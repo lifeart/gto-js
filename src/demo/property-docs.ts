@@ -519,6 +519,200 @@ export const PROPERTY_DOCS: Record<string, ProtocolDoc> = {
     }
   },
 
+  // ============= RVColorSaturation (verified from OpenRV ColorSaturationIPNode.cpp) =============
+  'RVColorSaturation': {
+    description: 'Color saturation adjustment node. Properties verified from ColorSaturationIPNode.cpp.',
+    components: {
+      'color': {
+        description: 'Saturation parameters',
+        properties: {
+          'active': { description: 'Enable saturation adjustment', type: 'int', default: 1 },
+          'saturation': { description: 'Saturation multiplier (1.0=normal, 0=grayscale, >1=boosted)', type: 'float', default: 1.0 }
+        }
+      }
+    }
+  },
+
+  // ============= RVColorVibrance (verified from OpenRV ColorVibranceIPNode.cpp) =============
+  'RVColorVibrance': {
+    description: 'Color vibrance adjustment node. Boosts saturation of less-saturated colors while preserving skin tones. Properties verified from ColorVibranceIPNode.cpp.',
+    components: {
+      'color': {
+        description: 'Vibrance parameters',
+        properties: {
+          'active': { description: 'Enable vibrance adjustment', type: 'int', default: 1 },
+          'vibrance': { description: 'Vibrance amount (0=none, positive=boost, negative=reduce)', type: 'float', default: 0.0 }
+        }
+      }
+    }
+  },
+
+  // ============= RVColorHighlight (verified from OpenRV ColorHighlightIPNode.cpp) =============
+  'RVColorHighlight': {
+    description: 'Highlight adjustment node. Properties verified from ColorHighlightIPNode.cpp.',
+    components: {
+      'color': {
+        description: 'Highlight parameters',
+        properties: {
+          'active': { description: 'Enable highlight adjustment', type: 'int', default: 1 },
+          'highlight': { description: 'Highlight adjustment amount', type: 'float', default: 0.0 }
+        }
+      }
+    }
+  },
+
+  // ============= RVColorShadow (verified from OpenRV ColorShadowIPNode.cpp) =============
+  'RVColorShadow': {
+    description: 'Shadow adjustment node. Properties verified from ColorShadowIPNode.cpp.',
+    components: {
+      'color': {
+        description: 'Shadow parameters',
+        properties: {
+          'active': { description: 'Enable shadow adjustment', type: 'int', default: 1 },
+          'shadow': { description: 'Shadow adjustment amount', type: 'float', default: 0.0 }
+        }
+      }
+    }
+  },
+
+  // ============= RVColorExposure (verified from OpenRV ColorExposureIPNode.cpp) =============
+  'RVColorExposure': {
+    description: 'Exposure adjustment node. Properties verified from ColorExposureIPNode.cpp.',
+    components: {
+      'color': {
+        description: 'Exposure parameters',
+        properties: {
+          'active': { description: 'Enable exposure adjustment', type: 'int', default: 1 },
+          'exposure': { description: 'Exposure adjustment in stops (0=no change)', type: 'float', default: 0.0 }
+        }
+      }
+    }
+  },
+
+  // ============= RVColorCurve (verified from OpenRV ColorCurveIPNode.cpp) =============
+  'RVColorCurve': {
+    description: 'Contrast/curve adjustment node (works in YCbCr space). Properties verified from ColorCurveIPNode.cpp.',
+    components: {
+      'color': {
+        description: 'Curve parameters',
+        properties: {
+          'active': { description: 'Enable curve adjustment', type: 'int', default: 1 },
+          'contrast': { description: 'Contrast adjustment applied in YCbCr space', type: 'float', default: 0.0 }
+        }
+      }
+    }
+  },
+
+  // ============= RVColorGrayScale (verified from OpenRV ColorGrayScaleIPNode.cpp) =============
+  'RVColorGrayScale': {
+    description: 'Grayscale conversion node. Properties verified from ColorGrayScaleIPNode.cpp.',
+    components: {
+      'node': {
+        description: 'Node control',
+        properties: {
+          'active': { description: 'Enable grayscale conversion', type: 'int', default: 0 }
+        }
+      }
+    }
+  },
+
+  // ============= RVClarity (verified from OpenRV ClarityIPNode.cpp) =============
+  'RVClarity': {
+    description: 'Clarity/local contrast enhancement node. Properties verified from ClarityIPNode.cpp.',
+    components: {
+      'node': {
+        description: 'Clarity parameters',
+        properties: {
+          'active': { description: 'Enable clarity effect', type: 'int', default: 1 },
+          'amount': { description: 'Clarity strength (roughly -0.5 to 1.5)', type: 'float', default: 0.0 },
+          'radius': { description: 'Blur radius for local contrast calculation', type: 'float', default: 20.0 }
+        }
+      }
+    }
+  },
+
+  // ============= RVNoiseReduction (verified from OpenRV NoiseReductionIPNode.cpp) =============
+  'RVNoiseReduction': {
+    description: 'Noise reduction filter node. Properties verified from NoiseReductionIPNode.cpp.',
+    components: {
+      'node': {
+        description: 'Noise reduction parameters',
+        properties: {
+          'active': { description: 'Enable noise reduction', type: 'int', default: 1 },
+          'amount': { description: 'Noise reduction strength', type: 'float', default: 0.0 },
+          'radius': { description: 'Filter radius', type: 'float', default: 0.0 },
+          'threshold': { description: 'Edge detection threshold', type: 'float', default: 5.0 }
+        }
+      }
+    }
+  },
+
+  // ============= RVRotateCanvas (verified from OpenRV RotateCanvasIPNode.cpp) =============
+  'RVRotateCanvas': {
+    description: 'Canvas rotation node (90° increments). Properties verified from RotateCanvasIPNode.cpp.',
+    components: {
+      'node': {
+        description: 'Rotation parameters',
+        properties: {
+          'active': { description: 'Enable rotation', type: 'int', default: 1 },
+          'rotate': { description: 'Rotation amount: 0, 90, 180, or 270 degrees', type: 'int', default: 0 }
+        }
+      }
+    }
+  },
+
+  // ============= RVLogLin (verified from OpenRV LogLinIPNode.cpp) =============
+  'RVLogLin': {
+    description: 'Log-to-linear conversion node. Properties verified from LogLinIPNode.cpp.',
+    components: {
+      'converter': {
+        description: 'Converter settings',
+        properties: {
+          'type': { description: 'Conversion type', type: 'int', default: 0 }
+        }
+      },
+      'parameters': {
+        description: 'Cineon/DPX log parameters',
+        properties: {
+          'referenceBlack': { description: 'Reference black code value (0-1023)', type: 'int', default: 95 },
+          'referenceWhite': { description: 'Reference white code value (0-1023)', type: 'int', default: 685 }
+        }
+      }
+    }
+  },
+
+  // ============= RVYCToRGB (verified from OpenRV YCToRGBIPNode.cpp) =============
+  'RVYCToRGB': {
+    description: 'YCbCr to RGB conversion node. Properties verified from YCToRGBIPNode.cpp.',
+    components: {
+      'node': {
+        description: 'Node control',
+        properties: {
+          'active': { description: 'Enable YCbCr conversion', type: 'int', default: 1 }
+        }
+      },
+      'color': {
+        description: 'Conversion settings',
+        properties: {
+          'YUVconversion': { description: 'YUV matrix: File, ITU Rec.601, ITU Rec.601 Full Range, ITU Rec.709, ITU Rec.709 Full Range, ITU Rec.2020, ITU Rec.2020 Full Range', type: 'string', default: 'File' }
+        }
+      }
+    }
+  },
+
+  // ============= RVAudioAdd (verified from OpenRV AudioAddIPNode.cpp) =============
+  'RVAudioAdd': {
+    description: 'Audio add/mix node. Properties verified from AudioAddIPNode.cpp.',
+    components: {
+      'audio': {
+        description: 'Audio parameters',
+        properties: {
+          'offset': { description: 'Audio time offset in frames', type: 'float', default: 0.0 }
+        }
+      }
+    }
+  },
+
   // ============= RVFormat =============
   'RVFormat': {
     description: 'Format node: resize, crop, and bit-depth conversion',
@@ -1140,15 +1334,16 @@ export const PROPERTY_DOCS: Record<string, ProtocolDoc> = {
     }
   },
 
-  // ============= RVImageSource =============
+  // ============= RVImageSource (verified from OpenRV ImageSourceIPNode.cpp) =============
   'RVImageSource': {
-    description: 'Image source: handles multi-layer EXR sequences with multiple views and channels. Supports complex image formats with layers, views, and channel selection.',
+    description: 'Image source: handles multi-layer EXR sequences with multiple views and channels. Properties verified from ImageSourceIPNode.cpp.',
     components: {
       'media': {
         description: 'Media file references',
         properties: {
           'movie': { description: 'Image file path or sequence pattern (e.g., image.####.exr)', type: 'string' },
-          'name': { description: 'Friendly display name for this source', type: 'string' }
+          'name': { description: 'Friendly display name for this source', type: 'string' },
+          'location': { description: 'Media location type', type: 'string', default: 'image' }
         }
       },
       'cut': {
@@ -1159,17 +1354,27 @@ export const PROPERTY_DOCS: Record<string, ProtocolDoc> = {
         }
       },
       'image': {
-        description: 'Multi-layer image settings',
+        description: 'Image structure and format settings',
         properties: {
-          'channels': { description: 'List of available channel names to load', type: 'string[]' },
-          'layers': { description: 'List of available layer names (EXR layers)', type: 'string[]' },
-          'views': { description: 'List of available view names (stereo: left, right)', type: 'string[]' },
-          'defaultLayer': { description: 'Default layer to display', type: 'string' },
-          'defaultView': { description: 'Default view to display', type: 'string' },
-          'start': { description: 'Sequence start frame number', type: 'int' },
-          'end': { description: 'Sequence end frame number', type: 'int' },
+          'width': { description: 'Image width in pixels', type: 'int', default: 640 },
+          'height': { description: 'Image height in pixels', type: 'int', default: 480 },
+          'uncropWidth': { description: 'Uncropped (full) image width', type: 'int', default: 640 },
+          'uncropHeight': { description: 'Uncropped (full) image height', type: 'int', default: 480 },
+          'uncropX': { description: 'Uncrop X offset', type: 'int', default: 0 },
+          'uncropY': { description: 'Uncrop Y offset', type: 'int', default: 0 },
+          'pixelAspect': { description: 'Pixel aspect ratio (1.0 = square pixels)', type: 'float', default: 1.0 },
+          'fps': { description: 'Sequence frame rate', type: 'float', default: 0.0 },
+          'start': { description: 'Sequence start frame number', type: 'int', default: 1 },
+          'end': { description: 'Sequence end frame number', type: 'int', default: 1 },
           'inc': { description: 'Frame increment (1=every frame, 2=every other)', type: 'int', default: 1 },
-          'fps': { description: 'Sequence frame rate', type: 'float' }
+          'encoding': { description: 'Pixel encoding type', type: 'string', default: 'None' },
+          'channels': { description: 'Channel configuration', type: 'string', default: 'RGBA' },
+          'bitsPerChannel': { description: 'Bit depth per channel', type: 'int', default: 0 },
+          'float': { description: 'Floating-point pixel data flag', type: 'int', default: 0 },
+          'defaultView': { description: 'Default view to display', type: 'string', default: '' },
+          'defaultLayer': { description: 'Default layer to display', type: 'string', default: '' },
+          'layers': { description: 'List of available layer names (EXR layers)', type: 'string' },
+          'views': { description: 'List of available view names (stereo: left, right)', type: 'string' }
         }
       }
     }
