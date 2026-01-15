@@ -1,0 +1,26 @@
+{
+  "name": "gto",
+  "version": "1.0.0",
+  "description": "JavaScript implementation of the GTO (Graph Topology Object) file format",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.js"
+  },
+  "keywords": [
+    "gto",
+    "3d",
+    "geometry",
+    "mesh",
+    "polygon",
+    "animation",
+    "file-format"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

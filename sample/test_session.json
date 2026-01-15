@@ -1,0 +1,5259 @@
+{
+  "version": 4,
+  "objects": [
+    {
+      "name": "rv",
+      "protocol": "RVSession",
+      "protocolVersion": 4,
+      "components": {
+        "matte": {
+          "interpretation": "",
+          "properties": {
+            "show": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "aspect": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1.33000004
+              ]
+            },
+            "opacity": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0.330000013
+              ]
+            },
+            "heightVisible": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                -1
+              ]
+            },
+            "centerPoint": {
+              "type": "float",
+              "size": 1,
+              "width": 2,
+              "interpretation": "",
+              "data": [
+                [
+                  0,
+                  0
+                ]
+              ]
+            }
+          }
+        },
+        "session": {
+          "interpretation": "",
+          "properties": {
+            "viewNode": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                "defaultSequence"
+              ]
+            },
+            "range": {
+              "type": "int",
+              "size": 1,
+              "width": 2,
+              "interpretation": "",
+              "data": [
+                [
+                  1,
+                  28
+                ]
+              ]
+            },
+            "region": {
+              "type": "int",
+              "size": 1,
+              "width": 2,
+              "interpretation": "",
+              "data": [
+                [
+                  1,
+                  28
+                ]
+              ]
+            },
+            "fps": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                24
+              ]
+            },
+            "realtime": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "inc": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "currentFrame": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "marks": {
+              "type": "int",
+              "size": 0,
+              "width": 1,
+              "interpretation": "",
+              "data": []
+            },
+            "version": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                2
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "connections",
+      "protocol": "connection",
+      "protocolVersion": 2,
+      "components": {
+        "evaluation": {
+          "interpretation": "",
+          "properties": {
+            "connections": {
+              "type": "string",
+              "size": 5,
+              "width": 2,
+              "interpretation": "",
+              "data": [
+                "sourceGroup000000",
+                "defaultLayout",
+                "viewGroup",
+                "defaultOutputGroup",
+                "sourceGroup000000",
+                "defaultSequence",
+                "sourceGroup000000",
+                "defaultStack",
+                "defaultSequence",
+                "viewGroup"
+              ]
+            },
+            "roots": {
+              "type": "string",
+              "size": 0,
+              "width": 1,
+              "interpretation": "",
+              "data": []
+            }
+          }
+        },
+        "top": {
+          "interpretation": "",
+          "properties": {
+            "nodes": {
+              "type": "string",
+              "size": 4,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                "defaultLayout",
+                "defaultSequence",
+                "defaultStack",
+                "sourceGroup000000"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "defaultLayout",
+      "protocol": "RVLayoutGroup",
+      "protocolVersion": 1,
+      "components": {
+        "ui": {
+          "interpretation": "",
+          "properties": {
+            "name": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                "Default Layout"
+              ]
+            }
+          }
+        },
+        "layout": {
+          "interpretation": "",
+          "properties": {
+            "mode": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                "packed"
+              ]
+            },
+            "spacing": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "gridRows": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "gridColumns": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            }
+          }
+        },
+        "timing": {
+          "interpretation": "",
+          "properties": {
+            "retimeInputs": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "defaultLayout_paint",
+      "protocol": "RVPaint",
+      "protocolVersion": 3,
+      "components": {
+        "paint": {
+          "interpretation": "",
+          "properties": {
+            "nextId": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "nextAnnotationId": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "show": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "exclude": {
+              "type": "string",
+              "size": 0,
+              "width": 1,
+              "interpretation": "",
+              "data": []
+            },
+            "include": {
+              "type": "string",
+              "size": 0,
+              "width": 1,
+              "interpretation": "",
+              "data": []
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "defaultLayout_rt_sourceGroup000000",
+      "protocol": "RVRetime",
+      "protocolVersion": 1,
+      "components": {
+        "visual": {
+          "interpretation": "",
+          "properties": {
+            "scale": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "offset": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            }
+          }
+        },
+        "audio": {
+          "interpretation": "",
+          "properties": {
+            "scale": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "offset": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            }
+          }
+        },
+        "output": {
+          "interpretation": "",
+          "properties": {
+            "fps": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                24
+              ]
+            }
+          }
+        },
+        "warp": {
+          "interpretation": "",
+          "properties": {
+            "active": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "style": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "keyFrames": {
+              "type": "int",
+              "size": 0,
+              "width": 1,
+              "interpretation": "",
+              "data": []
+            },
+            "keyRates": {
+              "type": "float",
+              "size": 0,
+              "width": 1,
+              "interpretation": "",
+              "data": []
+            }
+          }
+        },
+        "explicit": {
+          "interpretation": "",
+          "properties": {
+            "active": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "firstOutputFrame": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "inputFrames": {
+              "type": "int",
+              "size": 0,
+              "width": 1,
+              "interpretation": "",
+              "data": []
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "defaultLayout_stack",
+      "protocol": "RVStack",
+      "protocolVersion": 1,
+      "components": {
+        "output": {
+          "interpretation": "",
+          "properties": {
+            "fps": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                24
+              ]
+            },
+            "size": {
+              "type": "int",
+              "size": 2,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1280,
+                536
+              ]
+            },
+            "autoSize": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "chosenAudioInput": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                ".all."
+              ]
+            },
+            "interactiveSize": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            }
+          }
+        },
+        "mode": {
+          "interpretation": "",
+          "properties": {
+            "useCutInfo": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "alignStartFrames": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "strictFrameRanges": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "supportReversedOrderBlending": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            }
+          }
+        },
+        "composite": {
+          "interpretation": "",
+          "properties": {
+            "type": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                "over"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "defaultLayout_t_sourceGroup000000",
+      "protocol": "RVTransform2D",
+      "protocolVersion": 1,
+      "components": {
+        "transform": {
+          "interpretation": "",
+          "properties": {
+            "flip": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "flop": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "rotate": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "translate": {
+              "type": "float",
+              "size": 1,
+              "width": 2,
+              "interpretation": "",
+              "data": [
+                [
+                  0,
+                  0
+                ]
+              ]
+            },
+            "scale": {
+              "type": "float",
+              "size": 1,
+              "width": 2,
+              "interpretation": "",
+              "data": [
+                [
+                  1,
+                  1
+                ]
+              ]
+            },
+            "active": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            }
+          }
+        },
+        "stencil": {
+          "interpretation": "",
+          "properties": {
+            "visibleBox": {
+              "type": "float",
+              "size": 4,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0,
+                1,
+                0,
+                1
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "defaultOutputGroup",
+      "protocol": "RVOutputGroup",
+      "protocolVersion": 1,
+      "components": {
+        "output": {
+          "interpretation": "",
+          "properties": {
+            "active": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "width": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "height": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "dataType": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                "uint8"
+              ]
+            },
+            "pixelAspect": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "defaultOutputGroup_colorPipeline",
+      "protocol": "RVDisplayPipelineGroup",
+      "protocolVersion": 1,
+      "components": {
+        "pipeline": {
+          "interpretation": "",
+          "properties": {
+            "nodes": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                "RVDisplayColor"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "defaultOutputGroup_colorPipeline_0",
+      "protocol": "RVDisplayColor",
+      "protocolVersion": 1,
+      "components": {
+        "lut": {
+          "interpretation": "",
+          "properties": {
+            "inMatrix": {
+              "type": "float",
+              "size": 1,
+              "width": 16,
+              "interpretation": "",
+              "data": [
+                [
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1
+                ]
+              ]
+            },
+            "outMatrix": {
+              "type": "float",
+              "size": 1,
+              "width": 16,
+              "interpretation": "",
+              "data": [
+                [
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1
+                ]
+              ]
+            },
+            "lut": {
+              "type": "float",
+              "size": 0,
+              "width": 1,
+              "interpretation": "",
+              "data": []
+            },
+            "prelut": {
+              "type": "float",
+              "size": 0,
+              "width": 1,
+              "interpretation": "",
+              "data": []
+            },
+            "scale": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "offset": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "conditioningGamma": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "type": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                "Luminance"
+              ]
+            },
+            "name": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                ""
+              ]
+            },
+            "file": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                ""
+              ]
+            },
+            "size": {
+              "type": "int",
+              "size": 3,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0,
+                0,
+                0
+              ]
+            },
+            "active": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            }
+          }
+        },
+        "color": {
+          "interpretation": "",
+          "properties": {
+            "channelOrder": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                "RGBA"
+              ]
+            },
+            "channelFlood": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "premult": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "gamma": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "sRGB": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "Rec709": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "brightness": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "outOfRange": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "dither": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "ditherLast": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "active": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            }
+          }
+        },
+        "chromaticities": {
+          "interpretation": "",
+          "properties": {
+            "active": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "adoptedNeutral": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "white": {
+              "type": "float",
+              "size": 1,
+              "width": 2,
+              "interpretation": "",
+              "data": [
+                [
+                  0.312700003,
+                  0.328999996
+                ]
+              ]
+            },
+            "red": {
+              "type": "float",
+              "size": 1,
+              "width": 2,
+              "interpretation": "",
+              "data": [
+                [
+                  0.639999986,
+                  0.330000013
+                ]
+              ]
+            },
+            "green": {
+              "type": "float",
+              "size": 1,
+              "width": 2,
+              "interpretation": "",
+              "data": [
+                [
+                  0.300000012,
+                  0.600000024
+                ]
+              ]
+            },
+            "blue": {
+              "type": "float",
+              "size": 1,
+              "width": 2,
+              "interpretation": "",
+              "data": [
+                [
+                  0.150000006,
+                  0.0599999987
+                ]
+              ]
+            },
+            "neutral": {
+              "type": "float",
+              "size": 1,
+              "width": 2,
+              "interpretation": "",
+              "data": [
+                [
+                  0.312700003,
+                  0.328999996
+                ]
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "defaultOutputGroup_stereo",
+      "protocol": "RVDisplayStereo",
+      "protocolVersion": 1,
+      "components": {
+        "stereo": {
+          "interpretation": "",
+          "properties": {
+            "swap": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "relativeOffset": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "rightOffset": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "type": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                "off"
+              ]
+            }
+          }
+        },
+        "rightTransform": {
+          "interpretation": "",
+          "properties": {
+            "flip": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "flop": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "rotate": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "translate": {
+              "type": "float",
+              "size": 1,
+              "width": 2,
+              "interpretation": "",
+              "data": [
+                [
+                  0,
+                  0
+                ]
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "defaultSequence",
+      "protocol": "RVSequenceGroup",
+      "protocolVersion": 1,
+      "components": {
+        "ui": {
+          "interpretation": "",
+          "properties": {
+            "name": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                "Default Sequence"
+              ]
+            }
+          }
+        },
+        "soundtrack": {
+          "interpretation": "",
+          "properties": {
+            "file": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                ""
+              ]
+            },
+            "offset": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            }
+          }
+        },
+        "timing": {
+          "interpretation": "",
+          "properties": {
+            "retimeInputs": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            }
+          }
+        },
+        "markers": {
+          "interpretation": "",
+          "properties": {
+            "in": {
+              "type": "int",
+              "size": 0,
+              "width": 1,
+              "interpretation": "",
+              "data": []
+            },
+            "out": {
+              "type": "int",
+              "size": 0,
+              "width": 1,
+              "interpretation": "",
+              "data": []
+            },
+            "color": {
+              "type": "float",
+              "size": 0,
+              "width": 4,
+              "interpretation": "",
+              "data": []
+            },
+            "name": {
+              "type": "string",
+              "size": 0,
+              "width": 1,
+              "interpretation": "",
+              "data": []
+            }
+          }
+        },
+        "session": {
+          "interpretation": "",
+          "properties": {
+            "marks": {
+              "type": "int",
+              "size": 0,
+              "width": 1,
+              "interpretation": "",
+              "data": []
+            },
+            "frame": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "fps": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                24
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "defaultSequence_p_sourceGroup000000",
+      "protocol": "RVPaint",
+      "protocolVersion": 3,
+      "components": {
+        "paint": {
+          "interpretation": "",
+          "properties": {
+            "nextId": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                6
+              ]
+            },
+            "nextAnnotationId": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "show": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "exclude": {
+              "type": "string",
+              "size": 0,
+              "width": 1,
+              "interpretation": "",
+              "data": []
+            },
+            "include": {
+              "type": "string",
+              "size": 0,
+              "width": 1,
+              "interpretation": "",
+              "data": []
+            }
+          }
+        },
+        "pen:1:15:User": {
+          "interpretation": "",
+          "properties": {
+            "color": {
+              "type": "float",
+              "size": 1,
+              "width": 4,
+              "interpretation": "",
+              "data": [
+                [
+                  1,
+                  1,
+                  1,
+                  1
+                ]
+              ]
+            },
+            "width": {
+              "type": "float",
+              "size": 15,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0.00995635986,
+                0.00995635986,
+                0.00995635986,
+                0.00995635986,
+                0.00995635986,
+                0.00995635986,
+                0.00995635986,
+                0.00995635986,
+                0.00995635986,
+                0.00995635986,
+                0.00995635986,
+                0.00995635986,
+                0.00995635986,
+                0.00995635986,
+                0.00995635986
+              ]
+            },
+            "brush": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                "circle"
+              ]
+            },
+            "points": {
+              "type": "float",
+              "size": 15,
+              "width": 2,
+              "interpretation": "",
+              "data": [
+                [
+                  0.183036849,
+                  0.253820688
+                ],
+                [
+                  0.158727273,
+                  0.233801052
+                ],
+                [
+                  0.075788781,
+                  0.173742011
+                ],
+                [
+                  0.0529091358,
+                  0.116543047
+                ],
+                [
+                  0.0514791943,
+                  0.0750737488
+                ],
+                [
+                  0.112968124,
+                  0.0321744718
+                ],
+                [
+                  0.160157353,
+                  0.0221646205
+                ],
+                [
+                  0.203056619,
+                  0.0321744718
+                ],
+                [
+                  0.251675785,
+                  0.0908034742
+                ],
+                [
+                  0.244525924,
+                  0.126552835
+                ],
+                [
+                  0.183036849,
+                  0.175172046
+                ],
+                [
+                  0.117257953,
+                  0.232371077
+                ],
+                [
+                  0.107248217,
+                  0.232371077
+                ],
+                [
+                  0.0986682773,
+                  0.232371077
+                ],
+                [
+                  0.0986682773,
+                  0.232371077
+                ]
+              ]
+            },
+            "debug": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "join": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                3
+              ]
+            },
+            "cap": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "splat": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            }
+          }
+        },
+        "frame:15": {
+          "interpretation": "",
+          "properties": {
+            "order": {
+              "type": "string",
+              "size": 2,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                "pen:1:15:User",
+                "pen:2:15:User"
+              ]
+            }
+          }
+        },
+        "pen:2:15:User": {
+          "interpretation": "",
+          "properties": {
+            "color": {
+              "type": "float",
+              "size": 1,
+              "width": 4,
+              "interpretation": "",
+              "data": [
+                [
+                  1,
+                  0,
+                  0.833325684,
+                  1
+                ]
+              ]
+            },
+            "width": {
+              "type": "float",
+              "size": 18,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0.00995635986,
+                0.00995635986,
+                0.00995635986,
+                0.00995635986,
+                0.00995635986,
+                0.00995635986,
+                0.00995635986,
+                0.00995635986,
+                0.00995635986,
+                0.00995635986,
+                0.00995635986,
+                0.00995635986,
+                0.00995635986,
+                0.00995635986,
+                0.00995635986,
+                0.00995635986,
+                0.00995635986,
+                0.00995635986
+              ]
+            },
+            "brush": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                "circle"
+              ]
+            },
+            "points": {
+              "type": "float",
+              "size": 18,
+              "width": 2,
+              "interpretation": "",
+              "data": [
+                [
+                  0.151577413,
+                  -0.0550540797
+                ],
+                [
+                  0.151577413,
+                  -0.0593439862
+                ],
+                [
+                  0.217356324,
+                  -0.0879435018
+                ],
+                [
+                  0.27312535,
+                  -0.10224326
+                ],
+                [
+                  0.284565151,
+                  -0.0893734694
+                ],
+                [
+                  0.294575036,
+                  -0.0650638938
+                ],
+                [
+                  0.30458492,
+                  -0.0536240749
+                ],
+                [
+                  0.308874756,
+                  -0.046474196
+                ],
+                [
+                  0.29886502,
+                  -0.0378943458
+                ],
+                [
+                  0.204486549,
+                  -0.0193046834
+                ],
+                [
+                  0.191616789,
+                  -0.0207346529
+                ],
+                [
+                  0.165877268,
+                  -0.0336044431
+                ],
+                [
+                  0.155867383,
+                  -0.0378943458
+                ],
+                [
+                  0.151577413,
+                  -0.0421842895
+                ],
+                [
+                  0.147287443,
+                  -0.0536240749
+                ],
+                [
+                  0.147287443,
+                  -0.0593439862
+                ],
+                [
+                  0.147287443,
+                  -0.0607739538
+                ],
+                [
+                  0.147287443,
+                  -0.0607739538
+                ]
+              ]
+            },
+            "debug": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "join": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                3
+              ]
+            },
+            "cap": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "splat": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            }
+          }
+        },
+        "pen:3:5:User": {
+          "interpretation": "",
+          "properties": {
+            "color": {
+              "type": "float",
+              "size": 1,
+              "width": 4,
+              "interpretation": "",
+              "data": [
+                [
+                  1,
+                  0,
+                  0.833325684,
+                  1
+                ]
+              ]
+            },
+            "width": {
+              "type": "float",
+              "size": 7,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0.00995635986,
+                0.00995635986,
+                0.00995635986,
+                0.00995635986,
+                0.00995635986,
+                0.00995635986,
+                0.00995635986
+              ]
+            },
+            "brush": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                "circle"
+              ]
+            },
+            "points": {
+              "type": "float",
+              "size": 7,
+              "width": 2,
+              "interpretation": "",
+              "data": [
+                [
+                  -0.373223692,
+                  0.12512286
+                ],
+                [
+                  -0.371793687,
+                  0.12512286
+                ],
+                [
+                  -0.244525865,
+                  0.0436142944
+                ],
+                [
+                  -0.118687965,
+                  -0.0536240749
+                ],
+                [
+                  -0.10009829,
+                  -0.0865135342
+                ],
+                [
+                  -0.10009829,
+                  -0.0893734694
+                ],
+                [
+                  -0.10009829,
+                  -0.0893734694
+                ]
+              ]
+            },
+            "debug": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "join": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                3
+              ]
+            },
+            "cap": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "splat": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            }
+          }
+        },
+        "frame:5": {
+          "interpretation": "",
+          "properties": {
+            "order": {
+              "type": "string",
+              "size": 3,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                "pen:3:5:User",
+                "pen:4:5:User",
+                "pen:5:5:User"
+              ]
+            }
+          }
+        },
+        "pen:4:5:User": {
+          "interpretation": "",
+          "properties": {
+            "color": {
+              "type": "float",
+              "size": 1,
+              "width": 4,
+              "interpretation": "",
+              "data": [
+                [
+                  1,
+                  0,
+                  0.833325684,
+                  1
+                ]
+              ]
+            },
+            "width": {
+              "type": "float",
+              "size": 5,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0.00995635986,
+                0.00995635986,
+                0.00995635986,
+                0.00995635986,
+                0.00995635986
+              ]
+            },
+            "brush": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                "circle"
+              ]
+            },
+            "points": {
+              "type": "float",
+              "size": 5,
+              "width": 2,
+              "interpretation": "",
+              "data": [
+                [
+                  -0.371793687,
+                  0.126552835
+                ],
+                [
+                  -0.341764182,
+                  0.12941277
+                ],
+                [
+                  -0.25882563,
+                  0.11940299
+                ],
+                [
+                  -0.168737143,
+                  0.11940299
+                ],
+                [
+                  -0.168737143,
+                  0.11940299
+                ]
+              ]
+            },
+            "debug": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "join": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                3
+              ]
+            },
+            "cap": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "splat": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            }
+          }
+        },
+        "pen:5:5:User": {
+          "interpretation": "",
+          "properties": {
+            "color": {
+              "type": "float",
+              "size": 1,
+              "width": 4,
+              "interpretation": "",
+              "data": [
+                [
+                  1,
+                  0,
+                  0.833325684,
+                  1
+                ]
+              ]
+            },
+            "width": {
+              "type": "float",
+              "size": 6,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0.00995635986,
+                0.00995635986,
+                0.00995635986,
+                0.00995635986,
+                0.00995635986,
+                0.00995635986
+              ]
+            },
+            "brush": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                "circle"
+              ]
+            },
+            "points": {
+              "type": "float",
+              "size": 6,
+              "width": 2,
+              "interpretation": "",
+              "data": [
+                [
+                  -0.368933737,
+                  0.11940299
+                ],
+                [
+                  -0.338904232,
+                  0.0564840101
+                ],
+                [
+                  -0.317454606,
+                  0.0250245593
+                ],
+                [
+                  -0.311734706,
+                  0.0193046834
+                ],
+                [
+                  -0.310304761,
+                  0.017874714
+                ],
+                [
+                  -0.310304761,
+                  0.017874714
+                ]
+              ]
+            },
+            "debug": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "join": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                3
+              ]
+            },
+            "cap": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "splat": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            }
+          }
+        },
+        "text:6:1:User": {
+          "interpretation": "",
+          "properties": {
+            "position": {
+              "type": "float",
+              "size": 1,
+              "width": 2,
+              "interpretation": "",
+              "data": [
+                [
+                  -0.979533434,
+                  0.291000068
+                ]
+              ]
+            },
+            "color": {
+              "type": "float",
+              "size": 1,
+              "width": 4,
+              "interpretation": "",
+              "data": [
+                [
+                  1,
+                  1,
+                  1,
+                  1
+                ]
+              ]
+            },
+            "spacing": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0.800000012
+              ]
+            },
+            "size": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0.00999999978
+              ]
+            },
+            "scale": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "rotation": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "font": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                ""
+              ]
+            },
+            "text": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                "text eng"
+              ]
+            },
+            "origin": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                ""
+              ]
+            },
+            "debug": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            }
+          }
+        },
+        "frame:1": {
+          "interpretation": "",
+          "properties": {
+            "order": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                "text:6:1:User"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "defaultSequence_rt_sourceGroup000000",
+      "protocol": "RVRetime",
+      "protocolVersion": 1,
+      "components": {
+        "visual": {
+          "interpretation": "",
+          "properties": {
+            "scale": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "offset": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            }
+          }
+        },
+        "audio": {
+          "interpretation": "",
+          "properties": {
+            "scale": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "offset": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            }
+          }
+        },
+        "output": {
+          "interpretation": "",
+          "properties": {
+            "fps": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                24
+              ]
+            }
+          }
+        },
+        "warp": {
+          "interpretation": "",
+          "properties": {
+            "active": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "style": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "keyFrames": {
+              "type": "int",
+              "size": 0,
+              "width": 1,
+              "interpretation": "",
+              "data": []
+            },
+            "keyRates": {
+              "type": "float",
+              "size": 0,
+              "width": 1,
+              "interpretation": "",
+              "data": []
+            }
+          }
+        },
+        "explicit": {
+          "interpretation": "",
+          "properties": {
+            "active": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "firstOutputFrame": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "inputFrames": {
+              "type": "int",
+              "size": 0,
+              "width": 1,
+              "interpretation": "",
+              "data": []
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "defaultSequence_sequence",
+      "protocol": "RVSequence",
+      "protocolVersion": 1,
+      "components": {
+        "edl": {
+          "interpretation": "",
+          "properties": {
+            "source": {
+              "type": "int",
+              "size": 2,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0,
+                0
+              ]
+            },
+            "frame": {
+              "type": "int",
+              "size": 2,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1,
+                28
+              ]
+            },
+            "in": {
+              "type": "int",
+              "size": 2,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1,
+                0
+              ]
+            },
+            "out": {
+              "type": "int",
+              "size": 2,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                27,
+                0
+              ]
+            }
+          }
+        },
+        "output": {
+          "interpretation": "",
+          "properties": {
+            "size": {
+              "type": "int",
+              "size": 2,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1280,
+                536
+              ]
+            },
+            "fps": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                24
+              ]
+            },
+            "interactiveSize": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "autoSize": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            }
+          }
+        },
+        "mode": {
+          "interpretation": "",
+          "properties": {
+            "autoEDL": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "useCutInfo": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "supportReversedOrderBlending": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            }
+          }
+        },
+        "composite": {
+          "interpretation": "",
+          "properties": {
+            "inputBlendModes": {
+              "type": "string",
+              "size": 0,
+              "width": 1,
+              "interpretation": "",
+              "data": []
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "defaultStack",
+      "protocol": "RVStackGroup",
+      "protocolVersion": 1,
+      "components": {
+        "ui": {
+          "interpretation": "",
+          "properties": {
+            "name": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                "Default Stack"
+              ]
+            }
+          }
+        },
+        "timing": {
+          "interpretation": "",
+          "properties": {
+            "retimeInputs": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            }
+          }
+        },
+        "markers": {
+          "interpretation": "",
+          "properties": {
+            "in": {
+              "type": "int",
+              "size": 0,
+              "width": 1,
+              "interpretation": "",
+              "data": []
+            },
+            "out": {
+              "type": "int",
+              "size": 0,
+              "width": 1,
+              "interpretation": "",
+              "data": []
+            },
+            "color": {
+              "type": "float",
+              "size": 0,
+              "width": 4,
+              "interpretation": "",
+              "data": []
+            },
+            "name": {
+              "type": "string",
+              "size": 0,
+              "width": 1,
+              "interpretation": "",
+              "data": []
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "defaultStack_paint",
+      "protocol": "RVPaint",
+      "protocolVersion": 3,
+      "components": {
+        "paint": {
+          "interpretation": "",
+          "properties": {
+            "nextId": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "nextAnnotationId": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "show": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "exclude": {
+              "type": "string",
+              "size": 0,
+              "width": 1,
+              "interpretation": "",
+              "data": []
+            },
+            "include": {
+              "type": "string",
+              "size": 0,
+              "width": 1,
+              "interpretation": "",
+              "data": []
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "defaultStack_rt_sourceGroup000000",
+      "protocol": "RVRetime",
+      "protocolVersion": 1,
+      "components": {
+        "visual": {
+          "interpretation": "",
+          "properties": {
+            "scale": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "offset": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            }
+          }
+        },
+        "audio": {
+          "interpretation": "",
+          "properties": {
+            "scale": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "offset": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            }
+          }
+        },
+        "output": {
+          "interpretation": "",
+          "properties": {
+            "fps": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                24
+              ]
+            }
+          }
+        },
+        "warp": {
+          "interpretation": "",
+          "properties": {
+            "active": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "style": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "keyFrames": {
+              "type": "int",
+              "size": 0,
+              "width": 1,
+              "interpretation": "",
+              "data": []
+            },
+            "keyRates": {
+              "type": "float",
+              "size": 0,
+              "width": 1,
+              "interpretation": "",
+              "data": []
+            }
+          }
+        },
+        "explicit": {
+          "interpretation": "",
+          "properties": {
+            "active": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "firstOutputFrame": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "inputFrames": {
+              "type": "int",
+              "size": 0,
+              "width": 1,
+              "interpretation": "",
+              "data": []
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "defaultStack_stack",
+      "protocol": "RVStack",
+      "protocolVersion": 1,
+      "components": {
+        "output": {
+          "interpretation": "",
+          "properties": {
+            "fps": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                24
+              ]
+            },
+            "size": {
+              "type": "int",
+              "size": 2,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1280,
+                536
+              ]
+            },
+            "autoSize": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "chosenAudioInput": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                ".all."
+              ]
+            },
+            "interactiveSize": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            }
+          }
+        },
+        "mode": {
+          "interpretation": "",
+          "properties": {
+            "useCutInfo": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "alignStartFrames": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "strictFrameRanges": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "supportReversedOrderBlending": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            }
+          }
+        },
+        "composite": {
+          "interpretation": "",
+          "properties": {
+            "type": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                "over"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "defaultStack_t_sourceGroup000000",
+      "protocol": "RVTransform2D",
+      "protocolVersion": 1,
+      "components": {
+        "transform": {
+          "interpretation": "",
+          "properties": {
+            "flip": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "flop": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "rotate": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "translate": {
+              "type": "float",
+              "size": 1,
+              "width": 2,
+              "interpretation": "",
+              "data": [
+                [
+                  0,
+                  0
+                ]
+              ]
+            },
+            "scale": {
+              "type": "float",
+              "size": 1,
+              "width": 2,
+              "interpretation": "",
+              "data": [
+                [
+                  1,
+                  1
+                ]
+              ]
+            },
+            "active": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            }
+          }
+        },
+        "stencil": {
+          "interpretation": "",
+          "properties": {
+            "visibleBox": {
+              "type": "float",
+              "size": 4,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0,
+                1,
+                0,
+                1
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "sourceGroup000000",
+      "protocol": "RVSourceGroup",
+      "protocolVersion": 1,
+      "components": {
+        "markers": {
+          "interpretation": "",
+          "properties": {
+            "in": {
+              "type": "int",
+              "size": 0,
+              "width": 1,
+              "interpretation": "",
+              "data": []
+            },
+            "out": {
+              "type": "int",
+              "size": 0,
+              "width": 1,
+              "interpretation": "",
+              "data": []
+            },
+            "color": {
+              "type": "float",
+              "size": 0,
+              "width": 4,
+              "interpretation": "",
+              "data": []
+            },
+            "name": {
+              "type": "string",
+              "size": 0,
+              "width": 1,
+              "interpretation": "",
+              "data": []
+            }
+          }
+        },
+        "ui": {
+          "interpretation": "",
+          "properties": {
+            "name": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                "2d56d82687b78171f50c496bab002bc18d53149b"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "sourceGroup000000_cache",
+      "protocol": "RVCache",
+      "protocolVersion": 1,
+      "components": {
+        "render": {
+          "interpretation": "",
+          "properties": {
+            "downSampling": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "sourceGroup000000_cacheLUT",
+      "protocol": "RVCacheLUT",
+      "protocolVersion": 1,
+      "components": {
+        "lut": {
+          "interpretation": "",
+          "properties": {
+            "inMatrix": {
+              "type": "float",
+              "size": 1,
+              "width": 16,
+              "interpretation": "",
+              "data": [
+                [
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1
+                ]
+              ]
+            },
+            "outMatrix": {
+              "type": "float",
+              "size": 1,
+              "width": 16,
+              "interpretation": "",
+              "data": [
+                [
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1
+                ]
+              ]
+            },
+            "lut": {
+              "type": "float",
+              "size": 0,
+              "width": 1,
+              "interpretation": "",
+              "data": []
+            },
+            "prelut": {
+              "type": "float",
+              "size": 0,
+              "width": 1,
+              "interpretation": "",
+              "data": []
+            },
+            "scale": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "offset": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "conditioningGamma": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "type": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                "Luminance"
+              ]
+            },
+            "name": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                ""
+              ]
+            },
+            "file": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                ""
+              ]
+            },
+            "size": {
+              "type": "int",
+              "size": 3,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0,
+                0,
+                0
+              ]
+            },
+            "active": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "sourceGroup000000_channelMap",
+      "protocol": "RVChannelMap",
+      "protocolVersion": 1,
+      "components": {
+        "format": {
+          "interpretation": "",
+          "properties": {
+            "channels": {
+              "type": "string",
+              "size": 0,
+              "width": 1,
+              "interpretation": "",
+              "data": []
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "sourceGroup000000_colorPipeline",
+      "protocol": "RVColorPipelineGroup",
+      "protocolVersion": 1,
+      "components": {
+        "pipeline": {
+          "interpretation": "",
+          "properties": {
+            "nodes": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                "RVColor"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "sourceGroup000000_colorPipeline_0",
+      "protocol": "RVColor",
+      "protocolVersion": 2,
+      "components": {
+        "lut": {
+          "interpretation": "",
+          "properties": {
+            "inMatrix": {
+              "type": "float",
+              "size": 1,
+              "width": 16,
+              "interpretation": "",
+              "data": [
+                [
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1
+                ]
+              ]
+            },
+            "outMatrix": {
+              "type": "float",
+              "size": 1,
+              "width": 16,
+              "interpretation": "",
+              "data": [
+                [
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1
+                ]
+              ]
+            },
+            "lut": {
+              "type": "float",
+              "size": 0,
+              "width": 1,
+              "interpretation": "",
+              "data": []
+            },
+            "prelut": {
+              "type": "float",
+              "size": 0,
+              "width": 1,
+              "interpretation": "",
+              "data": []
+            },
+            "scale": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "offset": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "conditioningGamma": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "type": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                "Luminance"
+              ]
+            },
+            "name": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                ""
+              ]
+            },
+            "file": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                ""
+              ]
+            },
+            "size": {
+              "type": "int",
+              "size": 3,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0,
+                0,
+                0
+              ]
+            },
+            "active": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            }
+          }
+        },
+        "color": {
+          "interpretation": "",
+          "properties": {
+            "invert": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "gamma": {
+              "type": "float",
+              "size": 1,
+              "width": 3,
+              "interpretation": "",
+              "data": [
+                [
+                  1,
+                  1,
+                  1
+                ]
+              ]
+            },
+            "lut": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                "default"
+              ]
+            },
+            "offset": {
+              "type": "float",
+              "size": 1,
+              "width": 3,
+              "interpretation": "",
+              "data": [
+                [
+                  0,
+                  0,
+                  0
+                ]
+              ]
+            },
+            "scale": {
+              "type": "float",
+              "size": 1,
+              "width": 3,
+              "interpretation": "",
+              "data": [
+                [
+                  1,
+                  1,
+                  1
+                ]
+              ]
+            },
+            "exposure": {
+              "type": "float",
+              "size": 1,
+              "width": 3,
+              "interpretation": "",
+              "data": [
+                [
+                  0,
+                  0,
+                  0
+                ]
+              ]
+            },
+            "contrast": {
+              "type": "float",
+              "size": 1,
+              "width": 3,
+              "interpretation": "",
+              "data": [
+                [
+                  0,
+                  0,
+                  0
+                ]
+              ]
+            },
+            "saturation": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "normalize": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "hue": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "active": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "unpremult": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            }
+          }
+        },
+        "CDL": {
+          "interpretation": "",
+          "properties": {
+            "active": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "colorspace": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                "rec709"
+              ]
+            },
+            "slope": {
+              "type": "float",
+              "size": 1,
+              "width": 3,
+              "interpretation": "",
+              "data": [
+                [
+                  1,
+                  1,
+                  1
+                ]
+              ]
+            },
+            "offset": {
+              "type": "float",
+              "size": 1,
+              "width": 3,
+              "interpretation": "",
+              "data": [
+                [
+                  0,
+                  0,
+                  0
+                ]
+              ]
+            },
+            "power": {
+              "type": "float",
+              "size": 1,
+              "width": 3,
+              "interpretation": "",
+              "data": [
+                [
+                  1,
+                  1,
+                  1
+                ]
+              ]
+            },
+            "saturation": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "noClamp": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            }
+          }
+        },
+        "luminanceLUT": {
+          "interpretation": "",
+          "properties": {
+            "lut": {
+              "type": "float",
+              "size": 0,
+              "width": 1,
+              "interpretation": "",
+              "data": []
+            },
+            "max": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "size": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "name": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                ""
+              ]
+            },
+            "active": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            }
+          }
+        },
+        "luminanceLUT:output": {
+          "interpretation": "",
+          "properties": {
+            "size": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                256
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "sourceGroup000000_format",
+      "protocol": "RVFormat",
+      "protocolVersion": 1,
+      "components": {
+        "geometry": {
+          "interpretation": "",
+          "properties": {
+            "xfit": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "yfit": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "xresize": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "yresize": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "scale": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "resampleMethod": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                "area"
+              ]
+            }
+          }
+        },
+        "color": {
+          "interpretation": "",
+          "properties": {
+            "maxBitDepth": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "allowFloatingPoint": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            }
+          }
+        },
+        "crop": {
+          "interpretation": "",
+          "properties": {
+            "active": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "xmin": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "ymin": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "xmax": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "ymax": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            }
+          }
+        },
+        "uncrop": {
+          "interpretation": "",
+          "properties": {
+            "active": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "width": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "height": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "x": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "y": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "sourceGroup000000_lookPipeline",
+      "protocol": "RVLookPipelineGroup",
+      "protocolVersion": 1,
+      "components": {
+        "pipeline": {
+          "interpretation": "",
+          "properties": {
+            "nodes": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                "RVLookLUT"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "sourceGroup000000_lookPipeline_0",
+      "protocol": "RVLookLUT",
+      "protocolVersion": 1,
+      "components": {
+        "lut": {
+          "interpretation": "",
+          "properties": {
+            "inMatrix": {
+              "type": "float",
+              "size": 1,
+              "width": 16,
+              "interpretation": "",
+              "data": [
+                [
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1
+                ]
+              ]
+            },
+            "outMatrix": {
+              "type": "float",
+              "size": 1,
+              "width": 16,
+              "interpretation": "",
+              "data": [
+                [
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1
+                ]
+              ]
+            },
+            "lut": {
+              "type": "float",
+              "size": 0,
+              "width": 1,
+              "interpretation": "",
+              "data": []
+            },
+            "prelut": {
+              "type": "float",
+              "size": 0,
+              "width": 1,
+              "interpretation": "",
+              "data": []
+            },
+            "scale": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "offset": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "conditioningGamma": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "type": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                "Luminance"
+              ]
+            },
+            "name": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                ""
+              ]
+            },
+            "file": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                ""
+              ]
+            },
+            "size": {
+              "type": "int",
+              "size": 3,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0,
+                0,
+                0
+              ]
+            },
+            "active": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "sourceGroup000000_overlay",
+      "protocol": "RVOverlay",
+      "protocolVersion": 1,
+      "components": {
+        "overlay": {
+          "interpretation": "",
+          "properties": {
+            "nextRectId": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "nextTextId": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "show": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "sourceGroup000000_paint",
+      "protocol": "RVPaint",
+      "protocolVersion": 3,
+      "components": {
+        "paint": {
+          "interpretation": "",
+          "properties": {
+            "nextId": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "nextAnnotationId": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "show": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "exclude": {
+              "type": "string",
+              "size": 0,
+              "width": 1,
+              "interpretation": "",
+              "data": []
+            },
+            "include": {
+              "type": "string",
+              "size": 0,
+              "width": 1,
+              "interpretation": "",
+              "data": []
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "sourceGroup000000_source",
+      "protocol": "RVFileSource",
+      "protocolVersion": 1,
+      "components": {
+        "request": {
+          "interpretation": "",
+          "properties": {
+            "imageComponent": {
+              "type": "string",
+              "size": 0,
+              "width": 1,
+              "interpretation": "",
+              "data": []
+            },
+            "stereoViews": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                "track 1"
+              ]
+            },
+            "readAllChannels": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            }
+          }
+        },
+        "media": {
+          "interpretation": "",
+          "properties": {
+            "repName": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                ""
+              ]
+            },
+            "active": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "movie": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                "E:/ltx2/2d56d82687b78171f50c496bab002bc18d53149b.mp4"
+              ]
+            },
+            "name": {
+              "type": "string",
+              "size": 0,
+              "width": 1,
+              "interpretation": "",
+              "data": []
+            }
+          }
+        },
+        "group": {
+          "interpretation": "",
+          "properties": {
+            "fps": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "volume": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "audioOffset": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "rangeOffset": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "noMovieAudio": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "balance": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "crossover": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            }
+          }
+        },
+        "cut": {
+          "interpretation": "",
+          "properties": {
+            "in": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                -2147483647
+              ]
+            },
+            "out": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                2147483647
+              ]
+            }
+          }
+        },
+        "proxy": {
+          "interpretation": "",
+          "properties": {
+            "range": {
+              "type": "int",
+              "size": 1,
+              "width": 2,
+              "interpretation": "",
+              "data": [
+                [
+                  1,
+                  28
+                ]
+              ]
+            },
+            "inc": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "fps": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                24
+              ]
+            },
+            "size": {
+              "type": "int",
+              "size": 1,
+              "width": 2,
+              "interpretation": "",
+              "data": [
+                [
+                  1280,
+                  536
+                ]
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "sourceGroup000000_sourceStereo",
+      "protocol": "RVSourceStereo",
+      "protocolVersion": 1,
+      "components": {
+        "stereo": {
+          "interpretation": "",
+          "properties": {
+            "swap": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "relativeOffset": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "rightOffset": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            }
+          }
+        },
+        "rightTransform": {
+          "interpretation": "",
+          "properties": {
+            "flip": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "flop": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "rotate": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "translate": {
+              "type": "float",
+              "size": 1,
+              "width": 2,
+              "interpretation": "",
+              "data": [
+                [
+                  0,
+                  0
+                ]
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "sourceGroup000000_tolinPipeline",
+      "protocol": "RVLinearizePipelineGroup",
+      "protocolVersion": 1,
+      "components": {
+        "pipeline": {
+          "interpretation": "",
+          "properties": {
+            "nodes": {
+              "type": "string",
+              "size": 2,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                "RVLinearize",
+                "RVLensWarp"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "sourceGroup000000_tolinPipeline_0",
+      "protocol": "RVLinearize",
+      "protocolVersion": 1,
+      "components": {
+        "lut": {
+          "interpretation": "",
+          "properties": {
+            "inMatrix": {
+              "type": "float",
+              "size": 1,
+              "width": 16,
+              "interpretation": "",
+              "data": [
+                [
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1
+                ]
+              ]
+            },
+            "outMatrix": {
+              "type": "float",
+              "size": 1,
+              "width": 16,
+              "interpretation": "",
+              "data": [
+                [
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1
+                ]
+              ]
+            },
+            "lut": {
+              "type": "float",
+              "size": 0,
+              "width": 1,
+              "interpretation": "",
+              "data": []
+            },
+            "prelut": {
+              "type": "float",
+              "size": 0,
+              "width": 1,
+              "interpretation": "",
+              "data": []
+            },
+            "scale": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "offset": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "conditioningGamma": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "type": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                "Luminance"
+              ]
+            },
+            "name": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                ""
+              ]
+            },
+            "file": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                ""
+              ]
+            },
+            "size": {
+              "type": "int",
+              "size": 3,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0,
+                0,
+                0
+              ]
+            },
+            "active": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            }
+          }
+        },
+        "color": {
+          "interpretation": "",
+          "properties": {
+            "alphaType": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "logtype": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "YUV": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "sRGB2linear": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "Rec709ToLinear": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "fileGamma": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "active": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "ignoreChromaticities": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            }
+          }
+        },
+        "cineon": {
+          "interpretation": "",
+          "properties": {
+            "whiteCodeValue": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "blackCodeValue": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "breakPointValue": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            }
+          }
+        },
+        "CDL": {
+          "interpretation": "",
+          "properties": {
+            "active": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "slope": {
+              "type": "float",
+              "size": 1,
+              "width": 3,
+              "interpretation": "",
+              "data": [
+                [
+                  1,
+                  1,
+                  1
+                ]
+              ]
+            },
+            "offset": {
+              "type": "float",
+              "size": 1,
+              "width": 3,
+              "interpretation": "",
+              "data": [
+                [
+                  0,
+                  0,
+                  0
+                ]
+              ]
+            },
+            "power": {
+              "type": "float",
+              "size": 1,
+              "width": 3,
+              "interpretation": "",
+              "data": [
+                [
+                  1,
+                  1,
+                  1
+                ]
+              ]
+            },
+            "saturation": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "noClamp": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "sourceGroup000000_tolinPipeline_1",
+      "protocol": "RVLensWarp",
+      "protocolVersion": 1,
+      "components": {
+        "node": {
+          "interpretation": "",
+          "properties": {
+            "active": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            }
+          }
+        },
+        "warp": {
+          "interpretation": "",
+          "properties": {
+            "pixelAspectRatio": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "model": {
+              "type": "string",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                "brown"
+              ]
+            },
+            "k1": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "k2": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "k3": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "d": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "p1": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "p2": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "center": {
+              "type": "float",
+              "size": 1,
+              "width": 2,
+              "interpretation": "",
+              "data": [
+                [
+                  0.5,
+                  0.5
+                ]
+              ]
+            },
+            "offset": {
+              "type": "float",
+              "size": 1,
+              "width": 2,
+              "interpretation": "",
+              "data": [
+                [
+                  0,
+                  0
+                ]
+              ]
+            },
+            "fx": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "fy": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "cropRatioX": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "cropRatioY": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "cx02": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "cy02": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "cx22": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "cy22": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "cx04": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "cy04": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "cx24": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "cy24": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "cx44": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "cy44": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "cx06": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "cy06": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "cx26": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "cy26": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "cx46": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "cy46": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "cx66": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "cy66": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "sourceGroup000000_transform2D",
+      "protocol": "RVTransform2D",
+      "protocolVersion": 1,
+      "components": {
+        "transform": {
+          "interpretation": "",
+          "properties": {
+            "flip": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "flop": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "rotate": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "translate": {
+              "type": "float",
+              "size": 1,
+              "width": 2,
+              "interpretation": "",
+              "data": [
+                [
+                  0,
+                  0
+                ]
+              ]
+            },
+            "scale": {
+              "type": "float",
+              "size": 1,
+              "width": 2,
+              "interpretation": "",
+              "data": [
+                [
+                  1,
+                  1
+                ]
+              ]
+            },
+            "active": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            }
+          }
+        },
+        "stencil": {
+          "interpretation": "",
+          "properties": {
+            "visibleBox": {
+              "type": "float",
+              "size": 4,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0,
+                1,
+                0,
+                1
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "viewGroup_dxform",
+      "protocol": "RVDispTransform2D",
+      "protocolVersion": 1,
+      "components": {
+        "transform": {
+          "interpretation": "",
+          "properties": {
+            "translate": {
+              "type": "float",
+              "size": 1,
+              "width": 2,
+              "interpretation": "",
+              "data": [
+                [
+                  0,
+                  0
+                ]
+              ]
+            },
+            "scale": {
+              "type": "float",
+              "size": 1,
+              "width": 2,
+              "interpretation": "",
+              "data": [
+                [
+                  1,
+                  1
+                ]
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "viewGroup_soundtrack",
+      "protocol": "RVSoundTrack",
+      "protocolVersion": 1,
+      "components": {
+        "audio": {
+          "interpretation": "",
+          "properties": {
+            "volume": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            },
+            "balance": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "offset": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "internalOffset": {
+              "type": "float",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "mute": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "softClamp": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                1
+              ]
+            }
+          }
+        },
+        "visual": {
+          "interpretation": "",
+          "properties": {
+            "width": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "height": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "frameStart": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            },
+            "frameEnd": {
+              "type": "int",
+              "size": 1,
+              "width": 1,
+              "interpretation": "",
+              "data": [
+                0
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "viewGroup_viewPipeline",
+      "protocol": "RVViewPipelineGroup",
+      "protocolVersion": 1,
+      "components": {
+        "pipeline": {
+          "interpretation": "",
+          "properties": {
+            "nodes": {
+              "type": "string",
+              "size": 0,
+              "width": 1,
+              "interpretation": "",
+              "data": []
+            }
+          }
+        }
+      }
+    }
+  ]
+}
