@@ -91,29 +91,18 @@ export function handleHashChange(): void {
 
   const params = new URLSearchParams(hash);
   const objName = params.get('object');
-  const tab = params.get('tab');
+  const tab = params.get('tab') || 'details';
 
-  // Handle object selection first (without auto-switching to details tab)
+  // Handle object selection
   if (objName) {
     const obj = gtoData.objects.find(o => o.name === objName);
     if (obj) {
-      // If we also have a tab specified, select object but let tab take precedence
-      if (tab) {
-        // Just update selection state without switching tab
-        const searchBox = document.getElementById('search-box') as HTMLInputElement;
-        const protocolFilter = document.getElementById('protocol-filter') as HTMLSelectElement;
-        if (searchBox?.value || protocolFilter?.value) {
-          searchBox.value = '';
-          protocolFilter.value = '';
-        }
-      } else {
-        selectFromProtocolView(objName);
-      }
+      // Select the object with the requested tab
+      // triggerCallback: true ensures hash is updated to match the actual state
+      selectFromProtocolView(objName, { tab, triggerCallback: true });
     }
-  }
-
-  // Handle tab switching
-  if (tab) {
+  } else if (tab) {
+    // Only tab specified, no object - just switch tabs
     switchToTab(tab);
   }
 }

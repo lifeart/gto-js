@@ -26,6 +26,7 @@ import {
   switchToTab,
   setupTabSwitching,
   setSelectFromProtocolCallback,
+  setTabSwitchCallback,
   selectAnnotationFrame,
   navigateAnnotationFrame,
   toggleGhostFrames
@@ -84,12 +85,22 @@ function onFileParsed(filename: string): void {
 function onObjectSelected(obj: ReturnType<typeof getGtoData>['objects'][0], compName?: string | null): void {
   renderDetailsPanel(obj, compName);
   switchToTab('details');
+  // Update navigation state
+  addToRecent(obj.name);
+  updateBreadcrumb(obj.name, compName);
+  updateHash(obj.name, 'details');
 }
 
-function onSelectFromProtocol(objectName: string): void {
+function onSelectFromProtocol(objectName: string, tab: string): void {
   addToRecent(objectName);
   updateBreadcrumb(objectName);
-  updateHash(objectName, 'details');
+  updateHash(objectName, tab);
+}
+
+function onTabSwitch(tabName: string): void {
+  // Update hash with current object and new tab
+  const selectedObj = getGtoData()?.objects.find(o => o.name === document.querySelector('.tree-item-header.selected')?.getAttribute('data-object'));
+  updateHash(selectedObj?.name || null, tabName);
 }
 
 // ============= Setup Window Globals =============
@@ -141,6 +152,7 @@ function init(): void {
   setParseCallback(onFileParsed);
   setSelectionCallback(onObjectSelected);
   setSelectFromProtocolCallback(onSelectFromProtocol);
+  setTabSwitchCallback(onTabSwitch);
 
   // Set up window globals for HTML onclick handlers
   setupWindowGlobals();

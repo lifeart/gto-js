@@ -1402,9 +1402,10 @@ export function renderTimelinePanel(): void {
 
 // ============= Annotations Panel =============
 
-// Join style constants from OpenRV
-const JOIN_STYLES = ['miter', 'round', 'bevel', 'none'] as const;
-const CAP_STYLES = ['butt', 'round', 'square'] as const;
+// Join style constants from OpenRV: 0=NoJoin, 1=Bevel, 2=Miter, 3=Round
+const JOIN_STYLES = ['miter', 'bevel', 'miter', 'round'] as const;  // 0=none->miter fallback, 1=bevel, 2=miter, 3=round
+// Cap style constants from OpenRV: 0=NoCap, 1=Square, 2=Round
+const CAP_STYLES = ['butt', 'square', 'round'] as const;  // 0=butt (no cap), 1=square, 2=round
 
 // State for frame viewer
 let selectedAnnotationFrame: number | null = null;
@@ -1475,7 +1476,7 @@ function renderStrokePath(points: number[][], color: string, strokeWidth = 2, jo
   const joinStyle = JOIN_STYLES[join] || 'round';
   const capStyle = CAP_STYLES[cap] || 'round';
 
-  return `<polyline points="${pathPoints.join(' ')}" fill="none" stroke="${color}" stroke-width="${strokeWidth}" stroke-linecap="${capStyle}" stroke-linejoin="${joinStyle === 'none' ? 'miter' : joinStyle}"/>`;
+  return `<polyline points="${pathPoints.join(' ')}" fill="none" stroke="${color}" stroke-width="${strokeWidth}" stroke-linecap="${capStyle}" stroke-linejoin="${joinStyle}"/>`;
 }
 
 function renderStrokeInCanvas(
@@ -1522,7 +1523,7 @@ function renderStrokeInCanvas(
   const joinStyle = JOIN_STYLES[join] || 'round';
   const capStyle = CAP_STYLES[cap] || 'round';
 
-  return `<polyline points="${pathPoints.join(' ')}" fill="none" stroke="${color}" stroke-width="${strokeWidth}" stroke-linecap="${capStyle}" stroke-linejoin="${joinStyle === 'none' ? 'miter' : joinStyle}" opacity="${opacity}"/>`;
+  return `<polyline points="${pathPoints.join(' ')}" fill="none" stroke="${color}" stroke-width="${strokeWidth}" stroke-linecap="${capStyle}" stroke-linejoin="${joinStyle}" opacity="${opacity}"/>`;
 }
 
 function renderTextInCanvas(
@@ -2382,7 +2383,15 @@ export function setCompareObject(side: 'left' | 'right', name: string): void {
 
 // ============= Tab Switching =============
 
-export function switchToTab(tabName: string): void {
+export type TabSwitchCallback = (tabName: string) => void;
+
+let tabSwitchCallback: TabSwitchCallback | null = null;
+
+export function setTabSwitchCallback(callback: TabSwitchCallback): void {
+  tabSwitchCallback = callback;
+}
+
+export function switchToTab(tabName: string, triggerCallback = false): void {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('visible'));
 
@@ -2391,6 +2400,10 @@ export function switchToTab(tabName: string): void {
     tab.classList.add('active');
     document.getElementById(`panel-${tabName}`)?.classList.add('visible');
   }
+
+  if (triggerCallback && tabSwitchCallback) {
+    tabSwitchCallback(tabName);
+  }
 }
 
 export function setupTabSwitching(): void {
@@ -2398,7 +2411,8 @@ export function setupTabSwitching(): void {
     tab.addEventListener('click', () => {
       const tabName = (tab as HTMLElement).dataset.panel;
       if (tabName) {
-        switchToTab(tabName);
+        // User clicked tab directly - trigger callback to update hash
+        switchToTab(tabName, true);
       }
     });
   });
@@ -2406,7 +2420,7 @@ export function setupTabSwitching(): void {
 
 // ============= Select from Protocol View =============
 
-export type SelectFromProtocolCallback = (objectName: string) => void;
+export type SelectFromProtocolCallback = (objectName: string, tab: string) => void;
 
 let selectFromProtocolCallback: SelectFromProtocolCallback | null = null;
 
@@ -2414,7 +2428,16 @@ export function setSelectFromProtocolCallback(callback: SelectFromProtocolCallba
   selectFromProtocolCallback = callback;
 }
 
-export function selectFromProtocolView(objectName: string): void {
+export interface SelectFromProtocolOptions {
+  /** Tab to switch to (default: 'details') */
+  tab?: string;
+  /** Whether to trigger the callback (default: true) */
+  triggerCallback?: boolean;
+}
+
+export function selectFromProtocolView(objectName: string, options: SelectFromProtocolOptions = {}): void {
+  const { tab = 'details', triggerCallback = true } = options;
+
   const gtoData = getGtoData();
   if (!gtoData) return;
 
@@ -2455,13 +2478,13 @@ export function selectFromProtocolView(objectName: string): void {
     }, 50);
   }
 
-  // Switch to details tab and render
-  switchToTab('details');
+  // Switch to requested tab and render details panel
+  switchToTab(tab);
   renderDetailsPanel(obj);
 
-  // Call custom callback if set
-  if (selectFromProtocolCallback) {
-    selectFromProtocolCallback(objectName);
+  // Call custom callback if set and enabled
+  if (triggerCallback && selectFromProtocolCallback) {
+    selectFromProtocolCallback(objectName, tab);
   }
 }
 
