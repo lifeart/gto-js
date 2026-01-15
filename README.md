@@ -27,6 +27,10 @@ Then open http://localhost:5173
   - Output: resolution, data type, audio settings
 - **Hierarchical object browser** with deep search (objects, components, properties)
 - **Property inspector** with type badges, value previews, and type filters
+- **Property documentation** - Contextual tooltips for RV properties verified from OpenRV source code:
+  - 43 node types documented (RVColor, RVFileSource, RVSequence, RVStack, etc.)
+  - 134 GLSL shader operations (color transforms, blending, filters, stereo, lens warp)
+  - Property descriptions, types, and default values shown on hover
 - **Inline property editing** - Edit any property value directly in the UI:
   - Vector editor for float[2]/[3]/[4] (XY, XYZ, XYZW fields)
   - Toggle switch for boolean values
@@ -672,6 +676,30 @@ GTO defines standard protocols for common data types:
 | `subdivision` | Subdivision surfaces |
 | `image` | 2D/3D image data |
 | `material` | Shader and parameters |
+
+### OpenRV Session Protocols
+
+RV session files use specialized protocols (verified from [OpenRV source](https://github.com/AcademySoftwareFoundation/OpenRV)):
+
+| Protocol | Description |
+|----------|-------------|
+| `RVSession` | Session state: FPS, frame range, playback settings |
+| `RVFileSource` | Media file references with trim, proxy, audio settings |
+| `RVImageSource` | Multi-layer EXR sequences with views and channels |
+| `RVSequence` | Edit decision list (EDL) with source references |
+| `RVStack` | Composite layers with blend modes and opacity |
+| `RVLayoutGroup` | Multi-up layouts (grid, row, column, manual) |
+| `RVColor` | Color grading: exposure, contrast, saturation, CDL, LUT |
+| `RVLinearize` | Input color space linearization (sRGB, Rec709, log curves) |
+| `RVDisplayColor` | Display color space and gamma correction |
+| `RVTransform2D` | 2D transforms: translate, scale, rotate, flip/flop |
+| `RVLensWarp` | Lens distortion correction (radial, tangential, 3DE4) |
+| `RVPaint` | Vector annotations: strokes, shapes, text per frame |
+| `RVOverlay` | Mattes, rectangles, and text overlays |
+| `RVRetime` | Speed changes, time warps, explicit frame mapping |
+| `RVSoundTrack` | Audio volume, balance, offset, waveform display |
+| `RVICC` | ICC color profile transformations |
+| `RVCacheLUT` / `RVLookLUT` | 1D/3D LUT application with shaper curves |
 
 ## License
 
