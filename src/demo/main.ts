@@ -25,7 +25,10 @@ import {
   setCompareObject,
   switchToTab,
   setupTabSwitching,
-  setSelectFromProtocolCallback
+  setSelectFromProtocolCallback,
+  selectAnnotationFrame,
+  navigateAnnotationFrame,
+  toggleGhostFrames
 } from './panels';
 
 // Export functions
@@ -121,6 +124,11 @@ function setupWindowGlobals(): void {
   window.renderAllPanels = renderAllPanels;
   window.selectFromProtocolView = selectFromProtocolView;
   window.showDataView = showDataView;
+
+  // Annotation functions
+  window.selectAnnotationFrame = selectAnnotationFrame;
+  window.navigateAnnotationFrame = navigateAnnotationFrame;
+  window.toggleGhostFrames = toggleGhostFrames;
 }
 
 // ============= Initialize Application =============

@@ -51,4 +51,9 @@ interface Window {
   renderAllPanels: () => void;
   selectFromProtocolView: (objectName: string) => void;
   showDataView: () => void;
+
+  // Annotation functions
+  selectAnnotationFrame: (frame: number) => void;
+  navigateAnnotationFrame: (delta: number) => void;
+  toggleGhostFrames: (enabled: boolean) => void;
 }
