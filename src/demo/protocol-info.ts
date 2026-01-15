@@ -431,6 +431,153 @@ export const PROTOCOL_INFO: Record<string, ProtocolMetadata> = {
       const nodes = obj.components.pipeline?.properties?.nodes?.data;
       return { 'Nodes': Array.isArray(nodes) && nodes.length ? nodes.join(', ') : 'Empty' };
     }
+  },
+  // OCIO nodes
+  'OCIO': {
+    icon: '🌈',
+    category: 'color',
+    description: 'OpenColorIO: color space transforms using OCIO config',
+    getDetails: (obj) => {
+      const ocio = obj.components.ocio?.properties;
+      return {
+        'Active': ocio?.active?.data?.[0] ? 'Yes' : 'No',
+        'Input Space': ocio?.inSpace?.data?.[0] || '-',
+        'LUT Size': ocio?.lut3DSize?.data?.[0] || 32
+      };
+    }
+  },
+  'OCIOFile': {
+    icon: '🌈',
+    category: 'color',
+    description: 'OCIO File: apply color transform from file',
+    getDetails: (obj) => {
+      const ocio = obj.components.ocio?.properties;
+      return {
+        'Active': ocio?.active?.data?.[0] ? 'Yes' : 'No',
+        'Input Space': ocio?.inSpace?.data?.[0] || '-',
+        'LUT Size': ocio?.lut3DSize?.data?.[0] || 32
+      };
+    }
+  },
+  'OCIOLook': {
+    icon: '🎨',
+    category: 'color',
+    description: 'OCIO Look: creative look transforms',
+    getDetails: (obj) => {
+      const ocio = obj.components.ocio?.properties;
+      return {
+        'Active': ocio?.active?.data?.[0] ? 'Yes' : 'No',
+        'Look': ocio?.look?.data?.[0] || '-',
+        'Input Space': ocio?.inSpace?.data?.[0] || '-'
+      };
+    }
+  },
+  'OCIODisplay': {
+    icon: '🖥',
+    category: 'color',
+    description: 'OCIO Display: display-specific color transforms',
+    getDetails: (obj) => {
+      const ocio = obj.components.ocio?.properties;
+      return {
+        'Active': ocio?.active?.data?.[0] ? 'Yes' : 'No',
+        'Display': ocio?.display?.data?.[0] || '-',
+        'View': ocio?.view?.data?.[0] || '-'
+      };
+    }
+  },
+  // Additional nodes
+  'RVCDL': {
+    icon: '🎬',
+    category: 'color',
+    description: 'ASC CDL: Color Decision List (slope, offset, power, saturation)',
+    getDetails: (obj) => {
+      const node = obj.components.node?.properties;
+      return {
+        'Active': node?.active?.data?.[0] ? 'Yes' : 'No',
+        'Colorspace': node?.colorspace?.data?.[0] || 'rec709',
+        'Saturation': (node?.saturation?.data?.[0] as number)?.toFixed(2) || '1.00',
+        'No Clamp': node?.noClamp?.data?.[0] ? 'Yes' : 'No'
+      };
+    }
+  },
+  'RVFolderGroup': {
+    icon: '📁',
+    category: 'group',
+    description: 'Folder: organizes sources into collapsible groups',
+    getDetails: (obj) => {
+      const ui = obj.components.ui?.properties;
+      const mode = obj.components.mode?.properties;
+      return {
+        'Name': ui?.name?.data?.[0] || obj.name,
+        'View Type': mode?.viewType?.data?.[0] || 'switch'
+      };
+    }
+  },
+  'RVSwitchGroup': {
+    icon: '🔀',
+    category: 'group',
+    description: 'Switch: toggle between multiple inputs',
+    getDetails: (obj) => {
+      const ui = obj.components.ui?.properties;
+      return {
+        'Name': ui?.name?.data?.[0] || obj.name
+      };
+    }
+  },
+  'RVSwitch': {
+    icon: '⏯',
+    category: 'group',
+    description: 'Switch node: controls which input is active',
+    getDetails: (obj) => {
+      const output = obj.components.output?.properties;
+      const mode = obj.components.mode?.properties;
+      return {
+        'Active Input': output?.input?.data?.[0] || '-',
+        'FPS': output?.fps?.data?.[0] || 24,
+        'Align Start': mode?.alignStartFrames?.data?.[0] ? 'Yes' : 'No'
+      };
+    }
+  },
+  'RVRetimeGroup': {
+    icon: '⏱',
+    category: 'group',
+    description: 'Retime group: container for time adjustments',
+    getDetails: (obj) => {
+      const ui = obj.components.ui?.properties;
+      return {
+        'Name': ui?.name?.data?.[0] || obj.name
+      };
+    }
+  },
+  'RVImageSource': {
+    icon: '🖼',
+    category: 'source',
+    description: 'Image source: multi-layer EXR sequences',
+    getDetails: (obj) => {
+      const media = obj.components.media?.properties;
+      const image = obj.components.image?.properties;
+      const moviePath = (media?.movie?.data?.[0] as string) || '';
+      const fileName = moviePath.split(/[/\\]/).pop() || 'Unknown';
+      return {
+        'File': fileName,
+        'Layers': (image?.layers?.data as string[])?.length || 0,
+        'Views': (image?.views?.data as string[])?.length || 0,
+        'FPS': image?.fps?.data?.[0] || '-'
+      };
+    }
+  },
+  'RVPrimaryConvert': {
+    icon: '🔄',
+    category: 'color',
+    description: 'Primary convert: color space with illuminant adaptation',
+    getDetails: (obj) => {
+      const node = obj.components.node?.properties;
+      const adapt = obj.components.illuminantAdaptation?.properties;
+      return {
+        'Active': node?.active?.data?.[0] ? 'Yes' : 'No',
+        'Bradford': adapt?.useBradfordTransform?.data?.[0] ? 'Yes' : 'No'
+      };
+    }
   }
 };
 

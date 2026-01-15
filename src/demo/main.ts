@@ -70,8 +70,11 @@ function onFileParsed(filename: string): void {
   renderTree();
   renderAllPanels();
 
-  // Select first object
-  if (gtoData.objects.length > 0) {
+  // Handle hash navigation if present, otherwise select first object
+  const hash = window.location.hash;
+  if (hash && hash.length > 1) {
+    handleHashChange();
+  } else if (gtoData.objects.length > 0) {
     selectObject(gtoData.objects[0]);
   }
 }

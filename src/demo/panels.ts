@@ -525,6 +525,337 @@ function generateWarpCurve(frames: number[], values: number[]): string {
   return `<path d="${points}" fill="none" stroke="var(--accent-orange)" stroke-width="2"/>`;
 }
 
+// ============= Layout Group Visualizer =============
+
+function renderLayoutGroupVisualizer(obj: ObjectData): string {
+  const layout = obj.components.layout?.properties;
+
+  const mode = (layout?.mode?.data?.[0] as string) || 'packed';
+  const spacing = (layout?.spacing?.data?.[0] as number) || 0;
+  const gridRows = (layout?.gridRows?.data?.[0] as number) || 2;
+  const gridCols = (layout?.gridColumns?.data?.[0] as number) || 2;
+
+  // Find connected inputs from the connection graph
+  const gtoData = getGtoData();
+  const inputs: string[] = [];
+  if (gtoData) {
+    const connObj = gtoData.objects.find(o => o.protocol === 'connection');
+    const connections = connObj?.components.evaluation?.properties?.connections?.data as string[] || [];
+    for (const conn of connections) {
+      if (conn.endsWith(` ${obj.name}`)) {
+        const source = conn.split(' ')[0];
+        inputs.push(source);
+      }
+    }
+  }
+
+  // Generate layout preview SVG based on mode
+  const generateLayoutPreview = () => {
+    const cellCount = Math.min(inputs.length || 4, 6);
+    // Limit gap to ensure cells have positive dimensions
+    const maxGap = 100 / (cellCount + 1);
+    const gap = Math.min(spacing * 10, maxGap);
+
+    if (mode === 'row') {
+      const cellWidth = Math.max(5, (100 - gap * (cellCount - 1)) / cellCount);
+      return Array.from({ length: cellCount }, (_, i) =>
+        `<rect x="${i * (cellWidth + gap)}" y="25" width="${cellWidth}" height="50" rx="2" class="layout-cell" data-index="${i}"/>`
+      ).join('');
+    }
+
+    if (mode === 'column') {
+      const cellHeight = Math.max(5, (100 - gap * (cellCount - 1)) / cellCount);
+      return Array.from({ length: cellCount }, (_, i) =>
+        `<rect x="25" y="${i * (cellHeight + gap)}" width="50" height="${cellHeight}" rx="2" class="layout-cell" data-index="${i}"/>`
+      ).join('');
+    }
+
+    if (mode === 'grid') {
+      const rows = gridRows;
+      const cols = gridCols;
+      const cellW = Math.max(5, (100 - gap * (cols - 1)) / cols);
+      const cellH = Math.max(5, (100 - gap * (rows - 1)) / rows);
+      const cells: string[] = [];
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          cells.push(`<rect x="${c * (cellW + gap)}" y="${r * (cellH + gap)}" width="${cellW}" height="${cellH}" rx="2" class="layout-cell" data-index="${r * cols + c}"/>`);
+        }
+      }
+      return cells.join('');
+    }
+
+    // Default: packed layout (2x2 with varying sizes)
+    return `
+      <rect x="0" y="0" width="45" height="45" rx="2" class="layout-cell" data-index="0"/>
+      <rect x="50" y="0" width="50" height="65" rx="2" class="layout-cell" data-index="1"/>
+      <rect x="0" y="50" width="45" height="50" rx="2" class="layout-cell" data-index="2"/>
+      <rect x="50" y="70" width="50" height="30" rx="2" class="layout-cell" data-index="3"/>
+    `;
+  };
+
+  const modeLabels: Record<string, string> = {
+    'packed': 'Packed',
+    'packed2': 'Packed v2',
+    'row': 'Row',
+    'column': 'Column',
+    'grid': 'Grid'
+  };
+
+  return `
+    <div class="detail-card layout-visualizer">
+      <div class="detail-header">
+        <div class="detail-title">⊞ Layout</div>
+        <span class="type-badge string">${modeLabels[mode] || mode}</span>
+      </div>
+      <div class="detail-body">
+        <div class="layout-preview-container">
+          <svg viewBox="0 0 100 100" class="layout-preview-svg">
+            ${generateLayoutPreview()}
+          </svg>
+        </div>
+        <div class="layout-info">
+          <div class="layout-info-row">
+            <span class="info-label">Mode</span>
+            <span class="info-value">${modeLabels[mode] || mode}</span>
+          </div>
+          ${mode === 'grid' ? `
+          <div class="layout-info-row">
+            <span class="info-label">Grid Size</span>
+            <span class="info-value">${gridRows} × ${gridCols}</span>
+          </div>
+          ` : ''}
+          <div class="layout-info-row">
+            <span class="info-label">Spacing</span>
+            <span class="info-value">${(spacing * 100).toFixed(0)}%</span>
+          </div>
+          <div class="layout-info-row">
+            <span class="info-label">Inputs</span>
+            <span class="info-value">${inputs.length}</span>
+          </div>
+        </div>
+        ${inputs.length > 0 ? `
+        <div class="layout-inputs">
+          <div class="inputs-header">Connected Sources</div>
+          <div class="inputs-list">
+            ${inputs.slice(0, 6).map((input, i) => `
+              <div class="input-item" style="--item-index: ${i}">
+                <span class="input-index">${i + 1}</span>
+                <span class="input-name">${escapeHtml(input.split('_')[0])}</span>
+              </div>
+            `).join('')}
+            ${inputs.length > 6 ? `<div class="input-more">+${inputs.length - 6} more</div>` : ''}
+          </div>
+        </div>
+        ` : ''}
+      </div>
+    </div>
+  `;
+}
+
+// ============= Stack Group Visualizer =============
+
+function renderStackGroupVisualizer(obj: ObjectData): string {
+  // Find the RVStack node and its settings
+  const gtoData = getGtoData();
+  let compositeType = 'over';
+  let autoSize = true;
+  let outputFps = 24;
+
+  // Find connected inputs and the stack node
+  const inputs: string[] = [];
+  if (gtoData) {
+    const connObj = gtoData.objects.find(o => o.protocol === 'connection');
+    const connections = connObj?.components.evaluation?.properties?.connections?.data as string[] || [];
+
+    for (const conn of connections) {
+      if (conn.endsWith(` ${obj.name}`)) {
+        const source = conn.split(' ')[0];
+        inputs.push(source);
+      }
+    }
+
+    // Find the RVStack node that belongs to this group
+    const stackNode = gtoData.objects.find(o =>
+      o.protocol === 'RVStack' && o.name.includes(obj.name.replace('_stack', ''))
+    );
+    if (stackNode) {
+      const composite = stackNode.components.composite?.properties;
+      const output = stackNode.components.output?.properties;
+      compositeType = (composite?.type?.data?.[0] as string) || 'over';
+      autoSize = (output?.autoSize?.data?.[0] as number) === 1;
+      outputFps = (output?.fps?.data?.[0] as number) || 24;
+    }
+  }
+
+  const compositeLabels: Record<string, { label: string; desc: string }> = {
+    'over': { label: 'Over', desc: 'Standard alpha compositing' },
+    'add': { label: 'Add', desc: 'Additive blending' },
+    'difference': { label: 'Difference', desc: 'Difference blending' },
+    'replace': { label: 'Replace', desc: 'Replace (no blending)' }
+  };
+
+  const compInfo = compositeLabels[compositeType] || { label: compositeType, desc: '' };
+
+  return `
+    <div class="detail-card stack-visualizer">
+      <div class="detail-header">
+        <div class="detail-title">📚 Stack</div>
+        <span class="type-badge string">${compInfo.label}</span>
+      </div>
+      <div class="detail-body">
+        <div class="stack-preview">
+          ${inputs.slice(0, 4).map((input, i) => `
+            <div class="stack-layer" style="--layer-index: ${i}; --layer-count: ${Math.min(inputs.length, 4)}">
+              <span class="layer-index">${i + 1}</span>
+              <span class="layer-name">${escapeHtml(input.split('_')[0])}</span>
+            </div>
+          `).reverse().join('')}
+          ${inputs.length === 0 ? '<div class="stack-empty">No layers</div>' : ''}
+        </div>
+
+        <div class="stack-info">
+          <div class="stack-info-row">
+            <span class="info-label">Composite</span>
+            <span class="info-value">${compInfo.label}</span>
+          </div>
+          <div class="stack-info-row">
+            <span class="info-label">Layers</span>
+            <span class="info-value">${inputs.length}</span>
+          </div>
+          <div class="stack-info-row">
+            <span class="info-label">Output FPS</span>
+            <span class="info-value">${outputFps}</span>
+          </div>
+          <div class="stack-info-row">
+            <span class="info-label">Auto Size</span>
+            <span class="info-value">${autoSize ? 'Yes' : 'No'}</span>
+          </div>
+        </div>
+
+        ${compInfo.desc ? `<div class="composite-desc">${compInfo.desc}</div>` : ''}
+      </div>
+    </div>
+  `;
+}
+
+// ============= Sequence/EDL Visualizer =============
+
+function renderSequenceVisualizer(obj: ObjectData): string {
+  // Handle both RVSequence and RVSequenceGroup
+  const isGroup = obj.protocol === 'RVSequenceGroup';
+
+  // For RVSequenceGroup, we need to find the associated RVSequence node
+  const gtoData = getGtoData();
+  let sequenceObj = obj;
+
+  if (isGroup && gtoData) {
+    const seqNode = gtoData.objects.find(o =>
+      o.protocol === 'RVSequence' && o.name.includes(obj.name.replace('_sequence', ''))
+    );
+    if (seqNode) {
+      sequenceObj = seqNode;
+    }
+  }
+
+  const edl = sequenceObj.components.edl?.properties;
+  const output = sequenceObj.components.output?.properties;
+
+  const frames = (edl?.frame?.data as number[]) || [];
+  const sources = (edl?.source?.data as number[]) || [];
+  const inPoints = (edl?.in?.data as number[]) || [];
+  const outPoints = (edl?.out?.data as number[]) || [];
+
+  const fps = (output?.fps?.data?.[0] as number) || 24;
+
+  // Colors for different sources
+  const colors = [
+    'var(--accent-blue)',
+    'var(--accent-green)',
+    'var(--accent-orange)',
+    'var(--accent-purple)',
+    'var(--accent-red)',
+    'var(--accent-cyan)'
+  ];
+
+  // Build clip segments
+  const clips = frames.map((startFrame, i) => {
+    const inPt = inPoints[i] || 0;
+    const outPt = outPoints[i] || 100;
+    const duration = outPt - inPt;
+    const sourceIdx = sources[i] || 0;
+    return {
+      start: startFrame,
+      duration,
+      sourceIdx,
+      inPoint: inPt,
+      outPoint: outPt
+    };
+  });
+
+  const totalDuration = clips.reduce((sum, c) => sum + c.duration, 0) || 1;
+
+  return `
+    <div class="detail-card sequence-visualizer">
+      <div class="detail-header">
+        <div class="detail-title">🎞 Sequence</div>
+        <span class="type-badge string">${clips.length} clips</span>
+      </div>
+      <div class="detail-body">
+        <div class="edl-timeline">
+          <div class="edl-track">
+            ${clips.map((clip, i) => {
+              const widthPercent = (clip.duration / totalDuration) * 100;
+              const color = colors[clip.sourceIdx % colors.length];
+              return `
+                <div class="edl-clip" style="width: ${widthPercent}%; background: ${color}" title="Source ${clip.sourceIdx + 1}: frames ${clip.inPoint}-${clip.outPoint}">
+                  <span class="clip-label">${clip.sourceIdx + 1}</span>
+                </div>
+              `;
+            }).join('')}
+          </div>
+          <div class="edl-ruler">
+            <span>0</span>
+            <span>${Math.round(totalDuration / 2)}</span>
+            <span>${totalDuration}</span>
+          </div>
+        </div>
+
+        <div class="sequence-info">
+          <div class="sequence-info-row">
+            <span class="info-label">Total Frames</span>
+            <span class="info-value">${totalDuration}</span>
+          </div>
+          <div class="sequence-info-row">
+            <span class="info-label">Duration</span>
+            <span class="info-value">${(totalDuration / fps).toFixed(2)}s @ ${fps}fps</span>
+          </div>
+          <div class="sequence-info-row">
+            <span class="info-label">Clips</span>
+            <span class="info-value">${clips.length}</span>
+          </div>
+        </div>
+
+        ${clips.length > 0 ? `
+        <div class="edl-list">
+          <div class="edl-list-header">Edit Decision List</div>
+          <div class="edl-clips">
+            ${clips.slice(0, 8).map((clip, i) => `
+              <div class="edl-item">
+                <span class="edl-item-color" style="background: ${colors[clip.sourceIdx % colors.length]}"></span>
+                <span class="edl-item-num">${i + 1}</span>
+                <span class="edl-item-range">${clip.inPoint} - ${clip.outPoint}</span>
+                <span class="edl-item-duration">${clip.duration}f</span>
+              </div>
+            `).join('')}
+            ${clips.length > 8 ? `<div class="edl-more">+${clips.length - 8} more clips</div>` : ''}
+          </div>
+        </div>
+        ` : '<div class="edl-empty">No clips defined</div>'}
+      </div>
+    </div>
+  `;
+}
+
 function renderProtocolVisualizer(obj: ObjectData): string {
   switch (obj.protocol) {
     case 'RVColor':
@@ -537,6 +868,13 @@ function renderProtocolVisualizer(obj: ObjectData): string {
       return renderTransform2DVisualizer(obj);
     case 'RVRetime':
       return renderRetimeVisualizer(obj);
+    case 'RVLayoutGroup':
+      return renderLayoutGroupVisualizer(obj);
+    case 'RVStackGroup':
+      return renderStackGroupVisualizer(obj);
+    case 'RVSequence':
+    case 'RVSequenceGroup':
+      return renderSequenceVisualizer(obj);
     default:
       return '';
   }
@@ -1167,11 +1505,12 @@ function renderStrokeInCanvas(
   const offsetX = (canvasWidth - contentWidth) / 2;
   const offsetY = (canvasHeight - contentHeight) / 2;
 
-  // Calculate average width for display (widths are normalized)
+  // Calculate average width for display (widths are normalized, typically ~0.01)
   const avgWidth = widths.length > 0
     ? widths.reduce((a, b) => a + b, 0) / widths.length
     : 0.01;
-  const strokeWidth = Math.max(1, avgWidth * scale * 50);
+  // Scale stroke width proportionally but cap it reasonably (2-10 pixels)
+  const strokeWidth = Math.max(2, Math.min(10, avgWidth * scale * 2));
 
   const pathPoints = points.map(p => {
     const x = offsetX + (p[0] - bounds.minX) * scale;
@@ -1212,7 +1551,8 @@ function renderTextInCanvas(
 
   const color = text.color || [1, 1, 1, 1];
   const colorStr = `rgba(${Math.round(color[0]*255)}, ${Math.round(color[1]*255)}, ${Math.round(color[2]*255)}, ${color[3] * opacity})`;
-  const fontSize = Math.max(10, text.size * scale * 1000 * text.scale);
+  // text.size is typically ~0.01-0.05 in NDC, scale to reasonable font size (12-48px)
+  const fontSize = Math.max(12, Math.min(48, text.size * scale * 10 * text.scale));
 
   return `<text x="${x}" y="${y}" fill="${colorStr}" font-size="${fontSize}px" transform="rotate(${-text.rotation}, ${x}, ${y})" opacity="${opacity}">${escapeHtml(text.text)}</text>`;
 }
@@ -1300,6 +1640,13 @@ function calculateGlobalBounds(frameAnnotations: Map<number, FrameAnnotations>):
     return { minX: -1, maxX: 1, minY: -1, maxY: 1 };
   }
 
+  // Include origin (0,0) in bounds for proper NDC coordinate alignment
+  // This ensures the grid lines at origin make sense
+  minX = Math.min(minX, 0);
+  maxX = Math.max(maxX, 0);
+  minY = Math.min(minY, 0);
+  maxY = Math.max(maxY, 0);
+
   // Add some padding to bounds
   const padX = (maxX - minX) * 0.1 || 0.1;
   const padY = (maxY - minY) * 0.1 || 0.1;
@@ -1367,11 +1714,31 @@ function renderFrameCanvas(
     }
   }
 
+  // Calculate where origin (0,0) is in canvas coordinates for reference grid
+  const padding = 20;
+  const rangeX = bounds.maxX - bounds.minX || 1;
+  const rangeY = bounds.maxY - bounds.minY || 1;
+  const scaleX = (canvasWidth - padding * 2) / rangeX;
+  const scaleY = (canvasHeight - padding * 2) / rangeY;
+  const scale = Math.min(scaleX, scaleY);
+  const contentWidth = rangeX * scale;
+  const contentHeight = rangeY * scale;
+  const offsetX = (canvasWidth - contentWidth) / 2;
+  const offsetY = (canvasHeight - contentHeight) / 2;
+
+  // Transform origin (0,0) to canvas coordinates
+  const originX = offsetX + (0 - bounds.minX) * scale;
+  const originY = canvasHeight - offsetY - (0 - bounds.minY) * scale;
+
+  // Only show grid lines if origin is within visible bounds
+  const showVertical = originX > 0 && originX < canvasWidth;
+  const showHorizontal = originY > 0 && originY < canvasHeight;
+
   return `
     <svg width="${canvasWidth}" height="${canvasHeight}" class="frame-canvas-svg" style="background: var(--bg-tertiary); border-radius: var(--radius-sm);">
-      <!-- Grid lines for reference -->
-      <line x1="${canvasWidth/2}" y1="0" x2="${canvasWidth/2}" y2="${canvasHeight}" stroke="var(--border-color)" stroke-width="1" opacity="0.3" stroke-dasharray="4"/>
-      <line x1="0" y1="${canvasHeight/2}" x2="${canvasWidth}" y2="${canvasHeight/2}" stroke="var(--border-color)" stroke-width="1" opacity="0.3" stroke-dasharray="4"/>
+      <!-- Grid lines showing origin (0,0) in NDC coordinates -->
+      ${showVertical ? `<line x1="${originX}" y1="0" x2="${originX}" y2="${canvasHeight}" stroke="var(--border-color)" stroke-width="1" opacity="0.3" stroke-dasharray="4"/>` : ''}
+      ${showHorizontal ? `<line x1="0" y1="${originY}" x2="${canvasWidth}" y2="${originY}" stroke="var(--border-color)" stroke-width="1" opacity="0.3" stroke-dasharray="4"/>` : ''}
       ${svgContent}
     </svg>
   `;
@@ -1496,7 +1863,7 @@ export function renderAnnotationsPanel(): void {
           </div>
           <div class="annotation-body">
             <div class="annotation-preview">
-              <svg width="100%" height="80" style="overflow: visible;">
+              <svg viewBox="0 0 300 80" preserveAspectRatio="xMidYMid meet" style="width: 100%; height: 80px; overflow: visible;">
                 ${renderStrokePath(stroke.points, colorStr, 2, stroke.join, stroke.cap)}
               </svg>
             </div>
