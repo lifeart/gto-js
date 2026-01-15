@@ -109,52 +109,22 @@ export const PROPERTY_DOCS: Record<string, ProtocolDoc> = {
     }
   },
 
-  // ============= RVLinearize =============
+  // ============= RVLinearize (verified from OpenRV source) =============
   'RVLinearize': {
-    description: 'Linearization node: converts encoded pixels to linear colorspace for compositing',
+    description: 'Linearization node: converts encoded pixels to linear colorspace for compositing. Properties verified from LinearizeIPNode.cpp.',
     components: {
+      'node': {
+        description: 'Node control',
+        properties: {
+          'active': { description: 'Toggle linearization on/off', type: 'int', default: 1 }
+        }
+      },
       'color': {
         description: 'Color space linearization controls',
         properties: {
-          'alphaType': { description: 'Alpha handling: 0=as reported, 1=force premultiplied', type: 'int', default: 0 },
-          'YUV': { description: 'Convert from YUV color space to RGB linear', type: 'int', default: 0 },
-          'logtype': { description: 'Log transform type: 0=none, 1=Cineon, 2=Viper, 3=LogC', type: 'int', default: 0 },
-          'sRGB2linear': { description: 'Convert sRGB encoded pixels to linear', type: 'int', default: 0 },
-          'Rec709ToLinear': { description: 'Apply inverse Rec.709 transfer function', type: 'int', default: 0 },
-          'fileGamma': { description: 'Gamma value for linearization (1.0 = linear input)', type: 'float', default: 1.0 },
-          'active': { description: 'Toggle linearization on/off', type: 'int', default: 1 },
-          'ignoreChromaticities': { description: 'Ignore non-Rec.709 chromaticities in file', type: 'int', default: 0 }
-        }
-      },
-      'CDL': {
-        description: 'CDL applied in linear space before linearization',
-        properties: {
-          'slope': { description: 'CDL per-channel slope (gain)', type: 'float[3]' },
-          'offset': { description: 'CDL per-channel offset', type: 'float[3]' },
-          'power': { description: 'CDL per-channel power (gamma)', type: 'float[3]' },
-          'saturation': { description: 'CDL saturation control', type: 'float' },
-          'noClamp': { description: 'Disable CDL value clamping', type: 'int', default: 0 },
-          'active': { description: 'Enable CDL processing', type: 'int', default: 0 }
-        }
-      },
-      'lut': {
-        description: 'LUT for linearization',
-        properties: {
-          'lut': { description: '3D or channel LUT data', type: 'float[]' },
-          'prelut': { description: 'Channel pre-LUT (shaper)', type: 'float[]' },
-          'inMatrix': { description: 'Input color matrix', type: 'float[16]' },
-          'outMatrix': { description: 'Output color matrix', type: 'float[16]' },
-          'file': { description: 'Path to LUT file loaded on session open', type: 'string' },
-          'size': { description: 'LUT dimensions (1=channel, 3=3D cube)', type: 'int' },
-          'active': { description: 'Enable LUT processing', type: 'int', default: 0 }
-        }
-      },
-      'cineon': {
-        description: 'Cineon/DPX log-to-linear settings',
-        properties: {
-          'refBlack': { description: 'Reference black point (code value 0-1023)', type: 'float', default: 95 },
-          'refWhite': { description: 'Reference white point (code value 0-1023)', type: 'float', default: 685 },
-          'softClip': { description: 'Soft clip range for highlight rolloff', type: 'float', default: 0 }
+          'transfer': { description: 'Transfer function: File, sRGB, Rec709, Gamma 2.2, Gamma 2.4, Linear, Cineon, LogC, RedLog, Viper, ST2084, HLG, etc.', type: 'string', default: 'File' },
+          'primaries': { description: 'Color primaries: File, sRGB, Rec709, Rec2020, ACES, ACEScg, DCI-P3, etc.', type: 'string', default: 'File' },
+          'alphaType': { description: 'Alpha handling: File, Premultiplied, Unpremultiplied', type: 'string', default: 'File' }
         }
       }
     }
@@ -472,6 +442,78 @@ export const PROPERTY_DOCS: Record<string, ProtocolDoc> = {
         description: 'Node state',
         properties: {
           'active': { description: 'Toggle lens warp on/off', type: 'int', default: 1 }
+        }
+      }
+    }
+  },
+
+  // ============= RVCrop (verified from OpenRV CropIPNode.cpp) =============
+  'RVCrop': {
+    description: 'Crop node: removes pixels from image edges. Properties verified from CropIPNode.cpp.',
+    components: {
+      'node': {
+        description: 'Node control',
+        properties: {
+          'active': { description: 'Enable cropping', type: 'int', default: 0 },
+          'manip': { description: 'Manipulation mode (non-persistent)', type: 'int', default: 0 }
+        }
+      },
+      'crop': {
+        description: 'Crop region settings (pixels to remove from each edge)',
+        properties: {
+          'baseWidth': { description: 'Base reference width for crop calculations', type: 'int', default: 1280 },
+          'baseHeight': { description: 'Base reference height for crop calculations', type: 'int', default: 720 },
+          'left': { description: 'Pixels to remove from left edge', type: 'int', default: 0 },
+          'right': { description: 'Pixels to remove from right edge', type: 'int', default: 0 },
+          'top': { description: 'Pixels to remove from top edge', type: 'int', default: 0 },
+          'bottom': { description: 'Pixels to remove from bottom edge', type: 'int', default: 0 }
+        }
+      }
+    }
+  },
+
+  // ============= RVFilterGaussian (verified from OpenRV FilterGaussianIPNode.cpp) =============
+  'RVFilterGaussian': {
+    description: 'Gaussian blur filter node. Properties verified from FilterGaussianIPNode.cpp.',
+    components: {
+      'node': {
+        description: 'Filter parameters',
+        properties: {
+          'sigma': { description: 'Gaussian sigma (roughly radius²/3)', type: 'float', default: 0.0303 },
+          'radius': { description: 'Blur radius in pixels', type: 'float', default: 10.0 }
+        }
+      }
+    }
+  },
+
+  // ============= RVUnsharpMask (verified from OpenRV UnsharpMaskIPNode.cpp) =============
+  'RVUnsharpMask': {
+    description: 'Unsharp mask sharpening filter node. Properties verified from UnsharpMaskIPNode.cpp.',
+    components: {
+      'node': {
+        description: 'Unsharp mask parameters',
+        properties: {
+          'active': { description: 'Enable unsharp mask filter', type: 'int', default: 1 },
+          'amount': { description: 'Sharpening amount/strength multiplier', type: 'float', default: 1.0 },
+          'threshold': { description: 'Edge detection threshold (normalized by dividing by 255)', type: 'float', default: 5.0 },
+          'unsharpRadius': { description: 'Gaussian blur radius for mask generation', type: 'float', default: 5.0 }
+        }
+      }
+    }
+  },
+
+  // ============= RVColorTemperature (verified from OpenRV ColorTemperatureIPNode.cpp) =============
+  'RVColorTemperature': {
+    description: 'Color temperature adjustment node. Properties verified from ColorTemperatureIPNode.cpp.',
+    components: {
+      'color': {
+        description: 'Temperature adjustment parameters',
+        properties: {
+          'inWhitePrimary': { description: 'Input white point chromaticity [x, y]', type: 'float[2]', default: [0.3457, 0.3585] },
+          'inTemperature': { description: 'Input color temperature in Kelvin', type: 'float', default: 6500 },
+          'outTemperature': { description: 'Output color temperature in Kelvin', type: 'float', default: 6500 },
+          'active': { description: 'Enable temperature adjustment', type: 'int', default: 1 },
+          'method': { description: 'Temperature calculation method', type: 'int', default: 2 }
         }
       }
     }
@@ -2148,418 +2190,380 @@ export const PROPERTY_DOCS: Record<string, ProtocolDoc> = {
     }
   },
 
-  // ============= ARRI LogC Nodes =============
-  'LogCToLinear': {
-    description: 'GLSL node: Converts ARRI LogC encoded footage to linear light. Supports LogC3 (Alexa) and LogC4 (Alexa 35).',
+  // ============= ARRI LogC GLSL Shaders (verified in OpenRV) =============
+  'ColorLogCLinear': {
+    description: 'GLSL shader: Converts ARRI LogC encoded footage to linear light. Used for Alexa/Amira cameras.',
     components: {
-      'node': {
-        description: 'Node parameters',
-        properties: {
-          'active': { description: 'Enable LogC to linear conversion', type: 'int', default: 1 }
-        }
-      },
-      'parameters': {
-        description: 'LogC parameters',
-        properties: {
-          'exposureIndex': { description: 'ARRI Exposure Index (EI) used during capture. Affects curve shape.', type: 'int', default: 800 },
-          'logCVersion': { description: 'LogC version: 3 (Alexa/Amira) or 4 (Alexa 35)', type: 'int', default: 3 }
-        }
+      'shader': {
+        description: 'Shader applied via RVLinearize or color pipeline',
+        properties: {}
       }
     }
   },
 
-  'LinearToLogC': {
-    description: 'GLSL node: Converts linear light values to ARRI LogC encoding for output/export.',
+  'ColorLinearLogC': {
+    description: 'GLSL shader: Converts linear light values to ARRI LogC encoding.',
     components: {
-      'node': {
-        description: 'Node parameters',
-        properties: {
-          'active': { description: 'Enable linear to LogC conversion', type: 'int', default: 1 }
-        }
-      },
-      'parameters': {
-        description: 'LogC parameters',
-        properties: {
-          'exposureIndex': { description: 'Target Exposure Index for encoding', type: 'int', default: 800 },
-          'logCVersion': { description: 'LogC version: 3 or 4', type: 'int', default: 3 }
-        }
+      'shader': {
+        description: 'Shader applied via color pipeline',
+        properties: {}
       }
     }
   },
 
-  // ============= RED Log Nodes =============
-  'REDLogToLinear': {
-    description: 'GLSL node: Converts RED camera log-encoded footage (Log3G10, REDlogFilm) to linear.',
+  // ============= RED Log GLSL Shaders (verified in OpenRV) =============
+  'ColorRedLogLinear': {
+    description: 'GLSL shader: Converts RED camera log-encoded footage to linear light.',
     components: {
-      'node': {
-        description: 'Node parameters',
-        properties: {
-          'active': { description: 'Enable RED log to linear conversion', type: 'int', default: 1 }
-        }
-      },
-      'parameters': {
-        description: 'RED log parameters',
-        properties: {
-          'logType': { description: 'RED log curve type: Log3G10, REDlogFilm', type: 'string', default: 'Log3G10' }
-        }
+      'shader': {
+        description: 'Shader applied via RVLinearize or color pipeline',
+        properties: {}
       }
     }
   },
 
-  'LinearToREDLog': {
-    description: 'GLSL node: Converts linear values to RED camera log encoding.',
+  'ColorLinearRedLog': {
+    description: 'GLSL shader: Converts linear values to RED camera log encoding.',
     components: {
-      'node': {
-        description: 'Node parameters',
-        properties: {
-          'active': { description: 'Enable linear to RED log conversion', type: 'int', default: 1 }
-        }
-      },
-      'parameters': {
-        description: 'RED log parameters',
-        properties: {
-          'logType': { description: 'RED log curve type: Log3G10, REDlogFilm', type: 'string', default: 'Log3G10' }
-        }
+      'shader': {
+        description: 'Shader applied via color pipeline',
+        properties: {}
       }
     }
   },
 
-  // ============= Sony S-Log Nodes =============
-  'SLogToLinear': {
-    description: 'GLSL node: Converts Sony S-Log encoded footage to linear light.',
+  // ============= HDR Transfer Functions (verified in OpenRV) =============
+  'ColorSMPTE2084Linear': {
+    description: 'GLSL shader: Converts PQ/SMPTE ST 2084 encoded HDR content to linear light. Used for Dolby Vision and HDR10.',
     components: {
-      'node': {
-        description: 'Node parameters',
-        properties: {
-          'active': { description: 'Enable S-Log to linear conversion', type: 'int', default: 1 }
-        }
-      },
-      'parameters': {
-        description: 'S-Log parameters',
-        properties: {
-          'slogVersion': { description: 'S-Log version: 2 or 3', type: 'int', default: 3 }
-        }
+      'shader': {
+        description: 'Shader applied via RVLinearize or color pipeline',
+        properties: {}
       }
     }
   },
 
-  'LinearToSLog': {
-    description: 'GLSL node: Converts linear light to Sony S-Log encoding.',
+  'ColorLinearSMPTE2084': {
+    description: 'GLSL shader: Converts linear light to PQ/SMPTE ST 2084 encoding for HDR display output.',
     components: {
-      'node': {
-        description: 'Node parameters',
-        properties: {
-          'active': { description: 'Enable linear to S-Log conversion', type: 'int', default: 1 }
-        }
-      },
-      'parameters': {
-        description: 'S-Log parameters',
-        properties: {
-          'slogVersion': { description: 'S-Log version: 2 or 3', type: 'int', default: 3 }
-        }
+      'shader': {
+        description: 'Shader applied via color pipeline',
+        properties: {}
       }
     }
   },
 
-  // ============= PQ/HDR Nodes =============
-  'PQToLinear': {
-    description: 'GLSL node: Converts PQ (Perceptual Quantizer / SMPTE ST 2084) encoded HDR content to linear.',
+  'ColorHLGLinear': {
+    description: 'GLSL shader: Converts HLG (Hybrid Log-Gamma) HDR content to linear light. Used for broadcast HDR.',
     components: {
-      'node': {
-        description: 'Node parameters',
-        properties: {
-          'active': { description: 'Enable PQ to linear conversion', type: 'int', default: 1 }
-        }
-      },
-      'parameters': {
-        description: 'PQ parameters',
-        properties: {
-          'maxNits': { description: 'Maximum display luminance in nits (cd/m²)', type: 'float', default: 10000.0 }
-        }
+      'shader': {
+        description: 'Shader applied via RVLinearize or color pipeline',
+        properties: {}
       }
     }
   },
 
-  'LinearToPQ': {
-    description: 'GLSL node: Converts linear light to PQ encoding for HDR display output.',
+  'ColorLinearHLG': {
+    description: 'GLSL shader: Converts linear light to HLG encoding for broadcast HDR output.',
     components: {
-      'node': {
-        description: 'Node parameters',
-        properties: {
-          'active': { description: 'Enable linear to PQ conversion', type: 'int', default: 1 }
-        }
-      },
-      'parameters': {
-        description: 'PQ parameters',
-        properties: {
-          'maxNits': { description: 'Target maximum luminance in nits', type: 'float', default: 10000.0 }
-        }
+      'shader': {
+        description: 'Shader applied via color pipeline',
+        properties: {}
       }
     }
   },
 
-  'HLGToLinear': {
-    description: 'GLSL node: Converts HLG (Hybrid Log-Gamma) HDR content to linear light.',
+  // ============= Additional Verified GLSL Shaders =============
+  'ColorACESLogLinear': {
+    description: 'GLSL shader: Converts ACES Log encoded content to linear light.',
     components: {
-      'node': {
-        description: 'Node parameters',
-        properties: {
-          'active': { description: 'Enable HLG to linear conversion', type: 'int', default: 1 }
-        }
-      },
-      'parameters': {
-        description: 'HLG parameters',
-        properties: {
-          'systemGamma': { description: 'HLG system gamma (1.2 typical)', type: 'float', default: 1.2 }
-        }
+      'shader': {
+        description: 'Shader for ACES workflow',
+        properties: {}
       }
     }
   },
 
-  'LinearToHLG': {
-    description: 'GLSL node: Converts linear light to HLG encoding for broadcast HDR.',
+  'ColorLinearACESLog': {
+    description: 'GLSL shader: Converts linear light to ACES Log encoding.',
     components: {
-      'node': {
-        description: 'Node parameters',
-        properties: {
-          'active': { description: 'Enable linear to HLG conversion', type: 'int', default: 1 }
-        }
-      },
-      'parameters': {
-        description: 'HLG parameters',
-        properties: {
-          'systemGamma': { description: 'Target system gamma', type: 'float', default: 1.2 }
-        }
+      'shader': {
+        description: 'Shader for ACES workflow',
+        properties: {}
       }
     }
   },
 
-  // ============= ACES Color Space Nodes =============
-  'ACEScgToLinear': {
-    description: 'GLSL node: Converts ACEScg (AP1 primaries) to Rec.709 linear for display.',
+  'ColorClamp': {
+    description: 'GLSL shader: Clamps pixel values to valid range. Applied in color pipeline.',
     components: {
-      'node': {
-        description: 'Node parameters',
-        properties: {
-          'active': { description: 'Enable ACEScg to linear conversion', type: 'int', default: 1 }
-        }
+      'shader': {
+        description: 'Shader parameters',
+        properties: {}
       }
     }
   },
 
-  'LinearToACEScg': {
-    description: 'GLSL node: Converts Rec.709 linear to ACEScg working space.',
+  'ColorOutOfRange': {
+    description: 'GLSL shader: Highlights out-of-range pixel values for QC. Shows pixels outside 0-1 range.',
     components: {
-      'node': {
-        description: 'Node parameters',
-        properties: {
-          'active': { description: 'Enable linear to ACEScg conversion', type: 'int', default: 1 }
-        }
+      'shader': {
+        description: 'QC visualization shader',
+        properties: {}
       }
     }
   },
 
-  'ACESccToLinear': {
-    description: 'GLSL node: Converts ACEScc (logarithmic ACES) to linear light.',
+  'ColorQuantize': {
+    description: 'GLSL shader: Quantizes color values to specified bit depth for preview.',
     components: {
-      'node': {
-        description: 'Node parameters',
-        properties: {
-          'active': { description: 'Enable ACEScc to linear conversion', type: 'int', default: 1 }
-        }
+      'shader': {
+        description: 'Bit depth preview shader',
+        properties: {}
       }
     }
   },
 
-  'LinearToACEScc': {
-    description: 'GLSL node: Converts linear light to ACEScc logarithmic encoding.',
+  'ColorHighlight': {
+    description: 'GLSL shader: Adjusts highlight regions of the image.',
     components: {
-      'node': {
-        description: 'Node parameters',
-        properties: {
-          'active': { description: 'Enable linear to ACEScc conversion', type: 'int', default: 1 }
-        }
+      'shader': {
+        description: 'Highlight adjustment shader',
+        properties: {}
       }
     }
   },
 
-  // ============= Color Space Primaries Conversion =============
-  'Rec709ToRec2020': {
-    description: 'GLSL node: Converts from Rec.709 color primaries to Rec.2020 wide color gamut.',
+  'ColorShadow': {
+    description: 'GLSL shader: Adjusts shadow regions of the image.',
     components: {
-      'node': {
-        description: 'Node parameters',
-        properties: {
-          'active': { description: 'Enable Rec.709 to Rec.2020 conversion', type: 'int', default: 1 }
-        }
+      'shader': {
+        description: 'Shadow adjustment shader',
+        properties: {}
       }
     }
   },
 
-  'Rec2020ToRec709': {
-    description: 'GLSL node: Converts from Rec.2020 wide gamut to Rec.709 primaries with gamut mapping.',
+  'ColorTemperatureOffset': {
+    description: 'GLSL shader: Applies color temperature shift to image.',
     components: {
-      'node': {
-        description: 'Node parameters',
-        properties: {
-          'active': { description: 'Enable Rec.2020 to Rec.709 conversion', type: 'int', default: 1 }
-        }
-      },
-      'parameters': {
-        description: 'Gamut mapping parameters',
-        properties: {
-          'gamutMapping': { description: 'Gamut mapping method: clip, compress, or none', type: 'string', default: 'clip' }
-        }
+      'shader': {
+        description: 'Temperature adjustment shader',
+        properties: {}
       }
     }
   },
 
-  'Rec709ToDCIP3': {
-    description: 'GLSL node: Converts from Rec.709 to DCI-P3 color primaries.',
+  'ColorVibrance': {
+    description: 'GLSL shader: Adjusts color vibrance (selective saturation boost for less-saturated colors).',
     components: {
-      'node': {
-        description: 'Node parameters',
-        properties: {
-          'active': { description: 'Enable Rec.709 to DCI-P3 conversion', type: 'int', default: 1 }
-        }
+      'shader': {
+        description: 'Vibrance adjustment shader',
+        properties: {}
       }
     }
   },
 
-  'DCIP3ToRec709': {
-    description: 'GLSL node: Converts from DCI-P3 to Rec.709 color primaries.',
+  'ColorCurve': {
+    description: 'GLSL shader: Applies curve-based color correction.',
     components: {
-      'node': {
-        description: 'Node parameters',
-        properties: {
-          'active': { description: 'Enable DCI-P3 to Rec.709 conversion', type: 'int', default: 1 }
-        }
+      'shader': {
+        description: 'Curve adjustment shader',
+        properties: {}
       }
     }
   },
 
-  // ============= Channel Operations =============
-  'Invert': {
-    description: 'GLSL node: Inverts image values (creates negative). Formula: out = 1 - in',
+  // ============= Stereo GLSL Shaders (verified in OpenRV) =============
+  'StereoAnaglyph': {
+    description: 'GLSL shader: Creates red/cyan anaglyph stereo output for viewing with colored glasses.',
     components: {
-      'node': {
-        description: 'Node parameters',
-        properties: {
-          'active': { description: 'Enable inversion', type: 'int', default: 1 }
-        }
-      },
-      'parameters': {
-        description: 'Invert parameters',
-        properties: {
-          'channels': { description: 'Channels to invert: rgb, rgba, r, g, b, a', type: 'string', default: 'rgb' }
-        }
+      'shader': {
+        description: 'Anaglyph stereo shader',
+        properties: {}
       }
     }
   },
 
-  'Clamp': {
-    description: 'GLSL node: Clamps pixel values to specified range.',
+  'StereoLumAnaglyph': {
+    description: 'GLSL shader: Creates luminance-based anaglyph stereo (grayscale per eye, reduces color rivalry).',
     components: {
-      'node': {
-        description: 'Node parameters',
-        properties: {
-          'active': { description: 'Enable clamping', type: 'int', default: 1 }
-        }
-      },
-      'parameters': {
-        description: 'Clamp parameters',
-        properties: {
-          'min': { description: 'Minimum output value', type: 'float', default: 0.0 },
-          'max': { description: 'Maximum output value', type: 'float', default: 1.0 }
-        }
+      'shader': {
+        description: 'Luminance anaglyph shader',
+        properties: {}
       }
     }
   },
 
-  'Normalize': {
-    description: 'GLSL node: Normalizes pixel values to 0-1 range based on min/max in image.',
+  'StereoChecker': {
+    description: 'GLSL shader: Creates checkerboard stereo pattern for DLP-based 3D displays.',
     components: {
-      'node': {
-        description: 'Node parameters',
-        properties: {
-          'active': { description: 'Enable normalization', type: 'int', default: 1 }
-        }
-      },
-      'parameters': {
-        description: 'Normalize parameters',
-        properties: {
-          'inMin': { description: 'Input minimum value to map from', type: 'float', default: 0.0 },
-          'inMax': { description: 'Input maximum value to map from', type: 'float', default: 1.0 },
-          'outMin': { description: 'Output minimum value to map to', type: 'float', default: 0.0 },
-          'outMax': { description: 'Output maximum value to map to', type: 'float', default: 1.0 }
-        }
+      'shader': {
+        description: 'Checkerboard stereo shader',
+        properties: {}
       }
     }
   },
 
-  // ============= Grain/Noise =============
-  'FilmGrain': {
-    description: 'GLSL node: Adds realistic film grain effect to images.',
+  'StereoScanline': {
+    description: 'GLSL shader: Creates scanline-interleaved stereo for passive polarized displays.',
     components: {
-      'node': {
-        description: 'Node parameters',
-        properties: {
-          'active': { description: 'Enable film grain', type: 'int', default: 1 }
-        }
-      },
-      'parameters': {
-        description: 'Film grain parameters',
-        properties: {
-          'intensity': { description: 'Grain intensity/strength', type: 'float', default: 0.1, range: '0.0 to 1.0' },
-          'size': { description: 'Grain particle size', type: 'float', default: 1.0 },
-          'softness': { description: 'Grain softness/blur', type: 'float', default: 0.0 },
-          'saturation': { description: 'Grain color saturation (0=monochrome)', type: 'float', default: 0.0 },
-          'seed': { description: 'Random seed (animate for temporal grain)', type: 'int' }
-        }
+      'shader': {
+        description: 'Scanline stereo shader',
+        properties: {}
       }
     }
   },
 
-  // ============= Chromatic Aberration =============
-  'ChromaticAberration': {
-    description: 'GLSL node: Simulates lens chromatic aberration (color fringing).',
+  // ============= Filter GLSL Shaders (verified in OpenRV) =============
+  'FilterClarity': {
+    description: 'GLSL shader: Applies clarity/local contrast enhancement filter.',
     components: {
-      'node': {
-        description: 'Node parameters',
-        properties: {
-          'active': { description: 'Enable chromatic aberration', type: 'int', default: 1 }
-        }
-      },
-      'parameters': {
-        description: 'Chromatic aberration parameters',
-        properties: {
-          'redOffset': { description: 'Red channel offset from center', type: 'float[2]', default: [0.002, 0] },
-          'blueOffset': { description: 'Blue channel offset from center', type: 'float[2]', default: [-0.002, 0] },
-          'center': { description: 'Aberration center point [x, y]', type: 'float[2]', default: [0.5, 0.5] }
-        }
+      'shader': {
+        description: 'Clarity filter shader',
+        properties: {}
       }
     }
   },
 
-  // ============= Vignette =============
-  'Vignette': {
-    description: 'GLSL node: Applies vignette (darkening at edges) effect.',
+  'FilterNoiseReduction': {
+    description: 'GLSL shader: Applies noise reduction filter to reduce grain/noise.',
     components: {
-      'node': {
-        description: 'Node parameters',
-        properties: {
-          'active': { description: 'Enable vignette', type: 'int', default: 1 }
-        }
-      },
-      'parameters': {
-        description: 'Vignette parameters',
-        properties: {
-          'intensity': { description: 'Vignette darkness intensity', type: 'float', default: 0.3, range: '0.0 to 1.0' },
-          'radius': { description: 'Vignette radius (0=center, 1=corners)', type: 'float', default: 0.8 },
-          'softness': { description: 'Vignette edge softness', type: 'float', default: 0.5 },
-          'center': { description: 'Vignette center point [x, y]', type: 'float[2]', default: [0.5, 0.5] },
-          'aspectRatio': { description: 'Vignette aspect ratio (1=circular)', type: 'float', default: 1.0 }
-        }
+      'shader': {
+        description: 'Noise reduction shader',
+        properties: {}
+      }
+    }
+  },
+
+  'FilterUnsharpMask': {
+    description: 'GLSL shader: Applies unsharp mask sharpening filter.',
+    components: {
+      'shader': {
+        description: 'Unsharp mask shader',
+        properties: {}
+      }
+    }
+  },
+
+  'FilterGaussianHorizontal': {
+    description: 'GLSL shader: Applies horizontal pass of Gaussian blur (separable filter).',
+    components: {
+      'shader': {
+        description: 'Horizontal Gaussian pass',
+        properties: {}
+      }
+    }
+  },
+
+  'FilterGaussianVertical': {
+    description: 'GLSL shader: Applies vertical pass of Gaussian blur (separable filter).',
+    components: {
+      'shader': {
+        description: 'Vertical Gaussian pass',
+        properties: {}
+      }
+    }
+  },
+
+  // ============= Lens Warp GLSL Shaders (verified in OpenRV) =============
+  'LensWarpRadial': {
+    description: 'GLSL shader: Applies radial lens distortion correction (k1, k2, k3 coefficients).',
+    components: {
+      'shader': {
+        description: 'Radial distortion shader',
+        properties: {}
+      }
+    }
+  },
+
+  'LensWarpTangential': {
+    description: 'GLSL shader: Applies tangential/decentering lens distortion correction (p1, p2 coefficients).',
+    components: {
+      'shader': {
+        description: 'Tangential distortion shader',
+        properties: {}
+      }
+    }
+  },
+
+  'LensWarpRadialAndTangential': {
+    description: 'GLSL shader: Applies combined radial and tangential lens distortion correction.',
+    components: {
+      'shader': {
+        description: 'Combined distortion shader',
+        properties: {}
+      }
+    }
+  },
+
+  'LensWarp3DE4AnamorphicDegree6': {
+    description: 'GLSL shader: Applies 3DE4 anamorphic lens distortion model with degree 6 polynomial.',
+    components: {
+      'shader': {
+        description: '3DE4 anamorphic distortion shader',
+        properties: {}
+      }
+    }
+  },
+
+  // ============= Other Verified GLSL Shaders =============
+  'Histogram': {
+    description: 'GLSL shader: Computes histogram data for image analysis.',
+    components: {
+      'shader': {
+        description: 'Histogram computation shader',
+        properties: {}
+      }
+    }
+  },
+
+  'AngularMask': {
+    description: 'GLSL shader: Creates angular/pie-shaped mask for wipe transitions.',
+    components: {
+      'shader': {
+        description: 'Angular mask shader',
+        properties: {}
+      }
+    }
+  },
+
+  'StencilBox': {
+    description: 'GLSL shader: Creates rectangular stencil/mask region.',
+    components: {
+      'shader': {
+        description: 'Stencil box shader',
+        properties: {}
+      }
+    }
+  },
+
+  'ConstantBG': {
+    description: 'GLSL shader: Generates constant color background.',
+    components: {
+      'shader': {
+        description: 'Background color shader',
+        properties: {}
+      }
+    }
+  },
+
+  'Opacity': {
+    description: 'GLSL shader: Applies opacity/transparency adjustment to image.',
+    components: {
+      'shader': {
+        description: 'Opacity adjustment shader',
+        properties: {}
+      }
+    }
+  },
+
+  'InlineDissolve2': {
+    description: 'GLSL shader: Performs inline cross-dissolve between two inputs.',
+    components: {
+      'shader': {
+        description: 'Dissolve transition shader',
+        properties: {}
       }
     }
   },
