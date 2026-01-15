@@ -713,6 +713,99 @@ export const PROPERTY_DOCS: Record<string, ProtocolDoc> = {
     }
   },
 
+  // ============= RVFileOutputGroup (verified from OpenRV FileOutputGroupIPNode.cpp) =============
+  'RVFileOutputGroup': {
+    description: 'File output group for rendering/exporting media. Properties verified from FileOutputGroupIPNode.cpp.',
+    components: {
+      'output': {
+        description: 'Output settings',
+        properties: {
+          'filename': { description: 'Output file path', type: 'string', default: 'out.mov' },
+          'fps': { description: 'Output frame rate', type: 'float', default: 24.0 },
+          'channels': { description: 'Output channels', type: 'string', default: 'RGBA' },
+          'timeRange': { description: 'Time range to render', type: 'string', default: '' }
+        }
+      }
+    }
+  },
+
+  // ============= RVSwitchGroup (verified from OpenRV SwitchGroupIPNode.cpp) =============
+  'RVSwitchGroup': {
+    description: 'Switch group container. Properties verified from SwitchGroupIPNode.cpp.',
+    components: {
+      'ui': {
+        description: 'UI settings',
+        properties: {
+          'name': { description: 'Group display name', type: 'string' }
+        }
+      },
+      'markers': {
+        description: 'Timeline markers',
+        properties: {
+          'in': { description: 'Marker in points', type: 'int[]' },
+          'out': { description: 'Marker out points', type: 'int[]' },
+          'color': { description: 'Marker colors [r,g,b,a]', type: 'float[4][]' },
+          'name': { description: 'Marker names', type: 'string[]' }
+        }
+      }
+    }
+  },
+
+  // ============= RVICC (verified from OpenRV ICCIPNode.cpp) =============
+  'RVICC': {
+    description: 'ICC color profile transformation node. Properties verified from ICCIPNode.cpp.',
+    components: {
+      'node': {
+        description: 'Node control',
+        properties: {
+          'active': { description: 'Enable ICC transformation', type: 'int', default: 1 }
+        }
+      },
+      'samples': {
+        description: 'LUT sampling resolution',
+        properties: {
+          '2d': { description: '2D LUT sampling resolution', type: 'int', default: 256 },
+          '3d': { description: '3D LUT sampling resolution', type: 'int', default: 32 }
+        }
+      },
+      'inProfile': {
+        description: 'Input ICC profile',
+        properties: {
+          'url': { description: 'Input profile file path', type: 'string' },
+          'description': { description: 'Input profile description', type: 'string' },
+          'version': { description: 'Input profile version', type: 'float' },
+          'data': { description: 'Input profile binary data', type: 'byte[]' }
+        }
+      },
+      'outProfile': {
+        description: 'Output ICC profile',
+        properties: {
+          'url': { description: 'Output profile file path', type: 'string' },
+          'description': { description: 'Output profile description', type: 'string' },
+          'version': { description: 'Output profile version', type: 'float' },
+          'data': { description: 'Output profile binary data', type: 'byte[]' }
+        }
+      }
+    }
+  },
+
+  // ============= RVResize (verified from OpenRV ResizeIPNode.cpp) =============
+  'RVResize': {
+    description: 'Image resize node. Properties verified from ResizeIPNode.cpp.',
+    components: {
+      'node': {
+        description: 'Resize parameters',
+        properties: {
+          'active': { description: 'Enable resizing', type: 'int', default: 1 },
+          'outWidth': { description: 'Output width in pixels', type: 'int', default: 1280 },
+          'outHeight': { description: 'Output height in pixels', type: 'int', default: 720 },
+          'upsamplingQuality': { description: 'Upsampling quality (0=fast, 1=good, 2=best)', type: 'int', default: 1 },
+          'useContext': { description: 'Use context dimensions for interactive resize', type: 'int', default: 0 }
+        }
+      }
+    }
+  },
+
   // ============= RVFormat =============
   'RVFormat': {
     description: 'Format node: resize, crop, and bit-depth conversion',
@@ -801,9 +894,9 @@ export const PROPERTY_DOCS: Record<string, ProtocolDoc> = {
     }
   },
 
-  // ============= RVSoundTrack =============
+  // ============= RVSoundTrack (verified from OpenRV SoundTrackIPNode.cpp) =============
   'RVSoundTrack': {
-    description: 'Soundtrack node: audio volume, balance, offset, mute',
+    description: 'Soundtrack node: audio volume, balance, offset, mute. Properties verified from SoundTrackIPNode.cpp.',
     components: {
       'audio': {
         description: 'Audio playback settings',
@@ -811,7 +904,18 @@ export const PROPERTY_DOCS: Record<string, ProtocolDoc> = {
           'volume': { description: 'Global audio volume (1.0=original level)', type: 'float', default: 1.0 },
           'balance': { description: 'Left/right balance: -1=left, 0=center, 1=right', type: 'float', default: 0, range: '-1 to 1' },
           'offset': { description: 'Global audio offset in seconds', type: 'float', default: 0 },
-          'mute': { description: 'Mute audio playback', type: 'int', default: 0 }
+          'internalOffset': { description: 'Internal timing adjustment', type: 'float', default: 0 },
+          'mute': { description: 'Mute audio playback', type: 'int', default: 0 },
+          'softClamp': { description: 'Enable soft clipping for audio peaks', type: 'int', default: 0 }
+        }
+      },
+      'visual': {
+        description: 'Audio waveform visualization settings',
+        properties: {
+          'width': { description: 'Waveform visualization width', type: 'int' },
+          'height': { description: 'Waveform visualization height', type: 'int' },
+          'frameStart': { description: 'Start frame for visualization', type: 'int' },
+          'frameEnd': { description: 'End frame for visualization', type: 'int' }
         }
       }
     }
