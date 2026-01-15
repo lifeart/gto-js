@@ -1621,6 +1621,7 @@ function exportTextGTO() {
   }
   document.getElementById('export-menu')?.classList.remove('show');
 }
+window.exportTextGTO = exportTextGTO;
 
 function exportBinaryGTO() {
   if (!gtoData) return;
@@ -1639,6 +1640,7 @@ function exportBinaryGTO() {
   }
   document.getElementById('export-menu')?.classList.remove('show');
 }
+window.exportBinaryGTO = exportBinaryGTO;
 
 // Load sample file on startup
 async function loadSampleFile() {
