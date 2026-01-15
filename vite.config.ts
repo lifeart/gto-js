@@ -5,8 +5,13 @@ import dts from 'vite-plugin-dts';
 const isLibBuild = process.env.BUILD_MODE === 'lib';
 
 export default defineConfig({
-  // Set base path for GitHub Pages deployment (only for app build)
-  base: !isLibBuild ? '/gto-js/' : '/',
+  // Set base path for GitHub Pages deployment
+  base: process.env.GITHUB_ACTIONS ? '/gto-js/' : '/',
+  resolve: {
+    alias: {
+      'gto-js': resolve(__dirname, 'src/index.ts')
+    }
+  },
   plugins: isLibBuild ? [
     dts({
       include: ['src/**/*.ts'],
