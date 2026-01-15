@@ -1088,20 +1088,436 @@ export const PROPERTY_DOCS: Record<string, ProtocolDoc> = {
 
   // ============= RVImageSource =============
   'RVImageSource': {
-    description: 'Image source: multi-layer EXR sequences with views',
+    description: 'Image source: handles multi-layer EXR sequences with multiple views and channels. Supports complex image formats with layers, views, and channel selection.',
     components: {
       'media': {
-        description: 'Media settings',
+        description: 'Media file references',
         properties: {
-          'movie': { description: 'Image file path or sequence pattern', type: 'string' }
+          'movie': { description: 'Image file path or sequence pattern (e.g., image.####.exr)', type: 'string' },
+          'name': { description: 'Friendly display name for this source', type: 'string' }
+        }
+      },
+      'cut': {
+        description: 'Source trim points',
+        properties: {
+          'in': { description: 'Source in-point frame number', type: 'int' },
+          'out': { description: 'Source out-point frame number', type: 'int' }
         }
       },
       'image': {
-        description: 'Image settings',
+        description: 'Multi-layer image settings',
         properties: {
-          'layers': { description: 'Available layer names', type: 'string[]' },
-          'views': { description: 'Available view names (stereo)', type: 'string[]' },
-          'fps': { description: 'Frame rate', type: 'float' }
+          'channels': { description: 'List of available channel names to load', type: 'string[]' },
+          'layers': { description: 'List of available layer names (EXR layers)', type: 'string[]' },
+          'views': { description: 'List of available view names (stereo: left, right)', type: 'string[]' },
+          'defaultLayer': { description: 'Default layer to display', type: 'string' },
+          'defaultView': { description: 'Default view to display', type: 'string' },
+          'start': { description: 'Sequence start frame number', type: 'int' },
+          'end': { description: 'Sequence end frame number', type: 'int' },
+          'inc': { description: 'Frame increment (1=every frame, 2=every other)', type: 'int', default: 1 },
+          'fps': { description: 'Sequence frame rate', type: 'float' }
+        }
+      }
+    }
+  },
+
+  // ============= GLSL Shader Nodes =============
+  // These are GPU-accelerated image processing nodes
+
+  'Matrix3x3': {
+    description: 'GLSL node: performs 3x3 matrix multiplication on RGB channels only. Used for color space conversions and color corrections.',
+    components: {
+      'node': {
+        description: 'Matrix parameters',
+        properties: {
+          'active': { description: 'Enable matrix operation', type: 'int', default: 1 }
+        }
+      },
+      'parameters': {
+        description: 'Matrix values',
+        properties: {
+          'm33': { description: '3x3 matrix values in row-major order [r0c0,r0c1,r0c2,r1c0,...]', type: 'float[9]', default: [1,0,0, 0,1,0, 0,0,1] }
+        }
+      }
+    }
+  },
+
+  'Matrix4x4': {
+    description: 'GLSL node: performs 4x4 matrix multiplication on all RGBA channels. Used for color transforms including alpha.',
+    components: {
+      'node': {
+        description: 'Matrix parameters',
+        properties: {
+          'active': { description: 'Enable matrix operation', type: 'int', default: 1 }
+        }
+      },
+      'parameters': {
+        description: 'Matrix values',
+        properties: {
+          'm44': { description: '4x4 matrix values in row-major order', type: 'float[16]', default: [1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1] }
+        }
+      }
+    }
+  },
+
+  'Gamma': {
+    description: 'GLSL node: applies gamma correction (power curve) to RGB channels. Formula: out = in^gamma',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable gamma correction', type: 'int', default: 1 }
+        }
+      },
+      'parameters': {
+        description: 'Gamma values',
+        properties: {
+          'gamma': { description: 'Per-channel gamma values. Default 0.4545 ≈ 1/2.2 (sRGB encoding)', type: 'float[3]', default: [0.4545, 0.4545, 0.4545] }
+        }
+      }
+    }
+  },
+
+  'Saturation': {
+    description: 'GLSL node: adjusts color saturation using luminance-preserving algorithm',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable saturation adjustment', type: 'int', default: 1 }
+        }
+      },
+      'parameters': {
+        description: 'Saturation parameters',
+        properties: {
+          'saturation': { description: 'Saturation multiplier (0=grayscale, 1=unchanged, >1=oversaturated)', type: 'float', default: 1.0 },
+          'lumaCoefficients': { description: 'Luminance weights for R, G, B (Rec.709 default)', type: 'float[3]', default: [0.2126, 0.7152, 0.0722] },
+          'minClamp': { description: 'Minimum output value clamp', type: 'float', default: 0 },
+          'maxClamp': { description: 'Maximum output value clamp', type: 'float', default: 1 }
+        }
+      }
+    }
+  },
+
+  'Premult': {
+    description: 'GLSL node: multiplies RGB values by alpha channel (pre-multiplication). Used for compositing preparation.',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable premultiplication', type: 'int', default: 1 }
+        }
+      }
+    }
+  },
+
+  'UnPremult': {
+    description: 'GLSL node: divides RGB values by alpha channel (un-premultiplication). Reverses premultiplied alpha.',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable un-premultiplication', type: 'int', default: 1 }
+        }
+      }
+    }
+  },
+
+  'SRGBToLinear': {
+    description: 'GLSL node: converts sRGB encoded values to linear light. Applies inverse sRGB transfer function.',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable sRGB to linear conversion', type: 'int', default: 1 }
+        }
+      }
+    }
+  },
+
+  'LinearToSRGB': {
+    description: 'GLSL node: converts linear light values to sRGB encoding. Applies sRGB transfer function for display.',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable linear to sRGB conversion', type: 'int', default: 1 }
+        }
+      }
+    }
+  },
+
+  'Rec709ToLinear': {
+    description: 'GLSL node: converts Rec.709 gamma-encoded values to linear light for broadcast content.',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable Rec.709 to linear conversion', type: 'int', default: 1 }
+        }
+      }
+    }
+  },
+
+  'LinearToRec709': {
+    description: 'GLSL node: converts linear light values to Rec.709 encoding for broadcast output.',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable linear to Rec.709 conversion', type: 'int', default: 1 }
+        }
+      }
+    }
+  },
+
+  'CineonLogToLinear': {
+    description: 'GLSL node: linearizes Cineon/DPX log-encoded film scans using Kodak specification.',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable Cineon log to linear conversion', type: 'int', default: 1 }
+        }
+      },
+      'parameters': {
+        description: 'Cineon parameters',
+        properties: {
+          'refBlack': { description: 'Reference black code value (0-1023 range)', type: 'float', default: 95 },
+          'refWhite': { description: 'Reference white code value (0-1023 range)', type: 'float', default: 685 },
+          'softClip': { description: 'Soft clip range for highlight rolloff', type: 'float', default: 0 }
+        }
+      }
+    }
+  },
+
+  'LinearToCineonLog': {
+    description: 'GLSL node: converts linear values to Cineon log encoding for film output.',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable linear to Cineon log conversion', type: 'int', default: 1 }
+        }
+      },
+      'parameters': {
+        description: 'Cineon parameters',
+        properties: {
+          'refBlack': { description: 'Reference black code value (0-1023 range)', type: 'float', default: 95 },
+          'refWhite': { description: 'Reference white code value (0-1023 range)', type: 'float', default: 685 }
+        }
+      }
+    }
+  },
+
+  'ViperLogToLinear': {
+    description: 'GLSL node: linearizes Thomson Viper camera log-encoded footage.',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable Viper log to linear conversion', type: 'int', default: 1 }
+        }
+      }
+    }
+  },
+
+  'LinearToViperLog': {
+    description: 'GLSL node: converts linear values to Thomson Viper log encoding.',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable linear to Viper log conversion', type: 'int', default: 1 }
+        }
+      }
+    }
+  },
+
+  // Color space conversion nodes
+  'RGBToYCbCr601': {
+    description: 'GLSL node: converts RGB to YCbCr using ITU-R BT.601 standard (SD video).',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable RGB to YCbCr 601 conversion', type: 'int', default: 1 }
+        }
+      }
+    }
+  },
+
+  'YCbCr601ToRGB': {
+    description: 'GLSL node: converts YCbCr to RGB using ITU-R BT.601 standard (SD video).',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable YCbCr 601 to RGB conversion', type: 'int', default: 1 }
+        }
+      }
+    }
+  },
+
+  'RGBToYCbCr709': {
+    description: 'GLSL node: converts RGB to YCbCr using ITU-R BT.709 standard (HD video).',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable RGB to YCbCr 709 conversion', type: 'int', default: 1 }
+        }
+      }
+    }
+  },
+
+  'YCbCr709ToRGB': {
+    description: 'GLSL node: converts YCbCr to RGB using ITU-R BT.709 standard (HD video).',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable YCbCr 709 to RGB conversion', type: 'int', default: 1 }
+        }
+      }
+    }
+  },
+
+  'RGBToYCgCo': {
+    description: 'GLSL node: converts RGB to YCgCo color space (luma + chroma green/orange).',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable RGB to YCgCo conversion', type: 'int', default: 1 }
+        }
+      }
+    }
+  },
+
+  'YCgCoToRGB': {
+    description: 'GLSL node: converts YCgCo color space back to RGB.',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable YCgCo to RGB conversion', type: 'int', default: 1 }
+        }
+      }
+    }
+  },
+
+  'RGBToYCbCr601FR': {
+    description: 'GLSL node: converts RGB to YCbCr 601 Full Range (0-255 instead of 16-235).',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable RGB to YCbCr 601 Full Range conversion', type: 'int', default: 1 }
+        }
+      }
+    }
+  },
+
+  'YCbCr601FRToRGB': {
+    description: 'GLSL node: converts YCbCr 601 Full Range back to RGB.',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable YCbCr 601 Full Range to RGB conversion', type: 'int', default: 1 }
+        }
+      }
+    }
+  },
+
+  // Transition nodes
+  'CrossDissolve': {
+    description: 'GLSL transition node: creates smooth cross-dissolve between two sources over specified frames.',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable cross-dissolve transition', type: 'int', default: 1 }
+        }
+      },
+      'parameters': {
+        description: 'Transition timing',
+        properties: {
+          'startFrame': { description: 'Frame number where transition begins', type: 'float', default: 40 },
+          'numFrames': { description: 'Duration of transition in frames', type: 'float', default: 20 }
+        }
+      }
+    }
+  },
+
+  'Wipe': {
+    description: 'GLSL transition node: creates wipe transition effect between two sources.',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable wipe transition', type: 'int', default: 1 }
+        }
+      },
+      'parameters': {
+        description: 'Transition timing',
+        properties: {
+          'startFrame': { description: 'Frame number where wipe begins', type: 'float', default: 40 },
+          'numFrames': { description: 'Duration of wipe in frames', type: 'float', default: 20 }
+        }
+      }
+    }
+  },
+
+  // CDL variants for ACES workflows
+  'CDLForACESLinear': {
+    description: 'GLSL node: CDL operation in ACES linear colorspace with conversion matrices for proper ACES workflow.',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable ACES CDL processing', type: 'int', default: 1 }
+        }
+      },
+      'parameters': {
+        description: 'CDL and ACES parameters',
+        properties: {
+          'slope': { description: 'CDL slope per channel', type: 'float[3]', default: [1, 1, 1] },
+          'offset': { description: 'CDL offset per channel', type: 'float[3]', default: [0, 0, 0] },
+          'power': { description: 'CDL power per channel', type: 'float[3]', default: [1, 1, 1] },
+          'saturation': { description: 'CDL saturation', type: 'float', default: 1.0 },
+          'lumaCoefficients': { description: 'Luminance weights for saturation', type: 'float[3]', default: [0.2126, 0.7152, 0.0722] },
+          'toACES': { description: '4x4 matrix to convert from working space to ACES', type: 'float[16]' },
+          'fromACES': { description: '4x4 matrix to convert from ACES back to working space', type: 'float[16]' },
+          'minClamp': { description: 'Minimum output value', type: 'float', default: 0 },
+          'maxClamp': { description: 'Maximum output value', type: 'float', default: 1 }
+        }
+      }
+    }
+  },
+
+  'CDLForACESLog': {
+    description: 'GLSL node: CDL operation in ACES Log colorspace for log-based ACES workflows.',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable ACES Log CDL processing', type: 'int', default: 1 }
+        }
+      },
+      'parameters': {
+        description: 'CDL and ACES parameters',
+        properties: {
+          'slope': { description: 'CDL slope per channel', type: 'float[3]', default: [1, 1, 1] },
+          'offset': { description: 'CDL offset per channel', type: 'float[3]', default: [0, 0, 0] },
+          'power': { description: 'CDL power per channel', type: 'float[3]', default: [1, 1, 1] },
+          'saturation': { description: 'CDL saturation', type: 'float', default: 1.0 },
+          'lumaCoefficients': { description: 'Luminance weights for saturation', type: 'float[3]', default: [0.2126, 0.7152, 0.0722] },
+          'toACES': { description: '4x4 matrix to convert from working space to ACES', type: 'float[16]' },
+          'fromACES': { description: '4x4 matrix to convert from ACES back to working space', type: 'float[16]' },
+          'minClamp': { description: 'Minimum output value', type: 'float', default: 0 },
+          'maxClamp': { description: 'Maximum output value', type: 'float', default: 1 }
         }
       }
     }
