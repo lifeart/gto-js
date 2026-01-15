@@ -856,6 +856,147 @@ function renderSequenceVisualizer(obj: ObjectData): string {
   `;
 }
 
+// ============= Chromaticities Visualizer =============
+
+function renderChromaticitiesVisualizer(comp: ComponentData): string {
+  const props = comp.properties;
+
+  const active = (props.active?.data?.[0] as number) || 0;
+  const white = (props.white?.data?.[0] as number[]) || [0.3127, 0.329];
+  const red = (props.red?.data?.[0] as number[]) || [0.64, 0.33];
+  const green = (props.green?.data?.[0] as number[]) || [0.3, 0.6];
+  const blue = (props.blue?.data?.[0] as number[]) || [0.15, 0.06];
+  const neutral = (props.neutral?.data?.[0] as number[]) || white;
+  const adoptedNeutral = (props.adoptedNeutral?.data?.[0] as number) || 0;
+
+  // CIE diagram dimensions (we'll use a 200x200 viewBox)
+  const size = 200;
+  const padding = 20;
+
+  // Transform CIE xy coordinates to SVG coordinates
+  // CIE x ranges roughly 0-0.8, y ranges 0-0.9
+  const toSvg = (x: number, y: number): [number, number] => {
+    const svgX = padding + (x / 0.8) * (size - 2 * padding);
+    const svgY = size - padding - (y / 0.9) * (size - 2 * padding);
+    return [svgX, svgY];
+  };
+
+  // Simplified spectral locus points (CIE 1931)
+  const spectralLocus = [
+    [0.175, 0.005], [0.17, 0.01], [0.16, 0.02], [0.14, 0.04], [0.12, 0.06],
+    [0.09, 0.13], [0.06, 0.2], [0.04, 0.28], [0.02, 0.37], [0.01, 0.46],
+    [0.01, 0.53], [0.02, 0.6], [0.06, 0.68], [0.12, 0.73], [0.2, 0.77],
+    [0.28, 0.8], [0.36, 0.82], [0.44, 0.82], [0.52, 0.8], [0.58, 0.76],
+    [0.63, 0.7], [0.67, 0.64], [0.7, 0.56], [0.72, 0.48], [0.73, 0.4],
+    [0.735, 0.265]
+  ];
+
+  const locusPath = spectralLocus
+    .map((p, i) => {
+      const [x, y] = toSvg(p[0], p[1]);
+      return `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(' ') + ' Z';
+
+  // RGB triangle
+  const [rx, ry] = toSvg(red[0], red[1]);
+  const [gx, gy] = toSvg(green[0], green[1]);
+  const [bx, by] = toSvg(blue[0], blue[1]);
+  const [wx, wy] = toSvg(white[0], white[1]);
+  const [nx, ny] = toSvg(neutral[0], neutral[1]);
+
+  const trianglePath = `M ${rx.toFixed(1)},${ry.toFixed(1)} L ${gx.toFixed(1)},${gy.toFixed(1)} L ${bx.toFixed(1)},${by.toFixed(1)} Z`;
+
+  return `
+    <div class="detail-card chromaticities-visualizer">
+      <div class="detail-header">
+        <div class="detail-title">🎨 Chromaticities</div>
+        <span class="type-badge ${active ? 'int' : 'float'}">${active ? 'Active' : 'Inactive'}</span>
+      </div>
+      <div class="detail-body">
+        <div class="cie-diagram-container">
+          <svg viewBox="0 0 ${size} ${size}" class="cie-diagram">
+            <!-- Spectral locus outline -->
+            <path d="${locusPath}" fill="none" stroke="var(--border-color)" stroke-width="1.5" opacity="0.6"/>
+
+            <!-- RGB triangle (gamut) -->
+            <path d="${trianglePath}" fill="url(#gamutGradient)" fill-opacity="0.3" stroke="var(--accent-blue)" stroke-width="1.5"/>
+
+            <!-- Gradient definition -->
+            <defs>
+              <linearGradient id="gamutGradient" x1="0%" y1="100%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#0066ff"/>
+                <stop offset="50%" stop-color="#00ff66"/>
+                <stop offset="100%" stop-color="#ff3300"/>
+              </linearGradient>
+            </defs>
+
+            <!-- Red primary -->
+            <circle cx="${rx.toFixed(1)}" cy="${ry.toFixed(1)}" r="6" fill="#ff3300" stroke="white" stroke-width="1"/>
+            <text x="${rx.toFixed(1)}" y="${(ry - 10).toFixed(1)}" text-anchor="middle" class="cie-label" fill="var(--text-color)">R</text>
+
+            <!-- Green primary -->
+            <circle cx="${gx.toFixed(1)}" cy="${gy.toFixed(1)}" r="6" fill="#00cc44" stroke="white" stroke-width="1"/>
+            <text x="${(gx + 12).toFixed(1)}" y="${gy.toFixed(1)}" text-anchor="start" class="cie-label" fill="var(--text-color)">G</text>
+
+            <!-- Blue primary -->
+            <circle cx="${bx.toFixed(1)}" cy="${by.toFixed(1)}" r="6" fill="#0066ff" stroke="white" stroke-width="1"/>
+            <text x="${bx.toFixed(1)}" y="${(by + 15).toFixed(1)}" text-anchor="middle" class="cie-label" fill="var(--text-color)">B</text>
+
+            <!-- White point -->
+            <circle cx="${wx.toFixed(1)}" cy="${wy.toFixed(1)}" r="5" fill="white" stroke="var(--text-color)" stroke-width="1.5"/>
+            <text x="${(wx + 10).toFixed(1)}" y="${(wy - 5).toFixed(1)}" text-anchor="start" class="cie-label" fill="var(--text-color)">W</text>
+
+            ${adoptedNeutral && (neutral[0] !== white[0] || neutral[1] !== white[1]) ? `
+            <!-- Neutral point -->
+            <circle cx="${nx.toFixed(1)}" cy="${ny.toFixed(1)}" r="4" fill="none" stroke="var(--text-color)" stroke-width="1.5" stroke-dasharray="2,2"/>
+            <text x="${(nx + 10).toFixed(1)}" y="${(ny + 5).toFixed(1)}" text-anchor="start" class="cie-label" fill="var(--text-color)">N</text>
+            ` : ''}
+
+            <!-- Axis labels -->
+            <text x="${size / 2}" y="${size - 3}" text-anchor="middle" class="cie-axis-label" fill="var(--text-muted)">x</text>
+            <text x="8" y="${size / 2}" text-anchor="middle" class="cie-axis-label" fill="var(--text-muted)" transform="rotate(-90, 8, ${size / 2})">y</text>
+          </svg>
+        </div>
+
+        <div class="chromaticity-values">
+          <div class="chroma-row">
+            <span class="chroma-label" style="color: #ff3300">Red</span>
+            <span class="chroma-value">(${red[0].toFixed(4)}, ${red[1].toFixed(4)})</span>
+          </div>
+          <div class="chroma-row">
+            <span class="chroma-label" style="color: #00cc44">Green</span>
+            <span class="chroma-value">(${green[0].toFixed(4)}, ${green[1].toFixed(4)})</span>
+          </div>
+          <div class="chroma-row">
+            <span class="chroma-label" style="color: #0066ff">Blue</span>
+            <span class="chroma-value">(${blue[0].toFixed(4)}, ${blue[1].toFixed(4)})</span>
+          </div>
+          <div class="chroma-row">
+            <span class="chroma-label">White</span>
+            <span class="chroma-value">(${white[0].toFixed(4)}, ${white[1].toFixed(4)})</span>
+          </div>
+          ${adoptedNeutral ? `
+          <div class="chroma-row">
+            <span class="chroma-label">Neutral</span>
+            <span class="chroma-value">(${neutral[0].toFixed(4)}, ${neutral[1].toFixed(4)})</span>
+          </div>
+          ` : ''}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderComponentVisualizer(compName: string, comp: ComponentData): string {
+  switch (compName) {
+    case 'chromaticities':
+      return renderChromaticitiesVisualizer(comp);
+    default:
+      return '';
+  }
+}
+
 function renderProtocolVisualizer(obj: ObjectData): string {
   switch (obj.protocol) {
     case 'RVColor':
@@ -917,6 +1058,10 @@ export function renderDetailsPanel(obj: ObjectData, highlightComponent: string |
   `;
 
   for (const [compName, comp] of Object.entries(obj.components) as [string, ComponentData][]) {
+    // Add component-specific visualizer if available
+    const componentVisualizer = renderComponentVisualizer(compName, comp);
+    html += componentVisualizer;
+
     html += `
       <div class="detail-card" id="comp-${compName}">
         <div class="detail-header">

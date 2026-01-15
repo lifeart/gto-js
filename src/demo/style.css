@@ -3161,6 +3161,63 @@
       display: none;
     }
 
+    /* Chromaticities Visualizer */
+    .chromaticities-visualizer .detail-body {
+      display: flex;
+      gap: 24px;
+      align-items: flex-start;
+    }
+
+    .cie-diagram-container {
+      flex-shrink: 0;
+    }
+
+    .cie-diagram {
+      width: 180px;
+      height: 180px;
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-color);
+    }
+
+    .cie-label {
+      font-size: 11px;
+      font-weight: 600;
+      font-family: 'SF Mono', Monaco, monospace;
+    }
+
+    .cie-axis-label {
+      font-size: 10px;
+      font-family: 'SF Mono', Monaco, monospace;
+    }
+
+    .chromaticity-values {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .chroma-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 12px;
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-sm);
+    }
+
+    .chroma-label {
+      font-weight: 600;
+      font-size: 12px;
+    }
+
+    .chroma-value {
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
     /* Responsive */
     @media (max-width: 900px) {
       .sidebar {
