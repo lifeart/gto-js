@@ -19,6 +19,15 @@ npx serve .
 Then open http://localhost:8080
 
 **Features:**
+- **Protocol browser** - Objects grouped by protocol type with meaningful summaries:
+  - Session: FPS, frame range, matte settings
+  - Sources: file paths, resolution, frame ranges
+  - Groups: sequence/stack/layout modes and settings
+  - Color: exposure, contrast, saturation, LUT status, CDL
+  - Transform: translate, scale, rotate, flip/flop, lens warp
+  - Paint: stroke counts, text annotations per frame
+  - Pipelines: node chains for color/display/linearize
+  - Output: resolution, data type, audio settings
 - Hierarchical object browser with search
 - Property inspector with type badges and value previews
 - Media source viewer (paths, frame ranges, resolution)
