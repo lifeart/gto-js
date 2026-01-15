@@ -29,7 +29,10 @@ import {
   setTabSwitchCallback,
   selectAnnotationFrame,
   navigateAnnotationFrame,
-  toggleGhostFrames
+  toggleGhostFrames,
+  openPropertyEditor,
+  closePropertyEditor,
+  savePropertyValue
 } from './panels';
 
 // Export functions
@@ -143,6 +146,11 @@ function setupWindowGlobals(): void {
   window.selectAnnotationFrame = selectAnnotationFrame;
   window.navigateAnnotationFrame = navigateAnnotationFrame;
   window.toggleGhostFrames = toggleGhostFrames;
+
+  // Property editor functions
+  window.openPropertyEditor = openPropertyEditor;
+  window.closePropertyEditor = closePropertyEditor;
+  window.savePropertyValue = savePropertyValue;
 }
 
 // ============= Initialize Application =============

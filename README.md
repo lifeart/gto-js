@@ -27,9 +27,17 @@ Then open http://localhost:5173
   - Output: resolution, data type, audio settings
 - **Hierarchical object browser** with deep search (objects, components, properties)
 - **Property inspector** with type badges, value previews, and type filters
+- **Inline property editing** - Edit any property value directly in the UI:
+  - Vector editor for float[2]/[3]/[4] (XY, XYZ, XYZW fields)
+  - Toggle switch for boolean values
+  - JSON editor for arrays
+  - Changes reflected immediately in JSON export
 - **Media source viewer** (paths, frame ranges, resolution)
 - **Interactive timeline** - Click to change frame, drag to adjust range
-- **Annotation previews** (paint strokes, text)
+- **Annotation previews** (paint strokes, text with frame viewer)
+- **Protocol visualizers**:
+  - CIE chromaticity diagram for color spaces
+  - Lens warp grid visualization (barrel/pincushion distortion)
 - **Node connection graph** with zoom/pan controls
 - **Object comparison** - Compare two objects side by side with diff highlighting
 - **Deep linking** - URL hash navigation (`#object=name&tab=details`)
@@ -52,6 +60,7 @@ Then open http://localhost:5173
 | `↑/↓` | Navigate sidebar |
 | `Enter` | Select focused item |
 | `Esc` | Clear search/close modals |
+| `Ctrl/Cmd+Enter` | Save changes (in property editor) |
 
 ![GTO Session Viewer](https://img.shields.io/badge/GTO-Session%20Viewer-blue)
 

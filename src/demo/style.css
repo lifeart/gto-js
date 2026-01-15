@@ -2338,6 +2338,7 @@
       background: var(--bg-tertiary);
       border-radius: var(--radius-sm);
       border: 1px solid var(--border-color);
+      position: relative;
     }
 
     .graph-node.enhanced {
@@ -3296,6 +3297,240 @@
     .param-value.active {
       color: var(--accent-blue);
       font-weight: 600;
+    }
+
+    /* Edit Button */
+    .edit-btn {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 11px;
+      padding: 3px 8px;
+      margin-left: 8px;
+      border-radius: 4px;
+      opacity: 0;
+      transition: all 0.15s;
+      font-weight: 500;
+    }
+
+    tr:hover .edit-btn {
+      opacity: 1;
+    }
+
+    .edit-btn:hover {
+      color: var(--accent-blue);
+      border-color: var(--accent-blue);
+      background: var(--bg-card);
+    }
+
+    .edit-btn:focus {
+      outline: 2px solid var(--accent-blue);
+      outline-offset: 2px;
+    }
+
+    /* Property Editor Modal */
+    .property-editor {
+      width: 550px;
+    }
+
+    .modal-footer {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      border-color: var(--border-color);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-card);
+    }
+
+    .editor-info {
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .editor-path {
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .editor-type {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .editor-field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .editor-field label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .editor-input {
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-color);
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      font-size: 14px;
+      font-family: 'SF Mono', Monaco, monospace;
+      width: 100%;
+    }
+
+    .editor-input:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+    }
+
+    .editor-textarea {
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-color);
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      font-size: 13px;
+      font-family: 'SF Mono', Monaco, monospace;
+      width: 100%;
+      resize: vertical;
+      min-height: 120px;
+    }
+
+    .editor-textarea:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+    }
+
+    .editor-hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .editor-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      padding: 8px 0;
+    }
+
+    .editor-checkbox input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      accent-color: var(--accent-blue);
+    }
+
+    .editor-checkbox span {
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 14px;
+    }
+
+    .editor-input-container {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Vector Editor (for float[2], float[3], float[4]) */
+    .editor-vector {
+      display: flex;
+      gap: 12px;
+    }
+
+    .editor-vector-field {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .editor-vector-field label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .editor-vector-input {
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-color);
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      font-size: 14px;
+      font-family: 'SF Mono', Monaco, monospace;
+      width: 100%;
+    }
+
+    .editor-vector-input:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+    }
+
+    /* Boolean Toggle */
+    .editor-toggle {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      padding: 8px 0;
+    }
+
+    .editor-toggle input[type="checkbox"] {
+      position: relative;
+      width: 48px;
+      height: 24px;
+      appearance: none;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .editor-toggle input[type="checkbox"]::before {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 18px;
+      height: 18px;
+      background: var(--text-muted);
+      border-radius: 50%;
+      transition: all 0.2s;
+    }
+
+    .editor-toggle input[type="checkbox"]:checked {
+      background: var(--accent-blue);
+      border-color: var(--accent-blue);
+    }
+
+    .editor-toggle input[type="checkbox"]:checked::before {
+      left: 26px;
+      background: white;
+    }
+
+    .editor-toggle .toggle-label {
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 14px;
+      color: var(--text-primary);
     }
 
     /* Responsive */

@@ -1259,7 +1259,10 @@ export function renderDetailsPanel(obj: ObjectData, highlightComponent: string |
                   <td><strong>${propName}</strong></td>
                   <td><span class="type-badge ${prop.type}">${prop.type}${prop.width > 1 ? `[${prop.width}]` : ''}</span></td>
                   <td>${prop.size}</td>
-                  <td><span class="data-preview">${formatDataPreview(prop)}</span></td>
+                  <td>
+                    <span class="data-preview">${formatDataPreview(prop)}</span>
+                    <button class="edit-btn" onclick="openPropertyEditor('${escapeAttr(obj.name)}', '${escapeAttr(compName)}', '${escapeAttr(propName)}')" title="Edit ${propName}" aria-label="Edit ${propName}">Edit</button>
+                  </td>
                 </tr>
               `).join('')}
             </tbody>
@@ -2393,17 +2396,41 @@ export function renderGraphPanel(): void {
     return;
   }
 
-  const connections = (connObj.components.evaluation?.properties.connections?.data || []) as string[][];
+  const connectionsProp = connObj.components.evaluation?.properties.connections;
+  const connectionsData = connectionsProp?.data || [];
+  const connectionsWidth = connectionsProp?.width || 2;
   const topNodes = connObj.components.top?.properties.nodes?.data || [];
 
   // Build graph
   const nodes = new Set<string>();
   const edges: { from: string; to: string }[] = [];
 
-  for (const conn of connections) {
-    nodes.add(conn[0]);
-    nodes.add(conn[1]);
-    edges.push({ from: conn[0], to: conn[1] });
+  // Handle both nested array format and flat array format
+  // Nested: [["a", "b"], ["c", "d"]]
+  // Flat: ["a", "b", "c", "d"] with width=2
+  if (connectionsData.length > 0) {
+    if (Array.isArray(connectionsData[0])) {
+      // Nested array format
+      for (const conn of connectionsData as string[][]) {
+        if (conn[0] && conn[1]) {
+          nodes.add(conn[0]);
+          nodes.add(conn[1]);
+          edges.push({ from: conn[0], to: conn[1] });
+        }
+      }
+    } else {
+      // Flat array format - chunk by width
+      const flatData = connectionsData as string[];
+      for (let i = 0; i < flatData.length; i += connectionsWidth) {
+        const from = flatData[i];
+        const to = flatData[i + 1];
+        if (from && to) {
+          nodes.add(from);
+          nodes.add(to);
+          edges.push({ from, to });
+        }
+      }
+    }
   }
 
   // Hierarchical layout
@@ -2471,6 +2498,7 @@ export function renderGraphPanel(): void {
           </svg>
           ${Array.from(nodes).map(node => {
             const pos = nodePositions[node];
+            if (!pos) return '';
             const nodeType = getNodeType(node);
             const category = getProtocolCategory(node, gtoData);
             const obj = gtoData.objects.find(o => o.name === node);
@@ -2815,4 +2843,255 @@ export function renderAllPanels(): void {
   renderGraphPanel();
   renderJSONPanel();
   renderComparePanel();
+}
+
+// ============= Property Editor =============
+
+let currentEditContext: { objectName: string; compName: string; propName: string } | null = null;
+
+export function openPropertyEditor(objectName: string, compName: string, propName: string): void {
+  const gtoData = getGtoData();
+  if (!gtoData) return;
+
+  const obj = gtoData.objects.find(o => o.name === objectName);
+  if (!obj) return;
+
+  const comp = obj.components[compName];
+  if (!comp) return;
+
+  const prop = comp.properties[propName];
+  if (!prop) return;
+
+  currentEditContext = { objectName, compName, propName };
+
+  // Create or show modal
+  let modal = document.getElementById('property-editor-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'property-editor-modal';
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+      <div class="modal property-editor" role="dialog" aria-modal="true" aria-labelledby="editor-title">
+        <div class="modal-header">
+          <h3 id="editor-title">Edit Property</h3>
+          <button class="modal-close" onclick="closePropertyEditor()" aria-label="Close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="editor-info">
+            <div class="editor-path"></div>
+            <div class="editor-type"></div>
+          </div>
+          <div class="editor-field">
+            <label for="editor-value">Value:</label>
+            <div class="editor-input-container"></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="closePropertyEditor()">Cancel</button>
+          <button class="btn btn-primary" onclick="savePropertyValue()">Save Changes</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    // Close on backdrop click
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closePropertyEditor();
+    });
+
+    // Keyboard support
+    modal.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closePropertyEditor();
+      } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        savePropertyValue();
+      }
+    });
+  }
+
+  // Update modal content
+  const pathEl = modal.querySelector('.editor-path');
+  const typeEl = modal.querySelector('.editor-type');
+  const inputContainer = modal.querySelector('.editor-input-container');
+
+  if (pathEl) pathEl.textContent = `${objectName} → ${compName} → ${propName}`;
+  if (typeEl) typeEl.innerHTML = `<span class="type-badge ${prop.type}">${prop.type}${prop.width > 1 ? `[${prop.width}]` : ''}</span> (${prop.size} element${prop.size !== 1 ? 's' : ''})`;
+
+  if (inputContainer) {
+    inputContainer.innerHTML = renderPropertyInput(prop);
+  }
+
+  modal.classList.add('visible');
+}
+
+function renderPropertyInput(prop: PropertyData): string {
+  const data = prop.data;
+  const isArray = prop.size > 1;
+  const type = prop.type;
+  const width = prop.width;
+
+  if (type === 'string') {
+    if (isArray) {
+      // Multi-line textarea for string arrays
+      const value = (data as string[]).join('\n');
+      return `<textarea id="editor-value" class="editor-textarea" rows="8" placeholder="One value per line">${escapeHtml(value)}</textarea>
+              <div class="editor-hint">One string per line</div>`;
+    } else {
+      // Single input for single string
+      const value = data[0] as string || '';
+      return `<input type="text" id="editor-value" class="editor-input" value="${escapeAttr(value)}">`;
+    }
+  }
+
+  if (type === 'int' || type === 'byte' || type === 'short') {
+    if (isArray) {
+      const value = JSON.stringify(data, null, 2);
+      return `<textarea id="editor-value" class="editor-textarea" rows="8" placeholder="JSON array">${escapeHtml(value)}</textarea>
+              <div class="editor-hint">JSON array of integers, e.g. [1, 2, 3]</div>`;
+    } else {
+      const value = data[0] as number ?? 0;
+      return `<input type="number" id="editor-value" class="editor-input" value="${value}" step="1">`;
+    }
+  }
+
+  if (type === 'float' || type === 'double' || type === 'half') {
+    // Single vector value with width > 1 (e.g., float[3] for color/position)
+    if (!isArray && width > 1 && width <= 4) {
+      const vec = data[0] as number[] || new Array(width).fill(0);
+      const labels = width === 2 ? ['X', 'Y'] :
+                     width === 3 ? ['X', 'Y', 'Z'] :
+                     ['X', 'Y', 'Z', 'W'];
+      return `
+        <div class="editor-vector" data-width="${width}">
+          ${vec.map((v, i) => `
+            <div class="editor-vector-field">
+              <label>${labels[i]}</label>
+              <input type="number" class="editor-vector-input" data-index="${i}" value="${v}" step="any">
+            </div>
+          `).join('')}
+        </div>
+        <div class="editor-hint">${width === 3 ? 'XYZ vector (position, color RGB, normal)' : width === 4 ? 'XYZW vector (RGBA, quaternion)' : 'XY vector (UV coordinates)'}</div>`;
+    }
+    if (isArray) {
+      const value = JSON.stringify(data, null, 2);
+      return `<textarea id="editor-value" class="editor-textarea" rows="8" placeholder="JSON array">${escapeHtml(value)}</textarea>
+              <div class="editor-hint">JSON array of ${width > 1 ? `${width}D vectors` : 'numbers'}, e.g. ${width > 1 ? '[[1, 0, 0], [0, 1, 0]]' : '[1.0, 2.5, 3.14]'}</div>`;
+    } else {
+      const value = data[0] as number ?? 0;
+      return `<input type="number" id="editor-value" class="editor-input" value="${value}" step="any">`;
+    }
+  }
+
+  if (type === 'bool') {
+    const checked = data[0] ? 'checked' : '';
+    return `<label class="editor-toggle">
+              <input type="checkbox" id="editor-value" ${checked} onchange="this.nextElementSibling.textContent = this.checked ? 'Enabled' : 'Disabled'">
+              <span class="toggle-label">${data[0] ? 'Enabled' : 'Disabled'}</span>
+            </label>`;
+  }
+
+  // Fallback for unknown types: JSON editor
+  const value = JSON.stringify(data, null, 2);
+  return `<textarea id="editor-value" class="editor-textarea" rows="8">${escapeHtml(value)}</textarea>
+          <div class="editor-hint">JSON format</div>`;
+}
+
+export function closePropertyEditor(): void {
+  const modal = document.getElementById('property-editor-modal');
+  if (modal) {
+    modal.classList.remove('visible');
+  }
+  currentEditContext = null;
+}
+
+export function savePropertyValue(): void {
+  if (!currentEditContext) return;
+
+  const gtoData = getGtoData();
+  if (!gtoData) return;
+
+  const { objectName, compName, propName } = currentEditContext;
+  const obj = gtoData.objects.find(o => o.name === objectName);
+  if (!obj) return;
+
+  const comp = obj.components[compName];
+  if (!comp) return;
+
+  const prop = comp.properties[propName];
+  if (!prop) return;
+
+  try {
+    const newValue = parsePropertyValue(prop);
+    prop.data = newValue;
+    prop.size = Array.isArray(newValue) ? newValue.length : 1;
+
+    // Close modal
+    closePropertyEditor();
+
+    // Re-render the details panel to show updated value
+    renderDetailsPanel(obj);
+
+    // Also update JSON panel if visible
+    renderJSONPanel();
+
+  } catch (e) {
+    alert(`Invalid value: ${(e as Error).message}`);
+  }
+}
+
+function parsePropertyValue(prop: PropertyData): unknown[] {
+  const type = prop.type;
+  const isArray = prop.size > 1;
+  const width = prop.width;
+
+  // Check for vector editor
+  const vectorEditor = document.querySelector('.editor-vector') as HTMLElement | null;
+  if (vectorEditor && (type === 'float' || type === 'double' || type === 'half')) {
+    const inputs = vectorEditor.querySelectorAll('.editor-vector-input') as NodeListOf<HTMLInputElement>;
+    const vec = Array.from(inputs).map(inp => Number(inp.value) || 0);
+    return [vec];
+  }
+
+  const input = document.getElementById('editor-value') as HTMLInputElement | HTMLTextAreaElement;
+  if (!input) throw new Error('No input found');
+
+  if (type === 'string') {
+    if (isArray) {
+      // Split by newlines
+      return (input.value || '').split('\n').filter(s => s.length > 0);
+    } else {
+      return [input.value || ''];
+    }
+  }
+
+  if (type === 'int' || type === 'byte' || type === 'short') {
+    if (isArray) {
+      const parsed = JSON.parse(input.value || '[]');
+      if (!Array.isArray(parsed)) throw new Error('Expected an array');
+      return parsed.map(v => Math.round(Number(v)));
+    } else {
+      return [Math.round(Number(input.value) || 0)];
+    }
+  }
+
+  if (type === 'float' || type === 'double' || type === 'half') {
+    if (isArray) {
+      const parsed = JSON.parse(input.value || '[]');
+      if (!Array.isArray(parsed)) throw new Error('Expected an array');
+      return parsed.map(v => {
+        if (Array.isArray(v)) return v.map(Number);
+        return Number(v);
+      });
+    } else {
+      return [Number(input.value) || 0];
+    }
+  }
+
+  if (type === 'bool') {
+    return [(input as HTMLInputElement).checked ? 1 : 0];
+  }
+
+  // Fallback: parse as JSON
+  const parsed = JSON.parse(input.value || '[]');
+  return Array.isArray(parsed) ? parsed : [parsed];
 }

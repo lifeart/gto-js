@@ -56,4 +56,9 @@ interface Window {
   selectAnnotationFrame: (frame: number) => void;
   navigateAnnotationFrame: (delta: number) => void;
   toggleGhostFrames: (enabled: boolean) => void;
+
+  // Property editor functions
+  openPropertyEditor: (objectName: string, compName: string, propName: string) => void;
+  closePropertyEditor: () => void;
+  savePropertyValue: () => void;
 }
