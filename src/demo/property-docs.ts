@@ -26,54 +26,54 @@ export interface ProtocolDoc {
 export const PROPERTY_DOCS: Record<string, ProtocolDoc> = {
   // ============= RVColor =============
   'RVColor': {
-    description: 'Color correction node: applies exposure, contrast, saturation, gamma, and CDL adjustments',
+    description: 'Color correction node: applies exposure, contrast, saturation, gamma, and CDL adjustments. Takes images as input and produces images with hue, saturation, exposure, and contrast potentially changed. All color corrections exclude alpha channel processing.',
     components: {
       'color': {
-        description: 'Primary color correction controls',
+        description: 'Primary color correction controls - operations applied to RGB channels only',
         properties: {
-          'normalize': { description: 'Normalize incoming pixels to [0,1] range', type: 'int', default: 0 },
-          'invert': { description: 'Apply inversion matrix to image (negative)', type: 'int', default: 0 },
-          'gamma': { description: 'Per-channel gamma adjustment (power curve)', type: 'float[3]', default: [1.0, 1.0, 1.0] },
-          'offset': { description: 'Per-channel color bias (added to RGB)', type: 'float[3]', default: [0, 0, 0] },
-          'scale': { description: 'Scale each RGB channel independently (multiplier)', type: 'float[3]' },
-          'exposure': { description: 'Relative exposure adjustment in stops (f-stops)', type: 'float[3]', default: [0, 0, 0] },
-          'contrast': { description: 'Per-channel contrast control around midpoint', type: 'float[3]' },
-          'saturation': { description: 'Relative saturation adjustment (1.0 = unchanged)', type: 'float', default: 1.0 },
-          'hue': { description: 'Hue rotation in radians around color wheel', type: 'float', default: 0 },
-          'active': { description: 'Toggle color correction on/off', type: 'int', default: 1 }
+          'normalize': { description: 'Normalize incoming pixels to [0,1] range before processing', type: 'int', default: 0 },
+          'invert': { description: 'Apply inversion matrix to image (creates negative)', type: 'int', default: 0 },
+          'gamma': { description: 'Per-channel gamma adjustment using power curve: out = in^gamma', type: 'float[3]', default: [1.0, 1.0, 1.0], range: '0.1 to 4.0 typical' },
+          'offset': { description: 'Per-channel color bias added to RGB after other operations', type: 'float[3]', default: [0, 0, 0], range: '-1.0 to 1.0' },
+          'scale': { description: 'Scale each RGB channel independently (gain multiplier)', type: 'float[3]', default: [1, 1, 1], range: '0.0 to 4.0' },
+          'exposure': { description: 'Relative exposure in stops. Formula: out = in × 2^exposure. Each stop doubles/halves brightness', type: 'float[3]', default: [0, 0, 0], range: '-10 to +10 stops' },
+          'contrast': { description: 'Per-channel contrast around 0.18 midpoint using matrix with offset compensation', type: 'float[3]', default: [1, 1, 1], range: '0.0 to 4.0' },
+          'saturation': { description: 'Relative saturation via matrix using Rec.709 luma weights (0.2126, 0.7152, 0.0722)', type: 'float', default: 1.0, range: '0.0 (grayscale) to 4.0' },
+          'hue': { description: 'Luminance-preserving hue rotation in radians around color wheel', type: 'float', default: 0, range: '-π to +π' },
+          'active': { description: 'Toggle all color correction on/off (1=enabled, 0=disabled)', type: 'int', default: 1 }
         }
       },
       'CDL': {
-        description: 'ASC Color Decision List (CDL) controls for interchange with color grading systems',
+        description: 'ASC Color Decision List (CDL) for interchange with color grading systems. Applied in order: slope → offset → power → saturation. Formula: out = clamp((in × slope + offset)^power)',
         properties: {
-          'slope': { description: 'CDL slope (gain) - multiplies RGB values', type: 'float[3]', default: [1, 1, 1] },
-          'offset': { description: 'CDL offset - adds to RGB values after slope', type: 'float[3]', default: [0, 0, 0] },
-          'power': { description: 'CDL power (gamma) - raises RGB to this power', type: 'float[3]', default: [1, 1, 1] },
-          'saturation': { description: 'CDL saturation control', type: 'float', default: 1.0 },
-          'noClamp': { description: 'Remove CDL equation clamping for HDR workflows', type: 'int', default: 0 },
+          'slope': { description: 'CDL slope (gain) - multiplies RGB values first in the CDL chain', type: 'float[3]', default: [1, 1, 1], range: '0.0 to 4.0' },
+          'offset': { description: 'CDL offset - added to RGB after slope multiplication', type: 'float[3]', default: [0, 0, 0], range: '-1.0 to 1.0' },
+          'power': { description: 'CDL power (gamma) - raises RGB to this power after slope+offset', type: 'float[3]', default: [1, 1, 1], range: '0.1 to 4.0' },
+          'saturation': { description: 'CDL saturation applied after slope/offset/power', type: 'float', default: 1.0, range: '0.0 to 4.0' },
+          'noClamp': { description: 'Remove CDL equation clamping at 0 and 1 for HDR/wide-gamut workflows', type: 'int', default: 0 },
           'active': { description: 'Enable CDL processing', type: 'int', default: 0 }
         }
       },
       'luminanceLUT': {
-        description: 'Luminance-based lookup table for tonal adjustments',
+        description: 'Luminance-based 1D lookup table for tonal adjustments (curves)',
         properties: {
-          'lut': { description: 'Luminance lookup table values', type: 'float[]' },
-          'max': { description: 'Output scale for luminance LUT', type: 'float' },
+          'lut': { description: 'Luminance lookup table float array', type: 'float[]' },
+          'max': { description: 'Output scale factor for luminance LUT', type: 'float', default: 1.0 },
           'active': { description: 'Enable luminance LUT processing', type: 'int', default: 0 }
         }
       },
       'lut': {
-        description: '3D or channel LUT for color transformation',
+        description: '3D LUT or channel (1D) LUT for color transformation. Pre-cache LUT results go into cache; subsequent LUTs applied in hardware.',
         properties: {
-          'lut': { description: '3D LUT or channel LUT data', type: 'float[]' },
-          'prelut': { description: 'Channel pre-LUT (shaper) applied before 3D LUT', type: 'float[]' },
-          'inMatrix': { description: 'Input color matrix applied before LUT', type: 'float[16]' },
-          'outMatrix': { description: 'Output color matrix applied after LUT', type: 'float[16]' },
-          'file': { description: 'Path to LUT file loaded when session opens', type: 'string' },
-          'name': { description: 'Display name for this LUT', type: 'string' },
-          'size': { description: 'LUT dimensions (1=channel LUT, 3=3D cube)', type: 'int' },
-          'type': { description: 'LUT type identifier', type: 'string' },
-          'active': { description: 'Enable LUT processing', type: 'int', default: 0 }
+          'lut': { description: '3D LUT data (size³×3 floats) or channel LUT data. Size must be divisible by 3', type: 'float[]' },
+          'prelut': { description: 'Per-channel pre-LUT (shaper) applied before 3D LUT for log encoding', type: 'float[]' },
+          'inMatrix': { description: '4×4 input color matrix applied before LUT (row-major)', type: 'float[16]' },
+          'outMatrix': { description: '4×4 output color matrix applied after LUT (row-major)', type: 'float[16]' },
+          'file': { description: 'Path to LUT file loaded when session opens. Supports: .csp, .3dl, .cube, .rv3dlut, .rvchlut', type: 'string' },
+          'name': { description: 'Display name for this LUT in UI', type: 'string' },
+          'size': { description: 'LUT dimensions: 1=channel (1D) LUT, 3=3D cube LUT', type: 'int' },
+          'type': { description: 'LUT type identifier (Luminance, Channel, 3D)', type: 'string' },
+          'active': { description: 'Enable LUT processing (non-zero = active)', type: 'int', default: 0 }
         }
       }
     }
@@ -280,43 +280,55 @@ export const PROPERTY_DOCS: Record<string, ProtocolDoc> = {
 
   // ============= RVPaint =============
   'RVPaint': {
-    description: 'Paint/annotation node: pen strokes, text overlays, per-frame drawings',
+    description: 'Paint/annotation node: stores per-frame annotation data including freehand strokes and text. Annotations indexed by id.frame.user. Coordinates are normalized: (0,0)=bottom-left, (1,1)=top-right. Multiply by image size to convert to pixels.',
     components: {
       'paint': {
-        description: 'Paint system state',
+        description: 'Global paint system state and counters',
         properties: {
-          'nextId': { description: 'Counter for unique annotation IDs', type: 'int' },
-          'nextAnnotationId': { description: 'Reserved annotation ID counter', type: 'int' },
-          'show': { description: 'Toggle paint visibility on/off', type: 'int', default: 1 },
-          'exclude': { description: 'Excluded annotation tags', type: 'string' },
-          'include': { description: 'Included annotation tags', type: 'string' }
+          'nextId': { description: 'Counter for generating unique stroke/annotation identifiers', type: 'int' },
+          'nextAnnotationId': { description: 'Reserved annotation ID counter (unused)', type: 'int' },
+          'show': { description: 'Toggle all paint/strokes visibility (1=show, 0=hide)', type: 'int', default: 1 },
+          'exclude': { description: 'Annotation tags to exclude from display', type: 'string' },
+          'include': { description: 'Annotation tags to include in display', type: 'string' }
+        }
+      },
+      'frame': {
+        description: 'Per-frame annotation ordering (dynamic component: frame:[frameNum])',
+        properties: {
+          'order': { description: 'Annotation order stack - rendering order for annotations on this frame', type: 'string[]' }
         }
       },
       // Dynamic pen components: pen:[id]:[frame]:[user]
       'pen': {
-        description: 'Pen stroke properties (dynamic component per stroke)',
+        description: 'Pen stroke properties. Dynamic component named pen:id:frame:user where id=unique identifier, frame=frame number, user=creator',
         properties: {
-          'color': { description: 'Stroke color RGBA (0-1 range)', type: 'float[4]' },
-          'width': { description: 'Stroke width at each point', type: 'float[]' },
-          'brush': { description: 'Brush style: "gauss" (soft) or "circle" (hard)', type: 'string', default: 'gauss' },
-          'points': { description: 'Stroke points in normalized device coordinates', type: 'float[2][]' },
-          'join': { description: 'Line join style: 0=miter, 1=round, 2=bevel', type: 'int', default: 1 },
-          'cap': { description: 'Line cap style: 0=butt, 1=round, 2=square', type: 'int', default: 1 },
-          'mode': { description: 'Draw mode: 0=over (draw), 1=erase', type: 'int', default: 0 },
-          'startFrame': { description: 'First frame to display this stroke', type: 'int' },
-          'duration': { description: 'Number of frames to display stroke', type: 'int' }
+          'color': { description: 'Stroke color RGBA in 0-1 range', type: 'float[4]' },
+          'width': { description: 'Stroke width - single value or array of widths per point for pressure sensitivity', type: 'float[]' },
+          'brush': { description: 'Brush type: 0=Gaussian (soft edges), 1=Circle (hard edges)', type: 'int', default: 0 },
+          'points': { description: 'Array of (x,y) coordinate pairs in normalized [0,1] coordinates. (0,0)=bottom-left, (1,1)=top-right', type: 'float[2][]' },
+          'join': { description: 'Line join style: 0=NoJoin, 1=Bevel, 2=Miter, 3=Round', type: 'int', default: 3 },
+          'cap': { description: 'Line cap style: 0=NoCap, 1=Square, 2=Round', type: 'int', default: 2 },
+          'splat': { description: 'Use Gaussian splats for rendering (soft brush effect)', type: 'int', default: 0 },
+          'mode': { description: 'Composition mode: 0=draw over (normal), 1=erase', type: 'int', default: 0 },
+          'startFrame': { description: 'First frame to display stroke. -1=display from current frame', type: 'int' },
+          'duration': { description: 'Number of frames to display stroke. -1=visible on all subsequent frames', type: 'int', default: -1 }
         }
       },
       // Dynamic text components: text:[id]:[frame]:[user]
       'text': {
-        description: 'Text annotation properties (dynamic component per text)',
+        description: 'Text annotation properties. Dynamic component named text:id:frame:user',
         properties: {
-          'position': { description: 'Text position in normalized coordinates', type: 'float[2]' },
-          'color': { description: 'Text color RGBA (0-1 range)', type: 'float[4]' },
-          'size': { description: 'Text size (font scale)', type: 'float' },
-          'text': { description: 'Text content string', type: 'string' },
-          'startFrame': { description: 'First frame to display this text', type: 'int' },
-          'duration': { description: 'Number of frames to display text', type: 'int' }
+          'position': { description: 'Text location (x,y) in normalized [0,1] coordinates. Can be pixel-based if pixelScale set in RVOverlay', type: 'float[2]' },
+          'color': { description: 'Text color RGBA in 0-1 range', type: 'float[4]' },
+          'spacing': { description: 'Character spacing multiplier', type: 'float', default: 1.0 },
+          'size': { description: 'Text point size', type: 'float' },
+          'scale': { description: 'Text scale multiplier', type: 'float', default: 1.0 },
+          'rotation': { description: 'Text rotation in degrees', type: 'float', default: 0 },
+          'font': { description: 'Path to TrueType/OpenType font file. Default: "Luxi Serif"', type: 'string' },
+          'text': { description: 'Text content string to display', type: 'string' },
+          'origin': { description: 'Text alignment: 0=TopLeft, 1=TopCenter, 2=TopRight, 3=CenterLeft, 4=Center, 5=CenterRight, 6=BottomLeft, 7=BottomCenter, 8=BottomRight', type: 'int', default: 0 },
+          'startFrame': { description: 'First frame to display text', type: 'int' },
+          'duration': { description: 'Number of frames to display text. -1=visible on all subsequent frames', type: 'int', default: -1 }
         }
       }
     }
@@ -559,15 +571,24 @@ export const PROPERTY_DOCS: Record<string, ProtocolDoc> = {
 
   // ============= RVDisplayStereo =============
   'RVDisplayStereo': {
-    description: 'Display stereo node: stereo mode selection and eye offset',
+    description: 'Display stereo node: controls stereo viewing mode for the first two image layers. Supports anaglyph, side-by-side, hardware stereo, and other display modes adaptable to various hardware.',
     components: {
       'stereo': {
-        description: 'Stereo display settings',
+        description: 'Stereo display settings - controls how left/right eye images are presented',
         properties: {
-          'type': { description: 'Stereo mode: off, anaglyph, side-by-side, over-under, checkerboard, etc.', type: 'string', default: 'off' },
-          'swap': { description: 'Swap left and right eyes', type: 'int', default: 0 },
-          'relativeOffset': { description: 'Relative offset between eyes for convergence', type: 'float', default: 0 },
-          'rightOffset': { description: 'Right eye offset', type: 'float[2]' }
+          'type': { description: 'Stereo viewing mode: off, anaglyph (red/cyan), luminance-anaglyph (grayscale), side-by-side, mirror, over-under, checker (DLP), scanline (LCD), hardware (shutter glasses)', type: 'string', default: 'off' },
+          'swap': { description: 'Swap left and right eyes - useful when stereo appears inverted', type: 'int', default: 0 },
+          'relativeOffset': { description: 'Horizontal separation between eyes as % of image width. Controls fusion depth - objects at fusion depth appear at screen depth', type: 'float', default: 0, range: '-0.1 to 0.1' },
+          'rightOffset': { description: 'Absolute right eye offset [x, y] for fine-tuning convergence', type: 'float[2]', default: [0, 0] }
+        }
+      },
+      'rightTransform': {
+        description: 'Independent transform controls for right eye image (for projection alignment)',
+        properties: {
+          'flip': { description: 'Vertical flip of right eye image', type: 'int', default: 0 },
+          'flop': { description: 'Horizontal flip of right eye image', type: 'int', default: 0 },
+          'rotate': { description: 'Rotation of right eye in degrees', type: 'float', default: 0 },
+          'translate': { description: 'Translation of right eye [x, y]', type: 'float[2]', default: [0, 0] }
         }
       }
     }
@@ -575,13 +596,23 @@ export const PROPERTY_DOCS: Record<string, ProtocolDoc> = {
 
   // ============= RVSourceStereo =============
   'RVSourceStereo': {
-    description: 'Source stereo node: per-source stereo configuration',
+    description: 'Source stereo node: per-source stereo configuration. Used when individual sources need stereo adjustments independent of global display settings.',
     components: {
       'stereo': {
-        description: 'Source stereo settings',
+        description: 'Per-source stereo settings',
         properties: {
-          'swap': { description: 'Swap left and right eyes for this source', type: 'int', default: 0 },
-          'relativeOffset': { description: 'Relative offset between eyes', type: 'float', default: 0 }
+          'swap': { description: 'Swap left and right eyes for this specific source', type: 'int', default: 0 },
+          'relativeOffset': { description: 'Source-specific eye separation as % of image width', type: 'float', default: 0, range: '-0.1 to 0.1' },
+          'rightOffset': { description: 'Source-specific right eye offset [x, y]', type: 'float[2]', default: [0, 0] }
+        }
+      },
+      'rightTransform': {
+        description: 'Per-source right eye transform for alignment',
+        properties: {
+          'flip': { description: 'Vertical flip of right eye', type: 'int', default: 0 },
+          'flop': { description: 'Horizontal flip of right eye', type: 'int', default: 0 },
+          'rotate': { description: 'Rotation of right eye in degrees', type: 'float', default: 0 },
+          'translate': { description: 'Translation of right eye [x, y]', type: 'float[2]', default: [0, 0] }
         }
       }
     }
@@ -589,19 +620,19 @@ export const PROPERTY_DOCS: Record<string, ProtocolDoc> = {
 
   // ============= RVCDL =============
   'RVCDL': {
-    description: 'CDL node: ASC Color Decision List from CCC/CC/CDL files',
+    description: 'CDL node: ASC Color Decision List from CCC/CC/CDL files. Can be applied at File level (before linearization) or Look level (after linearization). Supports .cdl, .cc, and .ccc file formats.',
     components: {
       'node': {
-        description: 'CDL node settings',
+        description: 'CDL node settings - ASC-CDL formula: out = clamp((in × slope + offset)^power × saturation_matrix)',
         properties: {
           'active': { description: 'Enable CDL processing', type: 'int', default: 1 },
-          'colorspace': { description: 'Working colorspace: rec709, aces, etc.', type: 'string', default: 'rec709' },
-          'file': { description: 'Path to CDL file', type: 'string' },
-          'slope': { description: 'CDL slope (gain) per channel', type: 'float[3]', default: [1, 1, 1] },
-          'offset': { description: 'CDL offset per channel', type: 'float[3]', default: [0, 0, 0] },
-          'power': { description: 'CDL power (gamma) per channel', type: 'float[3]', default: [1, 1, 1] },
-          'saturation': { description: 'CDL saturation', type: 'float', default: 1.0 },
-          'noClamp': { description: 'Disable CDL value clamping for HDR', type: 'int', default: 0 }
+          'colorspace': { description: 'Working colorspace for CDL application: rec709, aces, aceslog', type: 'string', default: 'rec709' },
+          'file': { description: 'Path to CDL file (.cdl, .cc, or .ccc). First Color Correction in CCC files is used', type: 'string' },
+          'slope': { description: 'CDL slope (gain) per RGB channel - multiplies input first', type: 'float[3]', default: [1, 1, 1], range: '0.0 to 4.0' },
+          'offset': { description: 'CDL offset per RGB channel - added after slope', type: 'float[3]', default: [0, 0, 0], range: '-1.0 to 1.0' },
+          'power': { description: 'CDL power (gamma) per RGB channel - applied after slope+offset', type: 'float[3]', default: [1, 1, 1], range: '0.1 to 4.0' },
+          'saturation': { description: 'CDL saturation multiplier applied last', type: 'float', default: 1.0, range: '0.0 to 4.0' },
+          'noClamp': { description: 'Skip clamping at 0 and 1 for HDR/wide-gamut workflows', type: 'int', default: 0 }
         }
       }
     }
@@ -609,13 +640,13 @@ export const PROPERTY_DOCS: Record<string, ProtocolDoc> = {
 
   // ============= RVDispTransform2D =============
   'RVDispTransform2D': {
-    description: 'Display transform 2D: pan/zoom in viewer',
+    description: 'Display transform 2D: interactive pan/zoom controls for the viewer window',
     components: {
       'transform': {
-        description: 'Display transformation',
+        description: 'Interactive display transformation (not saved to session)',
         properties: {
-          'translate': { description: 'Pan offset in normalized coordinates', type: 'float[2]', default: [0, 0] },
-          'scale': { description: 'Zoom factor', type: 'float[2]', default: [1, 1] }
+          'translate': { description: 'Pan offset in normalized device coordinates', type: 'float[2]', default: [0, 0] },
+          'scale': { description: 'Zoom factor [x, y] - 1.0 = 100%, 2.0 = 200%', type: 'float[2]', default: [1, 1] }
         }
       }
     }
@@ -623,12 +654,72 @@ export const PROPERTY_DOCS: Record<string, ProtocolDoc> = {
 
   // ============= OCIO Nodes =============
   'OCIO': {
-    description: 'OpenColorIO node: color space transforms using OCIO config',
+    description: 'OpenColorIO node: software library for cross-application color consistency. Provides color space conversion across RV display, look, viewing, linearize, and color pipelines. Supports OCIO v2 with legacy v1 API.',
     components: {
       'ocio': {
-        description: 'OCIO settings',
+        description: 'OCIO generic settings - usable as top-level user node for secondary color correction',
         properties: {
+          'function': { description: 'OCIO function type: color, look, or display', type: 'string' },
           'active': { description: 'Enable OCIO processing', type: 'int', default: 1 },
+          'inColorSpace': { description: 'Input color space name from OCIO config', type: 'string' },
+          'lut3DSize': { description: '3D LUT cube size for baking transforms', type: 'int', default: 32, range: '16 to 64' }
+        }
+      },
+      'ocio_color': {
+        description: 'OCIO color space conversion settings',
+        properties: {
+          'outColorSpace': { description: 'Output color space name for color function', type: 'string' }
+        }
+      },
+      'ocio_context': {
+        description: 'OCIO context variables - string properties become name/value pairs for OCIO config',
+        properties: {
+          'name': { description: 'Context variable name/value pairs for OCIO environment', type: 'string' }
+        }
+      }
+    }
+  },
+
+  // ============= OCIOFile =============
+  'OCIOFile': {
+    description: 'OCIO File node: converts between input and output color spaces using OCIO configuration',
+    components: {
+      'ocio': {
+        description: 'OCIO file conversion settings',
+        properties: {
+          'active': { description: 'Enable OCIO file processing', type: 'int', default: 1 },
+          'inColorSpace': { description: 'Input color space name', type: 'string' },
+          'outColorSpace': { description: 'Output color space name', type: 'string' },
+          'lut3DSize': { description: '3D LUT cube size', type: 'int', default: 32 }
+        }
+      }
+    }
+  },
+
+  'OCIODisplay': {
+    description: 'OCIO Display node: handles display-specific color correction using OCIO display and view transforms',
+    components: {
+      'ocio': {
+        description: 'OCIO display settings',
+        properties: {
+          'active': { description: 'Enable OCIO display processing', type: 'int', default: 1 },
+          'display': { description: 'OCIO display device name (e.g., sRGB, Rec709, ACES)', type: 'string' },
+          'view': { description: 'OCIO view transform name (e.g., Film, Raw, Log)', type: 'string' },
+          'lut3DSize': { description: '3D LUT cube size for display transform', type: 'int', default: 32 }
+        }
+      }
+    }
+  },
+
+  'OCIOLook': {
+    description: 'OCIO Look node: applies creative look transforms defined in OCIO configuration for artistic color grading',
+    components: {
+      'ocio': {
+        description: 'OCIO look settings',
+        properties: {
+          'active': { description: 'Enable OCIO look processing', type: 'int', default: 1 },
+          'look': { description: 'OCIO command string for looks - name from OCIO config', type: 'string' },
+          'direction': { description: 'Look direction: 0=forward, 1=inverse', type: 'int', default: 0 },
           'inSpace': { description: 'Input color space name', type: 'string' },
           'outSpace': { description: 'Output color space name', type: 'string' },
           'lut3DSize': { description: '3D LUT cube size', type: 'int', default: 32 }
@@ -637,44 +728,14 @@ export const PROPERTY_DOCS: Record<string, ProtocolDoc> = {
     }
   },
 
-  'OCIODisplay': {
-    description: 'OCIO Display node: display-specific color transforms',
-    components: {
-      'ocio': {
-        description: 'OCIO display settings',
-        properties: {
-          'active': { description: 'Enable OCIO display processing', type: 'int', default: 1 },
-          'display': { description: 'Display device name', type: 'string' },
-          'view': { description: 'View transform name', type: 'string' },
-          'lut3DSize': { description: '3D LUT cube size', type: 'int', default: 32 }
-        }
-      }
-    }
-  },
-
-  'OCIOLook': {
-    description: 'OCIO Look node: creative look transforms',
-    components: {
-      'ocio': {
-        description: 'OCIO look settings',
-        properties: {
-          'active': { description: 'Enable OCIO look', type: 'int', default: 1 },
-          'look': { description: 'Look name from OCIO config', type: 'string' },
-          'inSpace': { description: 'Input color space', type: 'string' },
-          'outSpace': { description: 'Output color space', type: 'string' }
-        }
-      }
-    }
-  },
-
   // ============= RVCache =============
   'RVCache': {
-    description: 'Cache node: image caching with optional downsampling',
+    description: 'Cache node: placeholder representing the image cache. Pre-cache LUT is applied in software and results go into cache for playback performance.',
     components: {
       'render': {
-        description: 'Cache render settings',
+        description: 'Cache render settings - controls quality vs. memory tradeoff',
         properties: {
-          'downSampling': { description: 'Downsample factor for cache (1=full res, 2=half, etc)', type: 'int', default: 1 }
+          'downSampling': { description: 'Downsample factor for cache: 1=full resolution, 2=half res, 4=quarter res. Reduces memory usage', type: 'int', default: 1 }
         }
       }
     }
@@ -682,12 +743,12 @@ export const PROPERTY_DOCS: Record<string, ProtocolDoc> = {
 
   // ============= RVChannelMap =============
   'RVChannelMap': {
-    description: 'Channel map node: reorder or select color channels',
+    description: 'Channel map node: remaps image channels by reordering or selecting specific channels. When channels list is empty, image passes through unchanged.',
     components: {
       'format': {
-        description: 'Channel format settings',
+        description: 'Channel format/remapping settings',
         properties: {
-          'channels': { description: 'Channel names to select/reorder', type: 'string[]' }
+          'channels': { description: 'List of channel names to keep and reorder (e.g., ["R", "G", "B"] or ["A", "R", "G", "B"])', type: 'string[]' }
         }
       }
     }
@@ -695,14 +756,48 @@ export const PROPERTY_DOCS: Record<string, ProtocolDoc> = {
 
   // ============= RVOverlay =============
   'RVOverlay': {
-    description: 'Overlay node: rectangles and text overlays on source',
+    description: 'Overlay node: provides mechanism to overlay rectangles, text, and matte windows over sources. Supports per-source mattes independent of global session matte.',
     components: {
       'overlay': {
-        description: 'Overlay settings',
+        description: 'Global overlay settings',
         properties: {
-          'nextRectId': { description: 'Counter for unique rectangle IDs', type: 'int' },
-          'nextTextId': { description: 'Counter for unique text IDs', type: 'int' },
-          'show': { description: 'Toggle overlay visibility', type: 'int', default: 1 }
+          'nextRectId': { description: 'Counter for generating unique rectangle IDs', type: 'int' },
+          'nextTextId': { description: 'Counter for generating unique text IDs', type: 'int' },
+          'show': { description: 'Toggle all overlay elements visibility (1=show, 0=hide)', type: 'int', default: 1 }
+        }
+      },
+      'matte': {
+        description: 'Per-source matte settings (local matte independent of global session matte)',
+        properties: {
+          'show': { description: 'Toggle local matte visibility', type: 'int', default: 0 },
+          'aspect': { description: 'Local matte aspect ratio (e.g., 2.35 for cinemascope)', type: 'float' },
+          'opacity': { description: 'Matte opacity (0=transparent, 1=opaque black)', type: 'float', default: 1 },
+          'heightVisible': { description: 'Fraction of source height visible through matte (0-1)', type: 'float' },
+          'centerPoint': { description: 'Matte center in normalized coordinates [x, y]', type: 'float[2]' }
+        }
+      },
+      'rect': {
+        description: 'Rectangle overlay entries (dynamic components: rect:id)',
+        properties: {
+          'color': { description: 'Rectangle outline/fill color RGBA', type: 'float[4]' },
+          'width': { description: 'Rectangle width', type: 'float' },
+          'height': { description: 'Rectangle height', type: 'float' },
+          'position': { description: 'Rectangle position [x, y] in normalized coords', type: 'float[2]' },
+          'active': { description: 'Toggle this rectangle on/off', type: 'int', default: 1 },
+          'eye': { description: 'Stereo eye assignment for this rectangle', type: 'int' }
+        }
+      },
+      'text': {
+        description: 'Text overlay entries (dynamic components: text:id)',
+        properties: {
+          'pixelScale': { description: 'When non-zero, position is interpreted as pixel coordinates', type: 'float', default: 0 },
+          'position': { description: 'Text position [x, y] - normalized or pixel coords based on pixelScale', type: 'float[2]' },
+          'color': { description: 'Text color RGBA', type: 'float[4]' },
+          'spacing': { description: 'Character spacing', type: 'float' },
+          'size': { description: 'Text font size', type: 'float' },
+          'scale': { description: 'Text scale factor', type: 'float' },
+          'rotation': { description: 'Text rotation in degrees', type: 'float' },
+          'text': { description: 'Text content string', type: 'string' }
         }
       }
     }
