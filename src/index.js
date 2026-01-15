@@ -59,6 +59,9 @@ export { Writer, SimpleWriter } from './writer.js';
 // Builder
 export { GTOBuilder, polygon, transform } from './builder.js';
 
+// DTO (Data Transfer Object)
+export { GTODTO, ObjectDTO, ComponentDTO, PropertyDTO, ObjectCollection } from './dto.js';
+
 // Utilities
 export {
   halfToFloat,

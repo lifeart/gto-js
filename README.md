@@ -40,6 +40,7 @@ npm install gto
 - **Reader** - Parse `.rv` text files with callback-based or simple API
 - **Writer** - Generate `.rv` text files programmatically
 - **Builder** - Fluent API for constructing GTO data structures
+- **DTO** - Query and filter parsed data with null-safe chaining
 - **Round-trip support** - Read and write files without data loss
 - **Full type support** - int, float, double, string, byte, short, and more
 
@@ -276,6 +277,122 @@ const xform = transform('myTransform', 1)
   .build();
 ```
 
+### GTODTO
+
+Query and filter parsed GTO data with null-safe chaining:
+
+```javascript
+import { SimpleReader, GTODTO } from 'gto';
+
+const reader = new SimpleReader();
+reader.open(fileContent);
+const dto = new GTODTO(reader.result);
+
+// Get property value with safe chaining
+const fps = dto.object('rv').component('session').property('fps').value();
+
+// Shorthand syntax
+const currentFrame = dto.object('rv').prop('session', 'currentFrame');
+
+// Filter by protocol
+const sources = dto.byProtocol('RVFileSource');
+const moviePaths = sources.map(s => s.component('media').prop('movie'));
+
+// Filter by name pattern
+const sourceObjects = dto.byName(/^source/);
+
+// Safe chaining (returns null, never throws)
+const missing = dto.object('nonexistent').component('nope').prop('value');
+// missing === null
+```
+
+**GTODTO methods:**
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `object(name)` | ObjectDTO | Get object by exact name |
+| `objects()` | ObjectCollection | Get all objects |
+| `byProtocol(protocol)` | ObjectCollection | Filter by protocol |
+| `byName(pattern)` | ObjectCollection | Filter by name (string or regex) |
+| `protocols()` | string[] | List unique protocols |
+| `groupByProtocol()` | Map | Group objects by protocol |
+| `find(predicate)` | ObjectDTO | Find first matching object |
+| `filter(predicate)` | ObjectCollection | Filter objects |
+
+**ObjectDTO methods:**
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `component(name)` | ComponentDTO | Get component by name |
+| `prop(comp, prop)` | any | Shorthand for component().property().value() |
+| `components()` | ComponentDTO[] | Get all components |
+| `componentsByPattern(regex)` | ComponentDTO[] | Filter components by name |
+| `hasComponent(name)` | boolean | Check if component exists |
+| `isProtocol(protocol)` | boolean | Check protocol match |
+
+**ComponentDTO methods:**
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `property(name)` | PropertyDTO | Get property by name |
+| `prop(name)` | any | Shorthand for property().value() |
+| `properties()` | PropertyDTO[] | Get all properties |
+| `propertiesByType(type)` | PropertyDTO[] | Filter by type |
+| `hasProperty(name)` | boolean | Check if property exists |
+
+**PropertyDTO methods:**
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `value()` | any | Get value (unwraps single values) |
+| `valueOr(default)` | any | Get value or default |
+| `at(index)` | any | Get value at index |
+| `first()` | any | Get first value |
+| `last()` | any | Get last value |
+| `flat()` | any[] | Flatten nested arrays |
+| `map(fn)` | any[] | Map over values |
+| `filter(fn)` | any[] | Filter values |
+| `exists()` | boolean | Check if property has data |
+
+**ObjectCollection methods:**
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `at(index)` | ObjectDTO | Get object at index |
+| `first()` | ObjectDTO | Get first object |
+| `last()` | ObjectDTO | Get last object |
+| `byProtocol(protocol)` | ObjectCollection | Filter by protocol |
+| `byName(pattern)` | ObjectCollection | Filter by name |
+| `filter(predicate)` | ObjectCollection | Filter objects |
+| `find(predicate)` | ObjectDTO | Find first match |
+| `map(fn)` | any[] | Map over objects |
+| `forEach(fn)` | void | Iterate objects |
+| `toArray()` | ObjectDTO[] | Convert to array |
+
+**RV Session helpers:**
+
+```javascript
+// Quick access to common RV session data
+const dto = new GTODTO(reader.result);
+
+// Session info
+const session = dto.session();           // RVSession object
+const timeline = dto.timeline();         // { fps, currentFrame, range, region, marks }
+
+// Sources
+const groups = dto.sourceGroups();       // RVSourceGroup objects
+const sources = dto.fileSources();       // RVFileSource objects
+const paths = dto.mediaPaths();          // Extract all media file paths
+
+// Graph
+const conn = dto.connections();          // connection object
+const edges = dto.connectionEdges();     // [[from, to], ...] pairs
+
+// Annotations
+const paints = dto.paints();             // RVPaint objects
+const annotations = dto.annotations();   // Extracted annotation data
+```
+
 ## Data Types
 
 | Type | Description | Size (bytes) |
@@ -351,6 +468,7 @@ gto-js/
 │   ├── reader.js         # Reader & SimpleReader
 │   ├── writer.js         # Writer & SimpleWriter
 │   ├── builder.js        # GTOBuilder, polygon(), transform()
+│   ├── dto.js            # GTODTO, ObjectDTO, ComponentDTO, PropertyDTO
 │   ├── string-table.js   # String table management
 │   └── utils.js          # Utilities
 ├── scripts/

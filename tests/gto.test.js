@@ -11,7 +11,12 @@ import {
   StringTable,
   GTOBuilder,
   polygon,
-  transform
+  transform,
+  GTODTO,
+  ObjectDTO,
+  ComponentDTO,
+  PropertyDTO,
+  ObjectCollection
 } from '../src/index.js';
 
 describe('StringTable', () => {
@@ -672,5 +677,491 @@ describe('Transform Builder', () => {
     assert.strictEqual(data.objects[0].protocol, 'transform');
     assert.ok(data.objects[0].components.object.properties.globalMatrix);
     assert.deepStrictEqual(data.objects[0].components.object.properties.parent.data, ['root']);
+  });
+});
+
+describe('GTODTO', () => {
+  // Sample data for testing
+  const sampleData = {
+    version: 4,
+    objects: [
+      {
+        name: 'rv',
+        protocol: 'RVSession',
+        protocolVersion: 1,
+        components: {
+          session: {
+            interpretation: '',
+            properties: {
+              fps: { type: 'float', size: 1, width: 1, interpretation: '', data: [24] },
+              currentFrame: { type: 'int', size: 1, width: 1, interpretation: '', data: [100] },
+              range: { type: 'int', size: 2, width: 1, interpretation: '', data: [1, 500] }
+            }
+          }
+        }
+      },
+      {
+        name: 'source1',
+        protocol: 'RVFileSource',
+        protocolVersion: 1,
+        components: {
+          media: {
+            interpretation: '',
+            properties: {
+              movie: { type: 'string', size: 1, width: 1, interpretation: '', data: ['/path/to/movie1.mov'] }
+            }
+          }
+        }
+      },
+      {
+        name: 'source2',
+        protocol: 'RVFileSource',
+        protocolVersion: 1,
+        components: {
+          media: {
+            interpretation: '',
+            properties: {
+              movie: { type: 'string', size: 1, width: 1, interpretation: '', data: ['/path/to/movie2.mov'] }
+            }
+          }
+        }
+      },
+      {
+        name: 'paint1',
+        protocol: 'RVPaint',
+        protocolVersion: 1,
+        components: {
+          'pen:1:50:User': {
+            interpretation: '',
+            properties: {
+              color: { type: 'float', size: 4, width: 1, interpretation: '', data: [1, 0, 0, 1] },
+              points: { type: 'float', size: 3, width: 2, interpretation: '', data: [[10, 20], [30, 40], [50, 60]] }
+            }
+          }
+        }
+      }
+    ]
+  };
+
+  test('should create DTO from parsed data', () => {
+    const dto = new GTODTO(sampleData);
+
+    assert.strictEqual(dto.version, 4);
+    assert.strictEqual(dto.objectCount, 4);
+  });
+
+  test('should get object by name', () => {
+    const dto = new GTODTO(sampleData);
+    const rv = dto.object('rv');
+
+    assert.strictEqual(rv.name, 'rv');
+    assert.strictEqual(rv.protocol, 'RVSession');
+    assert.strictEqual(rv.protocolVersion, 1);
+    assert.ok(rv.exists());
+  });
+
+  test('should return null object for non-existent name', () => {
+    const dto = new GTODTO(sampleData);
+    const missing = dto.object('nonexistent');
+
+    assert.strictEqual(missing.exists(), false);
+    assert.strictEqual(missing.name, '');
+  });
+
+  test('should filter by protocol', () => {
+    const dto = new GTODTO(sampleData);
+    const sources = dto.byProtocol('RVFileSource');
+
+    assert.strictEqual(sources.length, 2);
+    assert.strictEqual(sources.first().name, 'source1');
+    assert.strictEqual(sources.last().name, 'source2');
+  });
+
+  test('should filter by name pattern', () => {
+    const dto = new GTODTO(sampleData);
+    const sources = dto.byName(/^source/);
+
+    assert.strictEqual(sources.length, 2);
+  });
+
+  test('should get protocols list', () => {
+    const dto = new GTODTO(sampleData);
+    const protocols = dto.protocols();
+
+    assert.ok(protocols.includes('RVSession'));
+    assert.ok(protocols.includes('RVFileSource'));
+    assert.ok(protocols.includes('RVPaint'));
+  });
+
+  test('should get component from object', () => {
+    const dto = new GTODTO(sampleData);
+    const session = dto.object('rv').component('session');
+
+    assert.strictEqual(session.name, 'session');
+    assert.ok(session.exists());
+  });
+
+  test('should return null component for non-existent name', () => {
+    const dto = new GTODTO(sampleData);
+    const missing = dto.object('rv').component('nonexistent');
+
+    assert.strictEqual(missing.exists(), false);
+  });
+
+  test('should get property from component', () => {
+    const dto = new GTODTO(sampleData);
+    const fps = dto.object('rv').component('session').property('fps');
+
+    assert.strictEqual(fps.name, 'fps');
+    assert.strictEqual(fps.type, 'float');
+    assert.strictEqual(fps.value(), 24);
+    assert.ok(fps.exists());
+  });
+
+  test('should return null property for non-existent name', () => {
+    const dto = new GTODTO(sampleData);
+    const missing = dto.object('rv').component('session').property('nonexistent');
+
+    assert.strictEqual(missing.exists(), false);
+    assert.strictEqual(missing.value(), null);
+  });
+
+  test('property value() should unwrap single values', () => {
+    const dto = new GTODTO(sampleData);
+
+    // Single value
+    const fps = dto.object('rv').component('session').property('fps').value();
+    assert.strictEqual(fps, 24);
+
+    // Array value
+    const range = dto.object('rv').component('session').property('range').value();
+    assert.deepStrictEqual(range, [1, 500]);
+  });
+
+  test('property at() should get specific index', () => {
+    const dto = new GTODTO(sampleData);
+    const range = dto.object('rv').component('session').property('range');
+
+    assert.strictEqual(range.at(0), 1);
+    assert.strictEqual(range.at(1), 500);
+    assert.strictEqual(range.at(999), null);
+  });
+
+  test('property valueOr() should return default for missing', () => {
+    const dto = new GTODTO(sampleData);
+    const missing = dto.object('rv').component('session').property('nonexistent');
+
+    assert.strictEqual(missing.valueOr(42), 42);
+  });
+
+  test('shorthand prop() method should work', () => {
+    const dto = new GTODTO(sampleData);
+
+    // Component.prop()
+    const fps = dto.object('rv').component('session').prop('fps');
+    assert.strictEqual(fps, 24);
+
+    // Object.prop(component, property)
+    const currentFrame = dto.object('rv').prop('session', 'currentFrame');
+    assert.strictEqual(currentFrame, 100);
+  });
+
+  test('ObjectCollection map should work', () => {
+    const dto = new GTODTO(sampleData);
+    const moviePaths = dto.byProtocol('RVFileSource')
+      .map(s => s.component('media').property('movie').value());
+
+    assert.deepStrictEqual(moviePaths, ['/path/to/movie1.mov', '/path/to/movie2.mov']);
+  });
+
+  test('ObjectCollection filter should work', () => {
+    const dto = new GTODTO(sampleData);
+    const filtered = dto.objects().filter(o => o.name.startsWith('source'));
+
+    assert.strictEqual(filtered.length, 2);
+  });
+
+  test('ObjectCollection find should work', () => {
+    const dto = new GTODTO(sampleData);
+    const found = dto.objects().find(o => o.name === 'source2');
+
+    assert.strictEqual(found.name, 'source2');
+  });
+
+  test('ObjectCollection groupByProtocol should work', () => {
+    const dto = new GTODTO(sampleData);
+    const groups = dto.groupByProtocol();
+
+    assert.ok(groups.has('RVSession'));
+    assert.ok(groups.has('RVFileSource'));
+    assert.strictEqual(groups.get('RVFileSource').length, 2);
+  });
+
+  test('ObjectCollection should be iterable', () => {
+    const dto = new GTODTO(sampleData);
+    const names = [];
+    for (const obj of dto.objects()) {
+      names.push(obj.name);
+    }
+
+    assert.strictEqual(names.length, 4);
+    assert.ok(names.includes('rv'));
+  });
+
+  test('component propertyNames should return all names', () => {
+    const dto = new GTODTO(sampleData);
+    const names = dto.object('rv').component('session').propertyNames();
+
+    assert.ok(names.includes('fps'));
+    assert.ok(names.includes('currentFrame'));
+    assert.ok(names.includes('range'));
+  });
+
+  test('component properties should return PropertyDTO array', () => {
+    const dto = new GTODTO(sampleData);
+    const props = dto.object('rv').component('session').properties();
+
+    assert.strictEqual(props.length, 3);
+    assert.ok(props.every(p => p instanceof PropertyDTO));
+  });
+
+  test('object componentNames should return all names', () => {
+    const dto = new GTODTO(sampleData);
+    const names = dto.object('rv').componentNames();
+
+    assert.deepStrictEqual(names, ['session']);
+  });
+
+  test('object components should return ComponentDTO array', () => {
+    const dto = new GTODTO(sampleData);
+    const comps = dto.object('rv').components();
+
+    assert.strictEqual(comps.length, 1);
+    assert.ok(comps.every(c => c instanceof ComponentDTO));
+  });
+
+  test('object componentsByPattern should filter by regex', () => {
+    const dto = new GTODTO(sampleData);
+    const penComps = dto.object('paint1').componentsByPattern(/^pen:/);
+
+    assert.strictEqual(penComps.length, 1);
+    assert.strictEqual(penComps[0].name, 'pen:1:50:User');
+  });
+
+  test('safe chaining should not throw', () => {
+    const dto = new GTODTO(sampleData);
+
+    // Deep non-existent path should return null, not throw
+    const value = dto
+      .object('nonexistent')
+      .component('also-missing')
+      .property('nope')
+      .value();
+
+    assert.strictEqual(value, null);
+  });
+
+  test('property flat() should flatten nested arrays', () => {
+    const dto = new GTODTO(sampleData);
+    const points = dto.object('paint1').component('pen:1:50:User').property('points');
+
+    const flat = points.flat();
+    assert.deepStrictEqual(flat, [10, 20, 30, 40, 50, 60]);
+  });
+
+  test('property map and filter should work', () => {
+    const dto = new GTODTO(sampleData);
+    const points = dto.object('paint1').component('pen:1:50:User').property('points');
+
+    const mapped = points.map(p => p[0]);
+    assert.deepStrictEqual(mapped, [10, 30, 50]);
+
+    const filtered = points.filter(p => p[0] > 20);
+    assert.deepStrictEqual(filtered, [[30, 40], [50, 60]]);
+  });
+
+  test('toObject methods should work', () => {
+    const dto = new GTODTO(sampleData);
+
+    const objData = dto.object('rv').toObject();
+    assert.strictEqual(objData.name, 'rv');
+
+    const compData = dto.object('rv').component('session').toObject();
+    assert.strictEqual(compData.name, 'session');
+
+    const propData = dto.object('rv').component('session').property('fps').toObject();
+    assert.strictEqual(propData.type, 'float');
+  });
+
+  test('toJSON should serialize correctly', () => {
+    const dto = new GTODTO(sampleData);
+    const json = dto.toJSON();
+    const parsed = JSON.parse(json);
+
+    assert.strictEqual(parsed.version, 4);
+    assert.strictEqual(parsed.objects.length, 4);
+  });
+});
+
+describe('GTODTO RV Helpers', () => {
+  const rvSessionData = {
+    version: 4,
+    objects: [
+      {
+        name: 'rv',
+        protocol: 'RVSession',
+        protocolVersion: 1,
+        components: {
+          session: {
+            interpretation: '',
+            properties: {
+              fps: { type: 'float', size: 1, width: 1, interpretation: '', data: [30] },
+              currentFrame: { type: 'int', size: 1, width: 1, interpretation: '', data: [50] },
+              range: { type: 'int', size: 2, width: 1, interpretation: '', data: [1, 200] },
+              region: { type: 'int', size: 2, width: 1, interpretation: '', data: [25, 175] },
+              marks: { type: 'int', size: 3, width: 1, interpretation: '', data: [50, 100, 150] }
+            }
+          }
+        }
+      },
+      {
+        name: 'sourceGroup000',
+        protocol: 'RVSourceGroup',
+        protocolVersion: 1,
+        components: {}
+      },
+      {
+        name: 'sourceGroup000_source',
+        protocol: 'RVFileSource',
+        protocolVersion: 1,
+        components: {
+          media: {
+            interpretation: '',
+            properties: {
+              movie: { type: 'string', size: 1, width: 1, interpretation: '', data: ['/renders/shot_001.exr'] }
+            }
+          }
+        }
+      },
+      {
+        name: 'connections',
+        protocol: 'connection',
+        protocolVersion: 1,
+        components: {
+          evaluation: {
+            interpretation: '',
+            properties: {
+              connections: { type: 'string', size: 2, width: 2, interpretation: '', data: [['node1', 'node2'], ['node2', 'node3']] }
+            }
+          }
+        }
+      }
+    ]
+  };
+
+  test('session() should return RVSession object', () => {
+    const dto = new GTODTO(rvSessionData);
+    const session = dto.session();
+
+    assert.strictEqual(session.protocol, 'RVSession');
+    assert.strictEqual(session.name, 'rv');
+  });
+
+  test('timeline() should return timeline info', () => {
+    const dto = new GTODTO(rvSessionData);
+    const timeline = dto.timeline();
+
+    assert.strictEqual(timeline.fps, 30);
+    assert.strictEqual(timeline.currentFrame, 50);
+    assert.deepStrictEqual(timeline.range, [1, 200]);
+    assert.deepStrictEqual(timeline.region, [25, 175]);
+    assert.deepStrictEqual(timeline.marks, [50, 100, 150]);
+  });
+
+  test('fileSources() should return file sources', () => {
+    const dto = new GTODTO(rvSessionData);
+    const sources = dto.fileSources();
+
+    assert.strictEqual(sources.length, 1);
+    assert.strictEqual(sources.first().protocol, 'RVFileSource');
+  });
+
+  test('sourceGroups() should return source groups', () => {
+    const dto = new GTODTO(rvSessionData);
+    const groups = dto.sourceGroups();
+
+    assert.strictEqual(groups.length, 1);
+    assert.strictEqual(groups.first().protocol, 'RVSourceGroup');
+  });
+
+  test('mediaPaths() should extract media paths', () => {
+    const dto = new GTODTO(rvSessionData);
+    const paths = dto.mediaPaths();
+
+    assert.deepStrictEqual(paths, ['/renders/shot_001.exr']);
+  });
+
+  test('connections() should return connection object', () => {
+    const dto = new GTODTO(rvSessionData);
+    const conn = dto.connections();
+
+    assert.strictEqual(conn.protocol, 'connection');
+  });
+
+  test('connectionEdges() should return edge pairs', () => {
+    const dto = new GTODTO(rvSessionData);
+    const edges = dto.connectionEdges();
+
+    assert.deepStrictEqual(edges, [['node1', 'node2'], ['node2', 'node3']]);
+  });
+});
+
+describe('GTODTO with Builder Integration', () => {
+  test('should work with GTOBuilder output', () => {
+    const data = new GTOBuilder()
+      .object('myMesh', 'polygon', 2)
+        .component('points')
+          .float3('position', [[0, 0, 0], [1, 0, 0], [1, 1, 0]])
+          .float3('normal', [[0, 0, 1], [0, 0, 1], [0, 0, 1]])
+        .end()
+        .component('indices')
+          .int('vertex', [0, 1, 2])
+        .end()
+      .end()
+      .build();
+
+    const dto = new GTODTO(data);
+
+    assert.strictEqual(dto.objectCount, 1);
+    assert.strictEqual(dto.object('myMesh').protocol, 'polygon');
+
+    const positions = dto.object('myMesh').component('points').property('position');
+    assert.strictEqual(positions.size, 3);
+    assert.deepStrictEqual(positions.at(0), [0, 0, 0]);
+
+    const indices = dto.object('myMesh').prop('indices', 'vertex');
+    assert.deepStrictEqual(indices, [0, 1, 2]);
+  });
+
+  test('should work with round-trip data', () => {
+    // Build -> Write -> Read -> DTO
+    const original = new GTOBuilder()
+      .object('config', 'settings', 1)
+        .component('user')
+          .string('name', 'TestUser')
+          .int('level', 42)
+        .end()
+      .end()
+      .build();
+
+    const rv = SimpleWriter.write(original);
+
+    const reader = new SimpleReader();
+    reader.open(rv);
+
+    const dto = new GTODTO(reader.result);
+
+    assert.strictEqual(dto.object('config').prop('user', 'name'), 'TestUser');
+    assert.strictEqual(dto.object('config').prop('user', 'level'), 42);
   });
 });
