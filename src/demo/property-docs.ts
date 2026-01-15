@@ -245,34 +245,46 @@ export const PROPERTY_DOCS: Record<string, ProtocolDoc> = {
 
   // ============= RVSession =============
   'RVSession': {
-    description: 'Session node: global session state, matte settings, paint effects',
+    description: 'Session node: global container for session state. One per file. Stores frame range, marks, playback FPS, realtime settings, matte and paint configurations. Values stored here apply to all sources and views.',
     components: {
       'session': {
-        description: 'Session playback state',
+        description: 'Session playback state and timeline settings',
         properties: {
-          'fps': { description: 'Session frame rate (fps)', type: 'float', default: 24 },
-          'currentFrame': { description: 'Current frame number', type: 'int' },
-          'range': { description: 'Session frame range [start, end) exclusive', type: 'int[2]' },
-          'inc': { description: 'Frame increment for playback', type: 'int', default: 1 }
+          'viewNode': { description: 'Default view node to display on startup', type: 'string' },
+          'marks': { description: 'Array of marked frame numbers for navigation', type: 'int[]' },
+          'fps': { description: 'Playback frame rate (frames per second)', type: 'float', default: 24 },
+          'currentFrame': { description: 'Frame to display on session startup', type: 'int' },
+          'range': { description: 'Full session frame range [start, end]', type: 'int[2]' },
+          'region': { description: 'In/out points for playback region [in, out]', type: 'int[2]' },
+          'inc': { description: 'Frame increment for playback (1=every frame, 2=every other)', type: 'int', default: 1 },
+          'realtime': { description: 'Enable real-time playback mode (drop frames to maintain fps)', type: 'int', default: 1 }
         }
       },
       'matte': {
-        description: 'Global matte/letterbox settings',
+        description: 'Centralized default matte settings applied to all views. Defines letterboxing for projection or aspect ratio preview.',
         properties: {
-          'aspect': { description: 'Matte aspect ratio (e.g., 2.35 for cinemascope)', type: 'float' },
-          'centerPoint': { description: 'Matte center in normalized coordinates [x, y]', type: 'float[2]' },
-          'heightVisible': { description: 'Fraction of source height visible (0-1)', type: 'float' },
-          'opacity': { description: 'Matte opacity (0=transparent, 1=opaque black)', type: 'float', default: 1 },
-          'show': { description: 'Toggle matte on/off globally', type: 'int', default: 0 }
+          'aspect': { description: 'Matte aspect ratio (1.85=flat, 2.35/2.39=scope, 1.78=16:9)', type: 'float' },
+          'centerPoint': { description: 'Matte center in normalized coordinates [x, y]. Default [0.5, 0.5]', type: 'float[2]', default: [0.5, 0.5] },
+          'heightVisible': { description: 'Fraction of source height visible through matte (0.0-1.0)', type: 'float', range: '0.0 to 1.0' },
+          'opacity': { description: 'Matte opacity (0=transparent/see-through, 1=opaque black bars)', type: 'float', default: 1, range: '0.0 to 1.0' },
+          'show': { description: 'Toggle matte visibility globally (1=show, 0=hide)', type: 'int', default: 0 }
         }
       },
       'paintEffects': {
-        description: 'Global paint/annotation effects',
+        description: 'Global annotation display effects - controls how annotations persist and ghost between frames',
         properties: {
-          'hold': { description: 'Enable annotation duration holding', type: 'int', default: 0 },
-          'ghost': { description: 'Enable annotation ghosting (onion skin)', type: 'int', default: 0 },
-          'ghostBefore': { description: 'Frames to display ghosted before current', type: 'int', default: 3 },
-          'ghostAfter': { description: 'Frames to display ghosted after current', type: 'int', default: 3 }
+          'hold': { description: 'Enable annotation duration holding (annotations persist beyond their frame)', type: 'int', default: 0 },
+          'ghost': { description: 'Enable annotation ghosting/onion-skinning (show adjacent frame annotations)', type: 'int', default: 0 },
+          'ghostBefore': { description: 'Number of frames before current to show ghosted annotations', type: 'int', default: 3 },
+          'ghostAfter': { description: 'Number of frames after current to show ghosted annotations', type: 'int', default: 3 }
+        }
+      },
+      'caching': {
+        description: 'Cache configuration settings',
+        properties: {
+          'cacheMode': { description: 'Cache mode: 0=off, 1=look-ahead, 2=region', type: 'int', default: 1 },
+          'cacheSize': { description: 'Cache size in bytes', type: 'int' },
+          'cacheLookAheadSeconds': { description: 'Seconds to cache ahead in look-ahead mode', type: 'float' }
         }
       }
     }
@@ -1518,6 +1530,539 @@ export const PROPERTY_DOCS: Record<string, ProtocolDoc> = {
           'fromACES': { description: '4x4 matrix to convert from ACES back to working space', type: 'float[16]' },
           'minClamp': { description: 'Minimum output value', type: 'float', default: 0 },
           'maxClamp': { description: 'Maximum output value', type: 'float', default: 1 }
+        }
+      }
+    }
+  },
+
+  // ============= Image Attributes =============
+  'image': {
+    description: 'Image attributes from file metadata. Contains per-frame/per-layer information about resolution, data format, color space, and other technical details.',
+    components: {
+      'attributes': {
+        description: 'Per-image attributes parsed from file metadata',
+        properties: {
+          'Width': { description: 'Image width in pixels', type: 'int' },
+          'Height': { description: 'Image height in pixels', type: 'int' },
+          'BitsPerChannel': { description: 'Bit depth per color channel (8, 16, 32)', type: 'int' },
+          'NumberOfChannels': { description: 'Number of color/data channels', type: 'int' },
+          'DataType': { description: 'Pixel data type: UINT8, UINT16, HALF, FLOAT', type: 'string' },
+          'PixelAspectRatio': { description: 'Pixel aspect ratio (1.0 for square pixels)', type: 'float', default: 1.0 },
+          'ColorSpace': { description: 'Color space name from file (sRGB, Linear, ACEScg, etc.)', type: 'string' },
+          'Chromaticities': { description: 'CIE xy chromaticity coordinates [Rx,Ry,Gx,Gy,Bx,By,Wx,Wy]', type: 'float[8]' },
+          'WhiteLuminance': { description: 'White point luminance in cd/m²', type: 'float' },
+          'AdoptedNeutral': { description: 'Adopted neutral xy chromaticity', type: 'float[2]' },
+          'RenderingIntent': { description: 'ICC rendering intent: perceptual, relative, saturation, absolute', type: 'string' },
+          'ICCProfile': { description: 'Embedded ICC profile name', type: 'string' },
+          'OriginalDate': { description: 'Original capture/creation date', type: 'string' },
+          'Software': { description: 'Software that created/modified the file', type: 'string' }
+        }
+      },
+      'displayAttributes': {
+        description: 'Display-related attributes for proper viewing',
+        properties: {
+          'Gamma': { description: 'Display gamma value (2.2 typical)', type: 'float' },
+          'DisplayPrimaries': { description: 'Display primaries chromaticities', type: 'float[6]' },
+          'DisplayWhitePoint': { description: 'Display white point chromaticity', type: 'float[2]' }
+        }
+      }
+    }
+  },
+
+  // ============= EXR Specific Attributes =============
+  'exr': {
+    description: 'OpenEXR specific attributes for multi-part, multi-view, and deep data files.',
+    components: {
+      'header': {
+        description: 'EXR header attributes',
+        properties: {
+          'compression': { description: 'EXR compression type: none, rle, zips, zip, piz, pxr24, b44, b44a, dwaa, dwab', type: 'string' },
+          'lineOrder': { description: 'Scanline order: increasingY, decreasingY, randomY', type: 'string' },
+          'dataWindow': { description: 'Data window bounds [xMin, yMin, xMax, yMax]', type: 'int[4]' },
+          'displayWindow': { description: 'Display window bounds [xMin, yMin, xMax, yMax]', type: 'int[4]' },
+          'screenWindowCenter': { description: 'Screen window center for NDC mapping', type: 'float[2]' },
+          'screenWindowWidth': { description: 'Screen window width for NDC mapping', type: 'float' },
+          'type': { description: 'Part type: scanlineimage, tiledimage, deepscanline, deeptile', type: 'string' }
+        }
+      },
+      'multiView': {
+        description: 'Multi-view (stereo) settings',
+        properties: {
+          'view': { description: 'Current view name (left, right, center)', type: 'string' },
+          'multiView': { description: 'List of available view names', type: 'string[]' },
+          'defaultView': { description: 'Default view to display', type: 'string' }
+        }
+      },
+      'deep': {
+        description: 'Deep data settings',
+        properties: {
+          'deepImageState': { description: 'Deep image state: sorted, messy', type: 'string' },
+          'maxSamplesPerPixel': { description: 'Maximum deep samples per pixel', type: 'int' }
+        }
+      }
+    }
+  },
+
+  // ============= DPX/Cineon Attributes =============
+  'dpx': {
+    description: 'DPX and Cineon film format attributes from file headers.',
+    components: {
+      'film': {
+        description: 'Film-related metadata',
+        properties: {
+          'FilmMfgId': { description: 'Film manufacturer ID code', type: 'string' },
+          'FilmType': { description: 'Film stock type code', type: 'string' },
+          'Offset': { description: 'Perfs offset', type: 'int' },
+          'Prefix': { description: 'Prefix before frame number', type: 'string' },
+          'Count': { description: 'Frame count in sequence', type: 'int' },
+          'Format': { description: 'Film format description', type: 'string' },
+          'FramePosition': { description: 'Frame position in sequence', type: 'int' },
+          'SequenceLength': { description: 'Total sequence length', type: 'int' },
+          'HeldCount': { description: 'Number of frames held', type: 'int' },
+          'FrameRate': { description: 'Frame rate of original', type: 'float' },
+          'ShutterAngle': { description: 'Camera shutter angle in degrees', type: 'float' },
+          'FrameId': { description: 'Frame ID string', type: 'string' },
+          'SlateInfo': { description: 'Slate/scene information', type: 'string' }
+        }
+      },
+      'source': {
+        description: 'Source device information',
+        properties: {
+          'XOriginalSize': { description: 'Original X dimension', type: 'int' },
+          'YOriginalSize': { description: 'Original Y dimension', type: 'int' },
+          'XOffset': { description: 'X offset from origin', type: 'int' },
+          'YOffset': { description: 'Y offset from origin', type: 'int' },
+          'XCenter': { description: 'X center of original', type: 'float' },
+          'YCenter': { description: 'Y center of original', type: 'float' },
+          'BorderValidity': { description: 'Border validity flags', type: 'int[4]' },
+          'AspectRatio': { description: 'Horizontal/vertical aspect ratio', type: 'int[2]' }
+        }
+      },
+      'orientation': {
+        description: 'Image orientation metadata',
+        properties: {
+          'XOffset': { description: 'X data offset in pixels', type: 'int' },
+          'YOffset': { description: 'Y data offset in pixels', type: 'int' },
+          'XOriginalCenter': { description: 'X center of original capture', type: 'float' },
+          'YOriginalCenter': { description: 'Y center of original capture', type: 'float' },
+          'XOriginalSize': { description: 'Original X size in pixels', type: 'int' },
+          'YOriginalSize': { description: 'Original Y size in pixels', type: 'int' },
+          'FileName': { description: 'Original file name', type: 'string' },
+          'CreationTime': { description: 'File creation timestamp', type: 'string' },
+          'InputDevice': { description: 'Input device name (scanner, camera)', type: 'string' },
+          'InputDeviceSerial': { description: 'Input device serial number', type: 'string' }
+        }
+      }
+    }
+  },
+
+  // ============= Movie/Video Attributes =============
+  'movie': {
+    description: 'Movie container and codec attributes from QuickTime, AVI, MXF, and other formats.',
+    components: {
+      'video': {
+        description: 'Video stream attributes',
+        properties: {
+          'Codec': { description: 'Video codec name (H.264, ProRes, DNxHD, etc.)', type: 'string' },
+          'CodecFourCC': { description: 'Four character codec code', type: 'string' },
+          'BitRate': { description: 'Video bit rate in bits/second', type: 'int' },
+          'FrameRate': { description: 'Video frame rate', type: 'float' },
+          'Duration': { description: 'Video duration in seconds', type: 'float' },
+          'FrameCount': { description: 'Total number of frames', type: 'int' },
+          'Width': { description: 'Video frame width', type: 'int' },
+          'Height': { description: 'Video frame height', type: 'int' },
+          'PixelFormat': { description: 'Pixel format (YUV420, RGB24, etc.)', type: 'string' },
+          'ColorRange': { description: 'Color range: limited (16-235) or full (0-255)', type: 'string' },
+          'ColorPrimaries': { description: 'Color primaries: BT.709, BT.2020, etc.', type: 'string' },
+          'TransferFunction': { description: 'Transfer function: sRGB, PQ, HLG, etc.', type: 'string' },
+          'MatrixCoefficients': { description: 'YUV matrix: BT.709, BT.601, etc.', type: 'string' }
+        }
+      },
+      'audio': {
+        description: 'Audio stream attributes',
+        properties: {
+          'AudioCodec': { description: 'Audio codec name (AAC, PCM, etc.)', type: 'string' },
+          'SampleRate': { description: 'Audio sample rate in Hz', type: 'int' },
+          'Channels': { description: 'Number of audio channels', type: 'int' },
+          'BitDepth': { description: 'Audio bit depth (16, 24, 32)', type: 'int' },
+          'AudioBitRate': { description: 'Audio bit rate in bits/second', type: 'int' },
+          'AudioDuration': { description: 'Audio duration in seconds', type: 'float' },
+          'ChannelLayout': { description: 'Channel layout (stereo, 5.1, 7.1)', type: 'string' }
+        }
+      },
+      'container': {
+        description: 'Container format attributes',
+        properties: {
+          'Format': { description: 'Container format (MOV, MXF, AVI, etc.)', type: 'string' },
+          'FormatVersion': { description: 'Container format version', type: 'string' },
+          'CreationDate': { description: 'Container creation date', type: 'string' },
+          'ModificationDate': { description: 'Last modification date', type: 'string' },
+          'Timecode': { description: 'Embedded timecode', type: 'string' },
+          'TimecodeRate': { description: 'Timecode frame rate', type: 'float' },
+          'DropFrame': { description: 'Drop-frame timecode flag', type: 'int' },
+          'ReelName': { description: 'Reel/tape name', type: 'string' },
+          'TapeNumber': { description: 'Tape number identifier', type: 'string' }
+        }
+      }
+    }
+  },
+
+  // ============= RAW Camera Attributes =============
+  'raw': {
+    description: 'Camera RAW file attributes from RED, ARRI, Sony, Blackmagic, and other cameras.',
+    components: {
+      'camera': {
+        description: 'Camera capture metadata',
+        properties: {
+          'Make': { description: 'Camera manufacturer', type: 'string' },
+          'Model': { description: 'Camera model name', type: 'string' },
+          'SerialNumber': { description: 'Camera serial number', type: 'string' },
+          'LensModel': { description: 'Lens model name', type: 'string' },
+          'LensSerialNumber': { description: 'Lens serial number', type: 'string' },
+          'FocalLength': { description: 'Focal length in mm', type: 'float' },
+          'FocalLength35mm': { description: 'Equivalent 35mm focal length', type: 'float' },
+          'Aperture': { description: 'Aperture f-number', type: 'float' },
+          'ISO': { description: 'ISO sensitivity value', type: 'int' },
+          'ExposureTime': { description: 'Exposure time in seconds', type: 'float' },
+          'ShutterAngle': { description: 'Shutter angle in degrees (cinema cameras)', type: 'float' },
+          'WhiteBalance': { description: 'White balance color temperature in Kelvin', type: 'int' },
+          'Tint': { description: 'White balance tint (green-magenta)', type: 'float' }
+        }
+      },
+      'sensor': {
+        description: 'Sensor technical data',
+        properties: {
+          'SensorWidth': { description: 'Active sensor width in mm', type: 'float' },
+          'SensorHeight': { description: 'Active sensor height in mm', type: 'float' },
+          'PhotositeWidth': { description: 'Photosite (pixel) width in μm', type: 'float' },
+          'PhotositeHeight': { description: 'Photosite height in μm', type: 'float' },
+          'BayerPattern': { description: 'Bayer mosaic pattern (RGGB, BGGR, etc.)', type: 'string' },
+          'BlackLevel': { description: 'Sensor black level values per channel', type: 'int[]' },
+          'WhiteLevel': { description: 'Sensor saturation (white) level', type: 'int' }
+        }
+      },
+      'colorimetry': {
+        description: 'RAW colorimetric data',
+        properties: {
+          'ColorMatrix1': { description: 'XYZ to camera RGB matrix (illuminant 1)', type: 'float[9]' },
+          'ColorMatrix2': { description: 'XYZ to camera RGB matrix (illuminant 2)', type: 'float[9]' },
+          'ForwardMatrix1': { description: 'Camera RGB to XYZ matrix (illuminant 1)', type: 'float[9]' },
+          'ForwardMatrix2': { description: 'Camera RGB to XYZ matrix (illuminant 2)', type: 'float[9]' },
+          'AsShotNeutral': { description: 'As-shot neutral point in camera RGB', type: 'float[3]' },
+          'CalibrationIlluminant1': { description: 'Calibration illuminant 1 type', type: 'string' },
+          'CalibrationIlluminant2': { description: 'Calibration illuminant 2 type', type: 'string' }
+        }
+      }
+    }
+  },
+
+  // ============= Movieproc Procedural Format =============
+  'movieproc': {
+    description: 'Procedural image/movie generator for test patterns, color bars, and synthetic content. Format: movieproc:[type],[params],[width]x[height],[start]-[end].[ext]',
+    components: {
+      'solid': {
+        description: 'Solid color generator: movieproc:solid,[r],[g],[b],[a]',
+        properties: {
+          'r': { description: 'Red channel value (0.0-1.0)', type: 'float', range: '0.0 to 1.0' },
+          'g': { description: 'Green channel value (0.0-1.0)', type: 'float', range: '0.0 to 1.0' },
+          'b': { description: 'Blue channel value (0.0-1.0)', type: 'float', range: '0.0 to 1.0' },
+          'a': { description: 'Alpha channel value (0.0-1.0)', type: 'float', default: 1.0, range: '0.0 to 1.0' }
+        }
+      },
+      'noise': {
+        description: 'Random noise pattern generator: movieproc:noise,[seed]',
+        properties: {
+          'seed': { description: 'Random seed (animates when different per frame)', type: 'int' }
+        }
+      },
+      'colorchart': {
+        description: 'Color chart pattern generator: movieproc:colorchart',
+        properties: {
+          'type': { description: 'Chart type (Macbeth ColorChecker)', type: 'string', default: 'macbeth' }
+        }
+      },
+      'colorwheel': {
+        description: 'HSV color wheel generator: movieproc:colorwheel',
+        properties: {}
+      },
+      'smptebars': {
+        description: 'SMPTE color bars test pattern: movieproc:smptebars',
+        properties: {}
+      },
+      'black': {
+        description: 'Black frame generator: movieproc:black',
+        properties: {}
+      },
+      'blank': {
+        description: 'Blank/transparent frame generator: movieproc:blank',
+        properties: {}
+      },
+      'grid': {
+        description: 'Grid pattern generator: movieproc:grid,[spacing]',
+        properties: {
+          'spacing': { description: 'Grid line spacing in pixels', type: 'int', default: 100 }
+        }
+      }
+    }
+  },
+
+  // ============= Reader/Threading Configuration =============
+  'RVReaderPrefs': {
+    description: 'Reader preferences and threading configuration for file I/O performance.',
+    components: {
+      'threading': {
+        description: 'Multi-threaded reader settings',
+        properties: {
+          'numReaderThreads': { description: 'Number of reader threads for async I/O', type: 'int', default: 4 },
+          'numIOThreads': { description: 'Number of I/O threads for disk access', type: 'int', default: 2 },
+          'numEvaluationThreads': { description: 'Number of threads for frame evaluation', type: 'int' },
+          'useThreadedUpload': { description: 'Use threaded GPU texture upload', type: 'int', default: 1 },
+          'usePBOs': { description: 'Use Pixel Buffer Objects for async upload', type: 'int', default: 1 }
+        }
+      },
+      'decoder': {
+        description: 'Decoder settings',
+        properties: {
+          'numDecoderThreads': { description: 'Threads for codec decoding (0=auto)', type: 'int', default: 0 },
+          'decoderPolicy': { description: 'Decoder thread policy: dedicated, shared', type: 'string', default: 'shared' },
+          'hwDecode': { description: 'Enable hardware-accelerated decoding', type: 'int', default: 1 },
+          'hwDecodePriority': { description: 'HW decode device preference: cuda, videotoolbox, qsv, vaapi', type: 'string' }
+        }
+      },
+      'prefetch': {
+        description: 'Prefetch/look-ahead settings',
+        properties: {
+          'prefetchFrames': { description: 'Number of frames to prefetch ahead', type: 'int', default: 4 },
+          'prefetchBehind': { description: 'Number of frames to keep behind playhead', type: 'int', default: 2 },
+          'asyncPrefetch': { description: 'Enable asynchronous prefetch', type: 'int', default: 1 }
+        }
+      }
+    }
+  },
+
+  // ============= Audio Device Configuration =============
+  'RVAudioPrefs': {
+    description: 'Audio device and playback configuration settings.',
+    components: {
+      'device': {
+        description: 'Audio device settings',
+        properties: {
+          'device': { description: 'Audio device name or "default"', type: 'string', default: 'default' },
+          'rate': { description: 'Audio sample rate in Hz', type: 'int', default: 48000 },
+          'channels': { description: 'Number of output channels', type: 'int', default: 2 },
+          'format': { description: 'Audio format: int16, int24, int32, float32', type: 'string', default: 'float32' },
+          'bufferSize': { description: 'Audio buffer size in samples', type: 'int', default: 512 },
+          'latency': { description: 'Target audio latency in milliseconds', type: 'float', default: 20 }
+        }
+      },
+      'sync': {
+        description: 'Audio-video sync settings',
+        properties: {
+          'avsync': { description: 'Audio/video sync mode: audio, video, freerun', type: 'string', default: 'audio' },
+          'avsyncOffset': { description: 'Global A/V sync offset in frames', type: 'float', default: 0 },
+          'scrubMode': { description: 'Scrub audio mode: off, on, pitched', type: 'string', default: 'on' }
+        }
+      }
+    }
+  },
+
+  // ============= Network/Sync Configuration =============
+  'RVNetworkPrefs': {
+    description: 'Network settings for remote sync, streaming, and collaborative review.',
+    components: {
+      'sync': {
+        description: 'Network sync settings',
+        properties: {
+          'syncHost': { description: 'Sync server hostname', type: 'string' },
+          'syncPort': { description: 'Sync server port', type: 'int', default: 45124 },
+          'syncEnabled': { description: 'Enable network sync', type: 'int', default: 0 },
+          'syncMode': { description: 'Sync mode: master, slave, peer', type: 'string', default: 'peer' },
+          'syncTransport': { description: 'Transport protocol: tcp, udp, multicast', type: 'string', default: 'tcp' }
+        }
+      },
+      'streaming': {
+        description: 'Streaming output settings',
+        properties: {
+          'streamEnabled': { description: 'Enable streaming output', type: 'int', default: 0 },
+          'streamPort': { description: 'Streaming server port', type: 'int', default: 45125 },
+          'streamCodec': { description: 'Streaming codec: h264, mjpeg', type: 'string', default: 'mjpeg' },
+          'streamQuality': { description: 'Streaming quality (0-100)', type: 'int', default: 85 },
+          'streamBitRate': { description: 'Target streaming bit rate in kbps', type: 'int' }
+        }
+      }
+    }
+  },
+
+  // ============= Comparison Modes =============
+  'RVCompare': {
+    description: 'Image comparison tools: wipe, difference, overlay modes for A/B comparison.',
+    components: {
+      'compare': {
+        description: 'Comparison mode settings',
+        properties: {
+          'mode': { description: 'Comparison mode: replace, over, difference, tile, wipe', type: 'string', default: 'replace' },
+          'wipeAngle': { description: 'Wipe line angle in degrees', type: 'float', default: 0 },
+          'wipePosition': { description: 'Wipe split position (0=left, 1=right)', type: 'float', default: 0.5, range: '0.0 to 1.0' },
+          'wipeWidth': { description: 'Wipe edge softness width in pixels', type: 'float', default: 2 },
+          'differenceScale': { description: 'Difference mode amplification factor', type: 'float', default: 1.0 },
+          'differenceOffset': { description: 'Difference mode offset (0.5=neutral gray)', type: 'float', default: 0.5 },
+          'showWipeLines': { description: 'Show wipe divider lines', type: 'int', default: 1 }
+        }
+      }
+    }
+  },
+
+  // ============= Histogram/Waveform/Vectorscope =============
+  'RVScopes': {
+    description: 'Video scopes for color analysis: histogram, waveform, vectorscope.',
+    components: {
+      'histogram': {
+        description: 'Histogram display settings',
+        properties: {
+          'show': { description: 'Show histogram overlay', type: 'int', default: 0 },
+          'mode': { description: 'Histogram mode: rgb, luminance, parade', type: 'string', default: 'rgb' },
+          'position': { description: 'Histogram position [x, y]', type: 'float[2]' },
+          'scale': { description: 'Histogram display scale', type: 'float', default: 1.0 },
+          'opacity': { description: 'Histogram background opacity', type: 'float', default: 0.8 }
+        }
+      },
+      'waveform': {
+        description: 'Waveform monitor settings',
+        properties: {
+          'show': { description: 'Show waveform overlay', type: 'int', default: 0 },
+          'mode': { description: 'Waveform mode: luma, rgb, parade, overlay', type: 'string', default: 'luma' },
+          'position': { description: 'Waveform position [x, y]', type: 'float[2]' },
+          'scale': { description: 'Waveform intensity scale', type: 'float', default: 1.0 }
+        }
+      },
+      'vectorscope': {
+        description: 'Vectorscope display settings',
+        properties: {
+          'show': { description: 'Show vectorscope overlay', type: 'int', default: 0 },
+          'position': { description: 'Vectorscope position [x, y]', type: 'float[2]' },
+          'scale': { description: 'Vectorscope display scale', type: 'float', default: 1.0 },
+          'intensity': { description: 'Vectorscope trace intensity', type: 'float', default: 1.0 },
+          'colorSpace': { description: 'Vectorscope color space: rec709, rec601, rec2020', type: 'string', default: 'rec709' }
+        }
+      }
+    }
+  },
+
+  // ============= Output Device Configuration =============
+  'RVOutputDevice': {
+    description: 'External output device configuration for SDI, HDMI, and other professional video outputs.',
+    components: {
+      'device': {
+        description: 'Output device settings',
+        properties: {
+          'device': { description: 'Output device name (AJA, Blackmagic, etc.)', type: 'string' },
+          'videoOutput': { description: 'Video output connector: SDI1, SDI2, HDMI', type: 'string' },
+          'audioOutput': { description: 'Audio output connector: embedded, analog, aes', type: 'string' },
+          'videoFormat': { description: 'Output video format: 1080p24, 1080p25, UHD30, etc.', type: 'string' },
+          'pixelFormat': { description: 'Output pixel format: yuv422, rgb444, yuv444', type: 'string' },
+          'bitDepth': { description: 'Output bit depth: 8, 10, 12', type: 'int', default: 10 },
+          'sync': { description: 'Genlock/sync source: internal, external, auto', type: 'string', default: 'internal' }
+        }
+      },
+      'colorCorrect': {
+        description: 'Output color correction settings',
+        properties: {
+          'outputColorSpace': { description: 'Output color space: rec709, rec2020, dci-p3', type: 'string', default: 'rec709' },
+          'outputTransfer': { description: 'Output transfer function: sdr, pq, hlg', type: 'string', default: 'sdr' },
+          'outputLUT': { description: 'Path to output calibration LUT file', type: 'string' },
+          'outputLUTActive': { description: 'Enable output LUT', type: 'int', default: 0 }
+        }
+      }
+    }
+  },
+
+  // ============= Timecode/Metadata Display =============
+  'RVTimecodeDisplay': {
+    description: 'Timecode and metadata burn-in display settings.',
+    components: {
+      'display': {
+        description: 'Timecode display settings',
+        properties: {
+          'show': { description: 'Show timecode burn-in', type: 'int', default: 0 },
+          'format': { description: 'Timecode format: SMPTE (HH:MM:SS:FF), frames, feet+frames, seconds', type: 'string', default: 'SMPTE' },
+          'position': { description: 'Position: top-left, top-center, top-right, bottom-left, etc.', type: 'string', default: 'bottom-left' },
+          'fontSize': { description: 'Font size in points', type: 'int', default: 24 },
+          'fontColor': { description: 'Font color RGBA', type: 'float[4]', default: [1, 1, 1, 1] },
+          'backgroundColor': { description: 'Background box color RGBA', type: 'float[4]', default: [0, 0, 0, 0.7] },
+          'showFrameNumber': { description: 'Also display absolute frame number', type: 'int', default: 0 },
+          'showSourceTimecode': { description: 'Display source file timecode', type: 'int', default: 1 }
+        }
+      },
+      'metadata': {
+        description: 'Metadata burn-in settings',
+        properties: {
+          'showFilename': { description: 'Display source filename', type: 'int', default: 0 },
+          'showResolution': { description: 'Display frame resolution', type: 'int', default: 0 },
+          'showCodec': { description: 'Display codec information', type: 'int', default: 0 },
+          'showColorSpace': { description: 'Display color space info', type: 'int', default: 0 },
+          'customText': { description: 'Custom text to display', type: 'string' },
+          'customPosition': { description: 'Custom text position', type: 'string' }
+        }
+      }
+    }
+  },
+
+  // ============= Dither and Banding Reduction =============
+  'Dither': {
+    description: 'GLSL node: applies dithering to reduce color banding when converting from high to low bit depth.',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable dithering', type: 'int', default: 1 }
+        }
+      },
+      'parameters': {
+        description: 'Dither parameters',
+        properties: {
+          'ditherAmount': { description: 'Dither noise amplitude (0.5/255 typical for 8-bit)', type: 'float', default: 0.00196 },
+          'seed': { description: 'Random seed for noise pattern', type: 'int' }
+        }
+      }
+    }
+  },
+
+  // ============= Sharpen/Blur Filters =============
+  'Sharpen': {
+    description: 'GLSL node: unsharp mask sharpening filter.',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable sharpening', type: 'int', default: 1 }
+        }
+      },
+      'parameters': {
+        description: 'Sharpen parameters',
+        properties: {
+          'amount': { description: 'Sharpening strength (0=none, 1=normal, >1=strong)', type: 'float', default: 0.5, range: '0.0 to 2.0' },
+          'radius': { description: 'Sharpening kernel radius in pixels', type: 'float', default: 1.0 },
+          'threshold': { description: 'Edge detection threshold to avoid noise amplification', type: 'float', default: 0.0 }
+        }
+      }
+    }
+  },
+
+  'Blur': {
+    description: 'GLSL node: Gaussian blur filter for softening or defocusing images.',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable blur', type: 'int', default: 1 }
+        }
+      },
+      'parameters': {
+        description: 'Blur parameters',
+        properties: {
+          'radius': { description: 'Blur radius in pixels', type: 'float', default: 2.0 },
+          'sigma': { description: 'Gaussian sigma (0=auto from radius)', type: 'float', default: 0 },
+          'quality': { description: 'Blur quality: 0=fast, 1=normal, 2=high', type: 'int', default: 1 }
         }
       }
     }
