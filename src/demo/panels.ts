@@ -6,6 +6,7 @@ import { getGtoData, getSelectedObject, setSelectedObject, markModified } from '
 import { escapeHtml, escapeAttr, escapeJsStringInHtmlAttr, formatDataPreview, formatCompareValue } from './utils';
 import { getProtocolIcon, getProtocolInfo, PROTOCOL_INFO } from './protocol-info';
 import { filterTree } from './tree';
+import { getPropertyHintFromDocs, getComponentDoc, getProtocolDoc } from './property-docs';
 
 // ============= Utility Functions =============
 
@@ -41,61 +42,194 @@ function formatByteSize(bytes: number): string {
 }
 
 /**
- * Get interpretation hint for a property based on its name and protocol
+ * Get interpretation hint for a property based on its name, component, and protocol
+ * Uses the comprehensive OpenRV documentation when available
  */
-function getPropertyHint(propName: string, prop: PropertyData, protocol: string): string | null {
-  // Common property hints based on naming conventions
+function getPropertyHint(propName: string, prop: PropertyData, protocol: string, componentName?: string): string | null {
+  // First, try to get documentation from the comprehensive docs
+  if (componentName) {
+    const docHint = getPropertyHintFromDocs(protocol, componentName, propName);
+    if (docHint) return docHint;
+  }
+
+  // Fallback to common property hints based on naming conventions
   const hints: Record<string, string> = {
     // Transform properties
-    'flip': 'Horizontal mirror',
-    'flop': 'Vertical mirror',
-    'rotate': 'Rotation in degrees',
-    'scale': 'Scale factor',
-    'translate': 'Position offset in NDC',
+    'flip': 'Vertical image flip (mirror top-to-bottom)',
+    'flop': 'Horizontal image flip (mirror left-to-right)',
+    'rotate': 'Rotate image in degrees about center',
+    'scale': 'Scale factor along X and Y axes',
+    'translate': 'Translation offset in NDC (normalized device coordinates)',
 
     // Color properties
-    'exposure': 'Exposure adjustment in stops',
-    'gamma': 'Gamma correction curve',
-    'saturation': 'Color saturation multiplier',
-    'contrast': 'Contrast adjustment',
-    'hue': 'Hue rotation in degrees',
-    'CDLslope': 'ASC-CDL slope (gain)',
-    'CDLoffset': 'ASC-CDL offset',
-    'CDLpower': 'ASC-CDL power (gamma)',
-    'CDLsaturation': 'ASC-CDL saturation',
+    'exposure': 'Relative exposure adjustment in stops (f-stops)',
+    'gamma': 'Gamma correction curve (power operation)',
+    'saturation': 'Relative saturation adjustment (1.0 = unchanged)',
+    'contrast': 'Per-channel contrast control around midpoint',
+    'hue': 'Hue rotation in radians around color wheel',
+    'normalize': 'Normalize incoming pixels to [0,1] range',
+    'invert': 'Apply inversion matrix to image (negative)',
+    'offset': 'Per-channel color bias (added to RGB)',
+
+    // CDL properties
+    'slope': 'CDL slope (gain) - multiplies RGB values',
+    'power': 'CDL power (gamma) - raises RGB to this power',
+    'noClamp': 'Remove CDL equation clamping for HDR workflows',
 
     // Paint properties
     'color': prop.width === 4 ? 'RGBA color (0-1 range)' : 'RGB color (0-1 range)',
-    'width': 'Stroke width per point',
-    'points': 'Stroke points in NDC coordinates',
-    'brush': 'Brush type identifier',
-    'join': 'Line join style (0=miter, 1=round, 2=bevel)',
-    'cap': 'Line cap style (0=butt, 1=round, 2=square)',
+    'width': 'Stroke width at each point',
+    'points': 'Stroke points in normalized device coordinates',
+    'brush': 'Brush style: "gauss" (soft) or "circle" (hard)',
+    'join': 'Line join style: 0=miter, 1=round, 2=bevel',
+    'cap': 'Line cap style: 0=butt, 1=round, 2=square',
+    'mode': 'Draw mode: 0=over (draw), 1=erase',
+    'startFrame': 'First frame to display this element',
+    'duration': 'Number of frames to display element',
 
     // Session properties
     'fps': 'Frames per second',
     'range': 'Frame range [start, end) exclusive',
-    'frame': 'Current frame number',
-    'inc': 'Frame increment',
+    'frame': 'Global frame number',
+    'currentFrame': 'Current playback frame number',
+    'inc': 'Frame increment for playback',
 
     // Source properties
-    'media': 'Media file path',
-    'cutIn': 'Source in point',
-    'cutOut': 'Source out point',
-    'offset': 'Time offset in frames',
+    'movie': 'Movie, image, or audio file path (or sequence pattern)',
+    'cutIn': 'Preferred start frame (in point)',
+    'cutOut': 'Preferred end frame (out point)',
+    'in': 'Source-relative in-frame',
+    'out': 'Source-relative out-frame',
+    'rangeOffset': 'Shift frame number range by this amount',
+    'rangeStart': 'Reset start frame to this value',
 
     // Output properties
     'viewNode': 'Current view node reference',
     'device': 'Output device identifier',
+    'autoSize': 'Auto-determine output size from sources',
+    'size': 'Output dimensions [width, height]',
+    'chosenAudioInput': 'Active audio input source name',
 
     // LUT properties
-    'file': 'LUT file path',
-    'active': 'Whether this node is enabled',
+    'file': 'Path to LUT file',
+    'lut': '3D LUT or channel LUT data array',
+    'prelut': 'Channel pre-LUT (shaper) applied before 3D LUT',
+    'inMatrix': 'Input color matrix applied before LUT',
+    'outMatrix': 'Output color matrix applied after LUT',
+    'active': 'Toggle this node/feature on/off',
 
     // Audio properties
-    'volume': 'Audio volume multiplier',
-    'balance': 'Stereo balance (-1 to 1)',
-    'audioOffset': 'Audio sync offset in seconds'
+    'volume': 'Audio volume (1.0 = original level)',
+    'balance': 'Left/right balance: -1=left, 0=center, 1=right',
+    'audioOffset': 'Audio offset in seconds for sync adjustment',
+    'mute': 'Mute audio playback',
+    'noMovieAudio': 'Skip embedded audio tracks in movie files',
+
+    // Layout properties
+    'spacing': 'Scale items in layout (0.0-1.0, 1.0=no gap)',
+    'gridColumns': 'Number of columns in grid mode',
+    'gridRows': 'Number of rows in grid mode',
+    'retimeInputs': 'Retime inputs to match output fps',
+
+    // Stereo properties
+    'swap': 'Swap left and right eyes',
+    'relativeOffset': 'Relative offset between eyes for convergence',
+    'type': 'Mode type (stereo: anaglyph, side-by-side, etc.)',
+
+    // Lens warp properties
+    'k1': 'Radial distortion coefficient for r^2 term',
+    'k2': 'Radial distortion coefficient for r^4 term',
+    'k3': 'Radial distortion coefficient for r^6 term',
+    'p1': 'First tangential (decentering) distortion coefficient',
+    'p2': 'Second tangential (decentering) distortion coefficient',
+    'model': 'Lens/distortion model (brown, opencv, pfbarrel, adobe)',
+    'pixelAspectRatio': 'Override pixel aspect ratio (0=use source)',
+    'center': 'Distortion center in normalized [0-1] coordinates',
+
+    // Format properties
+    'xfit': 'Force specific image width (pixels)',
+    'yfit': 'Force specific image height (pixels)',
+    'xresize': 'Force resolution width',
+    'yresize': 'Force resolution height',
+    'resampleMethod': 'Resample method: area, cubic, linear, nearest',
+    'maxBitDepth': 'Maximum bit depth: 8, 16, or 32',
+    'allowFloatingPoint': 'Allow GPU floating-point images',
+
+    // Crop properties
+    'xmin': 'Crop minimum X pixel value',
+    'ymin': 'Crop minimum Y pixel value',
+    'xmax': 'Crop maximum X pixel value',
+    'ymax': 'Crop maximum Y pixel value',
+
+    // Retime properties
+    'keyFrames': 'Input frame positions for keyframes',
+    'keyRates': 'Speed multipliers at each keyframe',
+    'firstOutputFrame': 'Starting output frame number',
+    'inputFrames': 'Input frame for each output frame',
+
+    // EDL properties
+    'source': 'Source input index for each cut',
+    'autoEDL': 'Auto-concatenate new sources to EDL',
+    'useCutInfo': 'Use input cut information for timing',
+    'alignStartFrames': 'Align all input start frames',
+    'strictFrameRanges': 'Match timeline exactly to source frames',
+
+    // Composite properties
+    'inputBlendModes': 'Per-input blend modes: over, add, difference',
+    'inputOpacities': 'Per-input opacity for compositing',
+
+    // Linearize properties
+    'alphaType': 'Alpha handling: 0=as reported, 1=force premultiplied',
+    'YUV': 'Convert from YUV color space to RGB linear',
+    'logtype': 'Log transform type: 0=none, 1=Cineon, 2=Viper, 3=LogC',
+    'sRGB2linear': 'Convert sRGB encoded pixels to linear',
+    'Rec709ToLinear': 'Apply inverse Rec.709 transfer function',
+    'fileGamma': 'Gamma value for linearization (1.0 = linear input)',
+    'ignoreChromaticities': 'Ignore non-Rec.709 chromaticities in file',
+
+    // Display color properties
+    'channelOrder': 'Channel permutation string (RGBA, BGRA, etc)',
+    'channelFlood': 'Channel flooding: 0=off, 1=R, 2=G, 3=B, 4=A, 5=L',
+    'sRGB': 'Apply linear-to-sRGB transfer function',
+    'Rec709': 'Apply Rec.709 transfer function for broadcast',
+    'brightness': 'Pixel brightening in relative stops',
+    'outOfRange': 'Enable out-of-range pixel highlighting',
+
+    // Matte properties
+    'aspect': 'Matte aspect ratio (e.g., 2.35 for cinemascope)',
+    'centerPoint': 'Matte center in normalized coordinates [x, y]',
+    'heightVisible': 'Fraction of source height visible (0-1)',
+    'opacity': 'Matte opacity (0=transparent, 1=opaque black)',
+    'show': 'Toggle visibility on/off',
+
+    // Paint effects
+    'hold': 'Enable annotation duration holding',
+    'ghost': 'Enable annotation ghosting (onion skin)',
+    'ghostBefore': 'Frames to display ghosted before current',
+    'ghostAfter': 'Frames to display ghosted after current',
+
+    // OCIO properties
+    'inSpace': 'Input color space name',
+    'outSpace': 'Output color space name',
+    'lut3DSize': '3D LUT cube size',
+    'display': 'Display device name',
+    'view': 'View transform name',
+    'look': 'Look name from OCIO config',
+
+    // Pipeline properties
+    'nodes': 'Node names in pipeline order',
+
+    // Chromaticity properties
+    'red': 'Red primary xy chromaticity',
+    'green': 'Green primary xy chromaticity',
+    'blue': 'Blue primary xy chromaticity',
+    'white': 'White point xy chromaticity',
+    'useBradfordTransform': 'Use Bradford chromatic adaptation transform',
+
+    // General
+    'name': 'Display name',
+    'input': 'Currently active input',
+    'viewType': 'View type: switch or layout'
   };
 
   return hints[propName] || null;
@@ -1322,6 +1456,10 @@ export function renderDetailsPanel(obj: ObjectData, highlightComponent: string |
   // Get protocol-specific visualizer
   const protocolVisualizer = renderProtocolVisualizer(obj);
 
+  // Get protocol documentation
+  const protocolDoc = getProtocolDoc(obj.protocol);
+  const protocolDescription = protocolDoc?.description || getProtocolInfo(obj.protocol).description;
+
   let html = `
     <div class="detail-card">
       <div class="detail-header">
@@ -1332,6 +1470,7 @@ export function renderDetailsPanel(obj: ObjectData, highlightComponent: string |
         <span class="type-badge string">${obj.protocol} v${obj.protocolVersion}</span>
       </div>
       <div class="detail-body">
+        <div class="protocol-doc-description">${protocolDescription}</div>
         <table class="prop-table">
           <tr>
             <th>Protocol</th>
@@ -1356,15 +1495,20 @@ export function renderDetailsPanel(obj: ObjectData, highlightComponent: string |
     const componentVisualizer = renderComponentVisualizer(compName, comp);
     html += componentVisualizer;
 
+    // Get component documentation
+    const componentDoc = getComponentDoc(obj.protocol, compName);
+    const componentDescription = componentDoc?.description || '';
+
     html += `
-      <div class="detail-card" id="comp-${compName}">
+      <div class="detail-card" id="comp-${escapeAttr(compName)}">
         <div class="detail-header">
           <div class="detail-title">
             <span>◇</span>
-            ${compName}
+            ${escapeHtml(compName)}
           </div>
           <span class="tree-badge">${Object.keys(comp.properties).length} properties</span>
         </div>
+        ${componentDescription ? `<div class="component-description">${escapeHtml(componentDescription)}</div>` : ''}
         <div class="detail-body">
           <table class="prop-table">
             <thead>
@@ -1378,14 +1522,14 @@ export function renderDetailsPanel(obj: ObjectData, highlightComponent: string |
             <tbody>
               ${(Object.entries(comp.properties) as [string, PropertyData][]).map(([propName, prop]) => {
                 const dataSize = getDataByteSize(prop);
-                const hint = getPropertyHint(propName, prop, obj.protocol);
+                const hint = getPropertyHint(propName, prop, obj.protocol, compName);
                 const propPath = `${obj.name}.${compName}.${propName}`;
                 const valueStr = JSON.stringify(prop.data);
                 return `
                 <tr>
                   <td>
-                    <strong>${propName}</strong>
-                    ${hint ? `<div class="prop-hint"><span class="prop-hint-icon">💡</span>${hint}</div>` : ''}
+                    <strong>${escapeHtml(propName)}</strong>
+                    ${hint ? `<div class="prop-hint"><span class="prop-hint-icon">💡</span>${escapeHtml(hint)}</div>` : ''}
                   </td>
                   <td><span class="type-badge ${prop.type}">${prop.type}${prop.width > 1 ? `[${prop.width}]` : ''}</span></td>
                   <td>
