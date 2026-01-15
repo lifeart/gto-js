@@ -9,6 +9,8 @@ import {
   DataType,
   DataTypeName,
   TypeNameToDataType,
+  DataTypeSize,
+  GTO_MAGIC,
   GTO_VERSION,
   ReaderMode,
   Request,
@@ -18,6 +20,7 @@ import {
   PropertyInfo
 } from './constants.js';
 import { StringTable } from './string-table.js';
+import { halfToFloat } from './utils.js';
 
 /**
  * Token types for lexer
@@ -262,8 +265,8 @@ export class Reader {
   }
 
   /**
-   * Open and parse a GTO text file
-   * @param {string} content - File content as string
+   * Open and parse a GTO file (text or binary)
+   * @param {string|ArrayBuffer|Uint8Array} content - File content
    * @param {string} name - Optional filename for error messages
    * @returns {boolean} - True if successful
    */
@@ -275,7 +278,18 @@ export class Reader {
     this._properties = [];
 
     try {
-      this._parse(content);
+      // Detect format from content type
+      if (content instanceof ArrayBuffer || content instanceof Uint8Array) {
+        this._parseBinary(content);
+      } else if (typeof content === 'string') {
+        if (content.trimStart().startsWith('GTOa')) {
+          this._parse(content);
+        } else {
+          throw new Error('Unknown GTO format - text files must start with "GTOa"');
+        }
+      } else {
+        throw new Error('Content must be string, ArrayBuffer, or Uint8Array');
+      }
       return true;
     } catch (e) {
       console.error(`Error parsing GTO file ${name}: ${e.message}`);
@@ -650,6 +664,245 @@ export class Reader {
       return [this._stringTable.intern(id)];
     }
     throw new Error(`Unexpected token ${this._currentToken.type} for single value at line ${this._lexer.line}`);
+  }
+
+  // ============================================
+  // Binary format parsing
+  // ============================================
+
+  /**
+   * Parse binary GTO content
+   * @private
+   */
+  _parseBinary(content) {
+    const buffer = content instanceof ArrayBuffer ? content : content.buffer.slice(content.byteOffset, content.byteOffset + content.byteLength);
+    const view = new DataView(buffer);
+
+    // Detect endianness from magic number
+    const magic = view.getUint32(0, true); // Try little-endian first
+    let littleEndian;
+    if (magic === GTO_MAGIC) {
+      littleEndian = true;
+    } else if (view.getUint32(0, false) === GTO_MAGIC) {
+      littleEndian = false;
+    } else {
+      throw new Error(`Invalid GTO magic number: 0x${magic.toString(16)}`);
+    }
+
+    let offset = 0;
+
+    // Read header (20 bytes)
+    offset += 4; // Skip magic
+    const numStrings = view.getUint32(offset, littleEndian); offset += 4;
+    const numObjects = view.getUint32(offset, littleEndian); offset += 4;
+    const version = view.getUint32(offset, littleEndian); offset += 4;
+    const flags = view.getUint32(offset, littleEndian); offset += 4;
+
+    this._header.magic = GTO_MAGIC;
+    this._header.numStrings = numStrings;
+    this._header.numObjects = numObjects;
+    this._header.version = version;
+    this._header.flags = flags;
+
+    // Call header callback
+    this.header(this._header);
+
+    if (this._mode & ReaderMode.HeaderOnly) {
+      return;
+    }
+
+    // Read string table
+    const stringTableBytes = this._stringTable.readFromBinary(view, offset, numStrings, littleEndian);
+    offset += stringTableBytes;
+
+    // Read object headers
+    const objectHeaders = [];
+    for (let i = 0; i < numObjects; i++) {
+      const nameId = view.getUint32(offset, littleEndian); offset += 4;
+      const protocolId = view.getUint32(offset, littleEndian); offset += 4;
+      const protocolVersion = view.getUint32(offset, littleEndian); offset += 4;
+      const numComponents = view.getUint32(offset, littleEndian); offset += 4;
+      offset += 4; // pad
+
+      objectHeaders.push({ nameId, protocolId, protocolVersion, numComponents });
+    }
+
+    // Count total components and properties
+    let totalComponents = 0;
+    for (const obj of objectHeaders) {
+      totalComponents += obj.numComponents;
+    }
+
+    // Read component headers
+    const componentHeaders = [];
+    for (let i = 0; i < totalComponents; i++) {
+      const nameId = view.getUint32(offset, littleEndian); offset += 4;
+      const interpretationId = view.getUint32(offset, littleEndian); offset += 4;
+      const numProperties = view.getUint32(offset, littleEndian); offset += 4;
+      const compFlags = view.getUint32(offset, littleEndian); offset += 4;
+
+      componentHeaders.push({ nameId, interpretationId, numProperties, flags: compFlags });
+    }
+
+    // Count total properties
+    let totalProperties = 0;
+    for (const comp of componentHeaders) {
+      totalProperties += comp.numProperties;
+    }
+
+    // Read property headers
+    const propertyHeaders = [];
+    for (let i = 0; i < totalProperties; i++) {
+      const nameId = view.getUint32(offset, littleEndian); offset += 4;
+      const interpretationId = view.getUint32(offset, littleEndian); offset += 4;
+      const type = view.getUint8(offset); offset += 1;
+      offset += 3; // pad (1 byte + 2 bytes)
+      const size = view.getUint32(offset, littleEndian); offset += 4;
+      const width = view.getUint32(offset, littleEndian); offset += 4;
+
+      // Read dims if version >= 4 (we'll read at least dims[0])
+      const dims = [1, 1, 1, 1];
+      if (version >= 4) {
+        dims[0] = view.getUint32(offset, littleEndian); offset += 4;
+      }
+
+      propertyHeaders.push({ nameId, interpretationId, type, size, width, dims });
+    }
+
+    // Now process objects/components/properties with callbacks and read data
+    let componentIdx = 0;
+    let propertyIdx = 0;
+
+    for (const objHeader of objectHeaders) {
+      const objectInfo = new ObjectInfo();
+      objectInfo.name = this._stringTable.stringFromId(objHeader.nameId);
+      objectInfo.protocol = this._stringTable.stringFromId(objHeader.protocolId);
+      objectInfo.protocolVersion = objHeader.protocolVersion;
+      objectInfo.numComponents = objHeader.numComponents;
+      objectInfo._nameId = objHeader.nameId;
+      objectInfo._protocolId = objHeader.protocolId;
+      objectInfo._componentOffset = this._components.length;
+
+      const objectRequest = this.object(
+        objectInfo.name,
+        objectInfo.protocol,
+        objectInfo.protocolVersion,
+        objectInfo
+      );
+
+      this._objects.push(objectInfo);
+
+      for (let c = 0; c < objHeader.numComponents; c++) {
+        const compHeader = componentHeaders[componentIdx++];
+        const componentInfo = new ComponentInfo();
+        componentInfo.name = this._stringTable.stringFromId(compHeader.nameId);
+        componentInfo.interpretation = compHeader.interpretationId > 0
+          ? this._stringTable.stringFromId(compHeader.interpretationId)
+          : '';
+        componentInfo.numProperties = compHeader.numProperties;
+        componentInfo.flags = compHeader.flags;
+        componentInfo._nameId = compHeader.nameId;
+        componentInfo._interpretationId = compHeader.interpretationId;
+        componentInfo._object = objectInfo;
+        componentInfo._propertyOffset = this._properties.length;
+
+        let componentRequest = Request.Skip;
+        if (objectRequest === Request.Read) {
+          componentRequest = this.component(componentInfo.name, componentInfo);
+        }
+
+        this._components.push(componentInfo);
+
+        for (let p = 0; p < compHeader.numProperties; p++) {
+          const propHeader = propertyHeaders[propertyIdx++];
+          const propertyInfo = new PropertyInfo();
+          propertyInfo.name = this._stringTable.stringFromId(propHeader.nameId);
+          propertyInfo.interpretation = propHeader.interpretationId > 0
+            ? this._stringTable.stringFromId(propHeader.interpretationId)
+            : '';
+          propertyInfo.type = propHeader.type;
+          propertyInfo.size = propHeader.size;
+          propertyInfo.width = propHeader.width;
+          propertyInfo.dims = propHeader.dims;
+          propertyInfo._nameId = propHeader.nameId;
+          propertyInfo._interpretationId = propHeader.interpretationId;
+          propertyInfo._component = componentInfo;
+          propertyInfo._dataOffset = offset;
+
+          let propertyRequest = Request.Skip;
+          if (componentRequest === Request.Read) {
+            propertyRequest = this.property(
+              propertyInfo.name,
+              propertyInfo.interpretation,
+              propertyInfo
+            );
+          }
+
+          this._properties.push(propertyInfo);
+
+          // Calculate data size and read data
+          const totalCount = propertyInfo.size * propertyInfo.width;
+          const typeSize = DataTypeSize[propertyInfo.type] || 4;
+          const dataBytes = totalCount * typeSize;
+
+          if (propertyRequest === Request.Read && totalCount > 0) {
+            const data = this._readBinaryData(view, offset, propertyInfo, totalCount, littleEndian);
+            const buffer = this.data(propertyInfo, dataBytes);
+            if (buffer !== null) {
+              this.dataRead(propertyInfo, data);
+            }
+          }
+
+          offset += dataBytes;
+        }
+      }
+    }
+  }
+
+  /**
+   * Read binary property data
+   * @private
+   */
+  _readBinaryData(view, offset, propertyInfo, count, littleEndian) {
+    const data = [];
+    const type = propertyInfo.type;
+    const typeSize = DataTypeSize[type] || 4;
+
+    for (let i = 0; i < count; i++) {
+      const value = this._readBinaryValue(view, offset + i * typeSize, type, littleEndian);
+      data.push(value);
+    }
+
+    return data;
+  }
+
+  /**
+   * Read a single binary value
+   * @private
+   */
+  _readBinaryValue(view, offset, type, littleEndian) {
+    switch (type) {
+      case DataType.Int:
+        return view.getInt32(offset, littleEndian);
+      case DataType.Float:
+        return view.getFloat32(offset, littleEndian);
+      case DataType.Double:
+        return view.getFloat64(offset, littleEndian);
+      case DataType.Half:
+        return halfToFloat(view.getUint16(offset, littleEndian));
+      case DataType.String:
+        return view.getUint32(offset, littleEndian);
+      case DataType.Boolean:
+        return view.getUint8(offset) !== 0 ? 1 : 0;
+      case DataType.Short:
+        return view.getUint16(offset, littleEndian);
+      case DataType.Byte:
+        return view.getUint8(offset);
+      case DataType.Int64:
+        return Number(view.getBigInt64(offset, littleEndian));
+      default:
+        throw new Error(`Unknown data type: ${type}`);
+    }
   }
 
   // ============================================

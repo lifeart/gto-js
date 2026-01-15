@@ -8,10 +8,13 @@
 import {
   DataType,
   DataTypeName,
+  DataTypeSize,
+  GTO_MAGIC,
   GTO_VERSION,
   FileType
 } from './constants.js';
 import { StringTable } from './string-table.js';
+import { floatToHalf } from './utils.js';
 
 /**
  * Writer states
@@ -44,6 +47,12 @@ export class Writer {
     this._output = '';
     this._indent = 0;
     this._version = GTO_VERSION;
+    this._binaryMode = false;
+    // Binary mode storage
+    this._objectInfos = [];
+    this._componentInfos = [];
+    this._propertyInfos = [];
+    this._propertyData = [];
   }
 
   /**
@@ -77,26 +86,39 @@ export class Writer {
   }
 
   /**
-   * Open/initialize the writer for text output
-   * @param {FileType} type - File type (only TextGTO supported)
+   * Open/initialize the writer
+   * @param {FileType} type - File type (TextGTO or BinaryGTO)
    * @returns {boolean}
    */
   open(type = FileType.TextGTO) {
-    if (type !== FileType.TextGTO) {
-      console.warn('Only TextGTO format is supported, using TextGTO');
-    }
+    this._fileType = type;
     this._state = WriterState.Initial;
-    this._output = '';
-    this._indent = 0;
+
+    if (type === FileType.BinaryGTO) {
+      this._binaryMode = true;
+      this._objectInfos = [];
+      this._componentInfos = [];
+      this._propertyInfos = [];
+      this._propertyData = [];
+      this._currentObjectIdx = -1;
+      this._currentComponentIdx = -1;
+    } else {
+      this._binaryMode = false;
+      this._output = '';
+      this._indent = 0;
+    }
     return true;
   }
 
   /**
    * Close the writer and finalize output
-   * @returns {string} - The complete GTO text content
+   * @returns {string|ArrayBuffer} - GTO text content or binary ArrayBuffer
    */
   close() {
     this._state = WriterState.Closed;
+    if (this._binaryMode) {
+      return this._buildBinary();
+    }
     return this.toString();
   }
 
@@ -142,17 +164,28 @@ export class Writer {
     this._state = WriterState.Object;
 
     // Intern strings
-    this.intern(name);
-    this.intern(protocol);
+    const nameId = this.intern(name);
+    const protocolId = this.intern(protocol);
 
-    // Write object header
-    let header = `${name} : ${protocol}`;
-    if (protocolVersion > 0) {
-      header += ` (${protocolVersion})`;
+    if (this._binaryMode) {
+      this._currentObjectIdx = this._objectInfos.length;
+      this._objectInfos.push({
+        nameId,
+        protocolId,
+        protocolVersion,
+        numComponents: 0,
+        componentStartIdx: this._componentInfos.length
+      });
+    } else {
+      // Write object header
+      let header = `${name} : ${protocol}`;
+      if (protocolVersion > 0) {
+        header += ` (${protocolVersion})`;
+      }
+      this._writeLine(header);
+      this._writeLine('{');
+      this._indent++;
     }
-    this._writeLine(header);
-    this._writeLine('{');
-    this._indent++;
   }
 
   /**
@@ -163,9 +196,16 @@ export class Writer {
       throw new Error('No object to end');
     }
 
-    this._indent--;
-    this._writeLine('}');
-    this._writeLine(); // Blank line between objects
+    if (this._binaryMode) {
+      // Update numComponents for the current object
+      const objInfo = this._objectInfos[this._currentObjectIdx];
+      objInfo.numComponents = this._componentInfos.length - objInfo.componentStartIdx;
+      this._currentObjectIdx = -1;
+    } else {
+      this._indent--;
+      this._writeLine('}');
+      this._writeLine(); // Blank line between objects
+    }
     this._state = WriterState.Initial;
   }
 
@@ -183,19 +223,28 @@ export class Writer {
     this._state = WriterState.Component;
 
     // Intern strings
-    this.intern(name);
-    if (interpretation) {
-      this.intern(interpretation);
-    }
+    const nameId = this.intern(name);
+    const interpretationId = interpretation ? this.intern(interpretation) : 0;
 
-    // Write component header (quote if contains special chars)
-    let header = this._quoteName(name);
-    if (interpretation) {
-      header += ` as ${interpretation}`;
+    if (this._binaryMode) {
+      this._currentComponentIdx = this._componentInfos.length;
+      this._componentInfos.push({
+        nameId,
+        interpretationId,
+        numProperties: 0,
+        flags: transposed ? 1 : 0,
+        propertyStartIdx: this._propertyInfos.length
+      });
+    } else {
+      // Write component header (quote if contains special chars)
+      let header = this._quoteName(name);
+      if (interpretation) {
+        header += ` as ${interpretation}`;
+      }
+      this._writeLine(header);
+      this._writeLine('{');
+      this._indent++;
     }
-    this._writeLine(header);
-    this._writeLine('{');
-    this._indent++;
   }
 
   /**
@@ -206,9 +255,16 @@ export class Writer {
       throw new Error('No component to end');
     }
 
-    this._indent--;
-    this._writeLine('}');
-    this._writeLine(); // Blank line between components
+    if (this._binaryMode) {
+      // Update numProperties for the current component
+      const compInfo = this._componentInfos[this._currentComponentIdx];
+      compInfo.numProperties = this._propertyInfos.length - compInfo.propertyStartIdx;
+      this._currentComponentIdx = -1;
+    } else {
+      this._indent--;
+      this._writeLine('}');
+      this._writeLine(); // Blank line between components
+    }
     this._state = WriterState.Object;
   }
 
@@ -227,35 +283,52 @@ export class Writer {
     }
 
     // Intern strings
-    this.intern(name);
-    if (interpretation) {
-      this.intern(interpretation);
+    const nameId = this.intern(name);
+    const interpretationId = interpretation ? this.intern(interpretation) : 0;
+
+    // Flatten data if nested
+    let flatData = data;
+    if (Array.isArray(data) && data.length > 0 && Array.isArray(data[0])) {
+      flatData = data.flat();
     }
 
-    // Build declaration
-    const typeName = DataTypeName[type];
-    let declaration = typeName;
+    if (this._binaryMode) {
+      // Store property info and data for later binary assembly
+      this._propertyInfos.push({
+        nameId,
+        interpretationId,
+        type,
+        size,
+        width,
+        dims: [1, 1, 1, 1]
+      });
+      this._propertyData.push(Array.from(flatData));
+    } else {
+      // Build declaration
+      const typeName = DataTypeName[type];
+      let declaration = typeName;
 
-    // In GTO text format:
-    // - type[N] means width=N (parts per element)
-    // - size is inferred from data, never written explicitly
-    if (width > 1) {
-      declaration += `[${width}]`;
+      // In GTO text format:
+      // - type[N] means width=N (parts per element)
+      // - size is inferred from data, never written explicitly
+      if (width > 1) {
+        declaration += `[${width}]`;
+      }
+
+      // Add name
+      declaration += ` ${name}`;
+
+      // Add interpretation if present
+      if (interpretation) {
+        declaration += ` as ${interpretation}`;
+      }
+
+      // Format data
+      const formattedData = this._formatData(type, width, size, flatData);
+      declaration += ` = ${formattedData}`;
+
+      this._writeLine(declaration);
     }
-
-    // Add name
-    declaration += ` ${name}`;
-
-    // Add interpretation if present
-    if (interpretation) {
-      declaration += ` as ${interpretation}`;
-    }
-
-    // Format data
-    const formattedData = this._formatData(type, width, size, data);
-    declaration += ` = ${formattedData}`;
-
-    this._writeLine(declaration);
   }
 
   /**
@@ -430,20 +503,154 @@ export class Writer {
     }
     return name;
   }
+
+  // ============================================
+  // Binary format writing
+  // ============================================
+
+  /**
+   * Build complete binary GTO file
+   * @private
+   * @returns {ArrayBuffer}
+   */
+  _buildBinary() {
+    const littleEndian = true; // Use little-endian by default
+
+    // Get string table bytes
+    const stringTableBytes = this._stringTable.writeToBinary();
+
+    // Calculate total size
+    const headerSize = 20;
+    const stringTableSize = stringTableBytes.byteLength;
+    const objectHeaderSize = this._objectInfos.length * 20;
+    const componentHeaderSize = this._componentInfos.length * 16;
+    const propertyHeaderSize = this._propertyInfos.length * 24; // 20 + 4 for dims[0]
+
+    // Calculate data section size
+    let dataSize = 0;
+    for (let i = 0; i < this._propertyInfos.length; i++) {
+      const propInfo = this._propertyInfos[i];
+      const data = this._propertyData[i];
+      const typeSize = DataTypeSize[propInfo.type] || 4;
+      dataSize += data.length * typeSize;
+    }
+
+    const totalSize = headerSize + stringTableSize + objectHeaderSize +
+                      componentHeaderSize + propertyHeaderSize + dataSize;
+
+    // Create buffer
+    const buffer = new ArrayBuffer(totalSize);
+    const view = new DataView(buffer);
+    const uint8View = new Uint8Array(buffer);
+    let offset = 0;
+
+    // Write header (20 bytes)
+    view.setUint32(offset, GTO_MAGIC, littleEndian); offset += 4;
+    view.setUint32(offset, this._stringTable.size, littleEndian); offset += 4;
+    view.setUint32(offset, this._objectInfos.length, littleEndian); offset += 4;
+    view.setUint32(offset, this._version, littleEndian); offset += 4;
+    view.setUint32(offset, 0, littleEndian); offset += 4; // flags
+
+    // Write string table
+    uint8View.set(stringTableBytes, offset);
+    offset += stringTableSize;
+
+    // Write object headers (20 bytes each)
+    for (const objInfo of this._objectInfos) {
+      view.setUint32(offset, objInfo.nameId, littleEndian); offset += 4;
+      view.setUint32(offset, objInfo.protocolId, littleEndian); offset += 4;
+      view.setUint32(offset, objInfo.protocolVersion, littleEndian); offset += 4;
+      view.setUint32(offset, objInfo.numComponents, littleEndian); offset += 4;
+      view.setUint32(offset, 0, littleEndian); offset += 4; // pad
+    }
+
+    // Write component headers (16 bytes each)
+    for (const compInfo of this._componentInfos) {
+      view.setUint32(offset, compInfo.nameId, littleEndian); offset += 4;
+      view.setUint32(offset, compInfo.interpretationId, littleEndian); offset += 4;
+      view.setUint32(offset, compInfo.numProperties, littleEndian); offset += 4;
+      view.setUint32(offset, compInfo.flags, littleEndian); offset += 4;
+    }
+
+    // Write property headers (24 bytes each - includes dims[0])
+    for (const propInfo of this._propertyInfos) {
+      view.setUint32(offset, propInfo.nameId, littleEndian); offset += 4;
+      view.setUint32(offset, propInfo.interpretationId, littleEndian); offset += 4;
+      view.setUint8(offset, propInfo.type); offset += 1;
+      offset += 3; // pad
+      view.setUint32(offset, propInfo.size, littleEndian); offset += 4;
+      view.setUint32(offset, propInfo.width, littleEndian); offset += 4;
+      view.setUint32(offset, propInfo.dims[0], littleEndian); offset += 4; // dims[0]
+    }
+
+    // Write data section
+    for (let i = 0; i < this._propertyInfos.length; i++) {
+      const propInfo = this._propertyInfos[i];
+      const data = this._propertyData[i];
+
+      for (const value of data) {
+        this._writeBinaryValue(view, offset, propInfo.type, value, littleEndian);
+        offset += DataTypeSize[propInfo.type] || 4;
+      }
+    }
+
+    return buffer;
+  }
+
+  /**
+   * Write a single binary value
+   * @private
+   */
+  _writeBinaryValue(view, offset, type, value, littleEndian) {
+    switch (type) {
+      case DataType.Int:
+        view.setInt32(offset, value, littleEndian);
+        break;
+      case DataType.Float:
+        view.setFloat32(offset, value, littleEndian);
+        break;
+      case DataType.Double:
+        view.setFloat64(offset, value, littleEndian);
+        break;
+      case DataType.Half:
+        view.setUint16(offset, floatToHalf(value), littleEndian);
+        break;
+      case DataType.String:
+        view.setUint32(offset, value, littleEndian);
+        break;
+      case DataType.Boolean:
+        view.setUint8(offset, value ? 1 : 0);
+        break;
+      case DataType.Short:
+        view.setUint16(offset, value, littleEndian);
+        break;
+      case DataType.Byte:
+        view.setUint8(offset, value);
+        break;
+      case DataType.Int64:
+        view.setBigInt64(offset, BigInt(value), littleEndian);
+        break;
+      default:
+        throw new Error(`Unknown data type: ${type}`);
+    }
+  }
 }
 
 /**
- * Simple writer that takes structured data and outputs GTO text
+ * Simple writer that takes structured data and outputs GTO text or binary
  */
 export class SimpleWriter {
   /**
-   * Write structured data to GTO text format
+   * Write structured data to GTO format
    * @param {Object} data - Structured data object
-   * @returns {string} - GTO text content
+   * @param {Object} options - Options object
+   * @param {boolean} options.binary - If true, output binary format (ArrayBuffer)
+   * @returns {string|ArrayBuffer} - GTO text content or binary ArrayBuffer
    */
-  static write(data) {
+  static write(data, options = {}) {
     const writer = new Writer();
-    writer.open(FileType.TextGTO);
+    const fileType = options.binary ? FileType.BinaryGTO : FileType.TextGTO;
+    writer.open(fileType);
 
     for (const obj of data.objects) {
       writer.beginObject(obj.name, obj.protocol, obj.protocolVersion || 1);

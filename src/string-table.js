@@ -100,15 +100,19 @@ export class StringTable {
   readFromBinary(view, offset, numStrings, littleEndian = true) {
     this.clear();
     let pos = offset;
+    const decoder = new TextDecoder('utf-8');
 
     for (let i = 0; i < numStrings; i++) {
-      let str = '';
-      while (pos < view.byteLength) {
-        const byte = view.getUint8(pos++);
-        if (byte === 0) break;
-        str += String.fromCharCode(byte);
+      // Find the null terminator
+      let endPos = pos;
+      while (endPos < view.byteLength && view.getUint8(endPos) !== 0) {
+        endPos++;
       }
+      // Decode the UTF-8 bytes
+      const bytes = new Uint8Array(view.buffer, view.byteOffset + pos, endPos - pos);
+      const str = decoder.decode(bytes);
       this.add(str);
+      pos = endPos + 1; // Skip past null terminator
     }
 
     return pos - offset;

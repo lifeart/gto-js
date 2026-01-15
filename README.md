@@ -66,12 +66,13 @@ npm install gto
 
 ## Features
 
-- **Reader** - Parse `.rv` text files with callback-based or simple API
-- **Writer** - Generate `.rv` text files programmatically
+- **Reader** - Parse text (`.rv`) and binary GTO files with callback-based or simple API
+- **Writer** - Generate text or binary GTO files programmatically
+- **Binary format support** - Compact binary encoding for efficient storage
 - **Builder** - Fluent API for constructing GTO data structures
 - **DTO** - Query and filter parsed data with null-safe chaining
 - **Round-trip support** - Read and write files without data loss
-- **Full type support** - int, float, double, string, byte, short, and more
+- **Full type support** - int, float, double, string, byte, short, half, int64, and more
 
 ## Quick Start
 
@@ -107,6 +108,42 @@ const data = new GTOBuilder()
 const rv = SimpleWriter.write(data);
 writeFileSync('output.rv', rv);
 ```
+
+### Binary Format
+
+```javascript
+import { SimpleReader, SimpleWriter, GTOBuilder } from 'gto';
+import { readFileSync, writeFileSync } from 'fs';
+
+// Write binary GTO file
+const data = new GTOBuilder()
+  .object('mesh', 'polygon', 1)
+    .component('points')
+      .float3('position', [[0,0,0], [1,0,0], [0,1,0]])
+    .end()
+  .end()
+  .build();
+
+const binary = SimpleWriter.write(data, { binary: true });
+writeFileSync('mesh.gto', Buffer.from(binary));
+
+// Read binary GTO file (auto-detected)
+const content = readFileSync('mesh.gto');
+const reader = new SimpleReader();
+reader.open(content.buffer);  // Pass ArrayBuffer
+console.log(reader.result.objects);
+
+// Convert text to binary
+const textContent = readFileSync('session.rv', 'utf-8');
+const textReader = new SimpleReader();
+textReader.open(textContent);
+const binaryOutput = SimpleWriter.write(textReader.result, { binary: true });
+```
+
+Binary format advantages:
+- **Compact**: ~50% smaller than text for numeric-heavy data
+- **Efficient**: Direct memory layout, no parsing overhead
+- **Auto-detected**: Reader automatically detects text vs binary format
 
 ## API Reference
 
@@ -183,7 +220,18 @@ reader.open(fileContent);
 
 ### SimpleWriter
 
-Convert structured data to `.rv` format:
+Convert structured data to `.rv` text or binary format:
+
+```javascript
+// Text output (default)
+const text = SimpleWriter.write(data);
+
+// Binary output
+const binary = SimpleWriter.write(data, { binary: true });
+// Returns ArrayBuffer
+```
+
+**Text format example:**
 
 ```javascript
 import { SimpleWriter } from 'gto';

@@ -1165,3 +1165,293 @@ describe('GTODTO with Builder Integration', () => {
     assert.strictEqual(dto.object('config').prop('user', 'level'), 42);
   });
 });
+
+// ============================================
+// Binary Format Tests
+// ============================================
+
+describe('Binary Format', () => {
+  test('should write and read simple binary format', () => {
+    // Create data with builder
+    const data = new GTOBuilder()
+      .object('test', 'TestProtocol', 1)
+        .component('values')
+          .int('intVal', [1, 2, 3])
+          .float('floatVal', [1.5, 2.5, 3.5])
+        .end()
+      .end()
+      .build();
+
+    // Write as binary
+    const binary = SimpleWriter.write(data, { binary: true });
+
+    // Verify it's an ArrayBuffer
+    assert.ok(binary instanceof ArrayBuffer, 'Should return ArrayBuffer');
+    assert.ok(binary.byteLength > 0, 'Should have content');
+
+    // Read binary back
+    const reader = new SimpleReader();
+    const success = reader.open(binary);
+
+    assert.strictEqual(success, true, 'Should read successfully');
+    assert.strictEqual(reader.result.version, 4);
+    assert.strictEqual(reader.result.objects.length, 1);
+
+    const obj = reader.result.objects[0];
+    assert.strictEqual(obj.name, 'test');
+    assert.strictEqual(obj.protocol, 'TestProtocol');
+
+    const intVal = obj.components.values.properties.intVal;
+    assert.deepStrictEqual(intVal.data, [1, 2, 3]);
+
+    const floatVal = obj.components.values.properties.floatVal;
+    assert.strictEqual(floatVal.data.length, 3);
+    assert.ok(Math.abs(floatVal.data[0] - 1.5) < 0.001);
+    assert.ok(Math.abs(floatVal.data[1] - 2.5) < 0.001);
+    assert.ok(Math.abs(floatVal.data[2] - 3.5) < 0.001);
+  });
+
+  test('should handle string data in binary format', () => {
+    const data = new GTOBuilder()
+      .object('config', 'Settings', 1)
+        .component('user')
+          .string('name', ['Alice', 'Bob', 'Charlie'])
+        .end()
+      .end()
+      .build();
+
+    const binary = SimpleWriter.write(data, { binary: true });
+    const reader = new SimpleReader();
+    reader.open(binary);
+
+    const names = reader.result.objects[0].components.user.properties.name.data;
+    assert.deepStrictEqual(names, ['Alice', 'Bob', 'Charlie']);
+  });
+
+  test('should handle multiple objects and components', () => {
+    const data = new GTOBuilder()
+      .object('obj1', 'Proto1', 1)
+        .component('comp1')
+          .int('val1', [10])
+        .end()
+        .component('comp2')
+          .float('val2', [20.5])
+        .end()
+      .end()
+      .object('obj2', 'Proto2', 2)
+        .component('comp3')
+          .int('val3', [30, 40])
+        .end()
+      .end()
+      .build();
+
+    const binary = SimpleWriter.write(data, { binary: true });
+    const reader = new SimpleReader();
+    reader.open(binary);
+
+    assert.strictEqual(reader.result.objects.length, 2);
+
+    const obj1 = reader.result.objects[0];
+    assert.strictEqual(obj1.name, 'obj1');
+    assert.strictEqual(obj1.protocol, 'Proto1');
+    assert.ok(obj1.components.comp1);
+    assert.ok(obj1.components.comp2);
+
+    const obj2 = reader.result.objects[1];
+    assert.strictEqual(obj2.name, 'obj2');
+    assert.strictEqual(obj2.protocol, 'Proto2');
+    assert.strictEqual(obj2.protocolVersion, 2);
+  });
+
+  test('should round-trip text to binary to text', () => {
+    const textGTO = `GTOa (4)
+
+roundTrip : TestProto (1)
+{
+    data
+    {
+        int[3][2] values = [ [ 1 2 3 ] [ 4 5 6 ] ]
+        float scale = 2.5
+    }
+}
+`;
+
+    // Read text
+    const reader1 = new SimpleReader();
+    reader1.open(textGTO);
+
+    // Write as binary
+    const binary = SimpleWriter.write(reader1.result, { binary: true });
+
+    // Read binary
+    const reader2 = new SimpleReader();
+    reader2.open(binary);
+
+    // Compare
+    assert.strictEqual(reader2.result.objects.length, reader1.result.objects.length);
+    assert.strictEqual(reader2.result.objects[0].name, 'roundTrip');
+    assert.strictEqual(reader2.result.objects[0].protocol, 'TestProto');
+
+    const prop1 = reader1.result.objects[0].components.data.properties.values;
+    const prop2 = reader2.result.objects[0].components.data.properties.values;
+    assert.strictEqual(prop2.size, prop1.size);
+    assert.strictEqual(prop2.width, prop1.width);
+    assert.deepStrictEqual(prop2.data, prop1.data);
+  });
+
+  test('should handle Uint8Array input', () => {
+    const data = new GTOBuilder()
+      .object('test', 'Test', 1)
+        .component('c')
+          .int('v', [42])
+        .end()
+      .end()
+      .build();
+
+    const binary = SimpleWriter.write(data, { binary: true });
+    const uint8 = new Uint8Array(binary);
+
+    const reader = new SimpleReader();
+    const success = reader.open(uint8);
+
+    assert.strictEqual(success, true);
+    assert.strictEqual(reader.result.objects[0].components.c.properties.v.data[0], 42);
+  });
+
+  test('should handle double type', () => {
+    const data = new GTOBuilder()
+      .object('test', 'Test', 1)
+        .component('c')
+          .double('d', [Math.PI, Math.E])
+        .end()
+      .end()
+      .build();
+
+    const binary = SimpleWriter.write(data, { binary: true });
+    const reader = new SimpleReader();
+    reader.open(binary);
+
+    const d = reader.result.objects[0].components.c.properties.d.data;
+    assert.ok(Math.abs(d[0] - Math.PI) < 1e-10);
+    assert.ok(Math.abs(d[1] - Math.E) < 1e-10);
+  });
+
+  test('should handle byte type', () => {
+    const data = new GTOBuilder()
+      .object('test', 'Test', 1)
+        .component('c')
+          .byte('b', [0, 127, 255])
+        .end()
+      .end()
+      .build();
+
+    const binary = SimpleWriter.write(data, { binary: true });
+    const reader = new SimpleReader();
+    reader.open(binary);
+
+    const b = reader.result.objects[0].components.c.properties.b.data;
+    assert.deepStrictEqual(b, [0, 127, 255]);
+  });
+
+  test('should handle short type', () => {
+    const data = new GTOBuilder()
+      .object('test', 'Test', 1)
+        .component('c')
+          .short('s', [0, 1000, 65535])
+        .end()
+      .end()
+      .build();
+
+    const binary = SimpleWriter.write(data, { binary: true });
+    const reader = new SimpleReader();
+    reader.open(binary);
+
+    const s = reader.result.objects[0].components.c.properties.s.data;
+    assert.deepStrictEqual(s, [0, 1000, 65535]);
+  });
+
+  test('should handle vector properties (width > 1)', () => {
+    const data = new GTOBuilder()
+      .object('mesh', 'polygon', 1)
+        .component('points')
+          .float3('position', [[0, 0, 0], [1, 0, 0], [0, 1, 0]])
+        .end()
+      .end()
+      .build();
+
+    const binary = SimpleWriter.write(data, { binary: true });
+    const reader = new SimpleReader();
+    reader.open(binary);
+
+    const pos = reader.result.objects[0].components.points.properties.position;
+    assert.strictEqual(pos.width, 3);
+    assert.strictEqual(pos.size, 3);
+    assert.deepStrictEqual(pos.data, [[0, 0, 0], [1, 0, 0], [0, 1, 0]]);
+  });
+
+  test('should produce smaller output than text for numeric data', () => {
+    // Create data with lots of numbers
+    const positions = [];
+    for (let i = 0; i < 100; i++) {
+      positions.push([i * 0.1, i * 0.2, i * 0.3]);
+    }
+
+    const data = new GTOBuilder()
+      .object('bigMesh', 'polygon', 1)
+        .component('points')
+          .float3('position', positions)
+        .end()
+      .end()
+      .build();
+
+    const text = SimpleWriter.write(data);
+    const binary = SimpleWriter.write(data, { binary: true });
+
+    // Binary should be smaller for numeric data
+    assert.ok(binary.byteLength < text.length,
+      `Binary (${binary.byteLength}) should be smaller than text (${text.length})`);
+  });
+
+  test('should handle UTF-8 strings in binary format', () => {
+    const data = new GTOBuilder()
+      .object('test', 'Test', 1)
+        .component('strings')
+          .string('names', ['hello', 'мир', '世界', 'émoji 🎉'])
+        .end()
+      .end()
+      .build();
+
+    const binary = SimpleWriter.write(data, { binary: true });
+    const reader = new SimpleReader();
+    reader.open(binary);
+
+    const names = reader.result.objects[0].components.strings.properties.names.data;
+    assert.deepStrictEqual(names, ['hello', 'мир', '世界', 'émoji 🎉']);
+  });
+});
+
+describe('Binary Format with Writer API', () => {
+  test('should write binary using Writer directly', () => {
+    const writer = new Writer();
+    writer.open(FileType.BinaryGTO);
+
+    writer.beginObject('myObj', 'MyProto', 1);
+    writer.beginComponent('data');
+    writer.propertyWithData('values', DataType.Int, 3, 1, '', [10, 20, 30]);
+    writer.endComponent();
+    writer.endObject();
+
+    const binary = writer.close();
+
+    assert.ok(binary instanceof ArrayBuffer);
+
+    const reader = new SimpleReader();
+    reader.open(binary);
+
+    assert.strictEqual(reader.result.objects[0].name, 'myObj');
+    assert.deepStrictEqual(
+      reader.result.objects[0].components.data.properties.values.data,
+      [10, 20, 30]
+    );
+  });
+});
