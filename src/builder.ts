@@ -18,72 +18,28 @@
  */
 
 import { DataType } from './constants.js';
+import type { GTOData, ObjectData, ComponentData, PropertyData } from './dto.js';
 
-/**
- * Property builder helper
- */
-class PropertyBuilder {
-  constructor(name, type, width = 1) {
-    this.name = name;
-    this.type = type;
-    this.width = width;
-    this.size = 0;
-    this.data = [];
-    this.interpretation = '';
-  }
-
-  /**
-   * Set interpretation string
-   */
-  as(interpretation) {
-    this.interpretation = interpretation;
-    return this;
-  }
-
-  /**
-   * Build the property object
-   */
-  build() {
-    return {
-      type: this._typeName(),
-      size: this.size,
-      width: this.width,
-      interpretation: this.interpretation,
-      data: this.data
-    };
-  }
-
-  _typeName() {
-    const names = {
-      [DataType.Int]: 'int',
-      [DataType.Float]: 'float',
-      [DataType.Double]: 'double',
-      [DataType.Half]: 'half',
-      [DataType.String]: 'string',
-      [DataType.Boolean]: 'bool',
-      [DataType.Short]: 'short',
-      [DataType.Byte]: 'byte',
-      [DataType.Int64]: 'int64'
-    };
-    return names[this.type] || 'float';
-  }
-}
+type PropertyValue = number | string | boolean | number[] | string[] | boolean[] | number[][];
 
 /**
  * Component builder
  */
 class ComponentBuilder {
-  constructor(name, parent) {
+  private _name: string;
+  private _parent: ObjectBuilder;
+  private _properties: Record<string, PropertyData> = {};
+  private _interpretation: string = '';
+
+  constructor(name: string, parent: ObjectBuilder) {
     this._name = name;
     this._parent = parent;
-    this._properties = {};
-    this._interpretation = '';
   }
 
   /**
    * Set component interpretation
    */
-  as(interpretation) {
+  as(interpretation: string): this {
     this._interpretation = interpretation;
     return this;
   }
@@ -95,28 +51,28 @@ class ComponentBuilder {
   /**
    * Add an int property (width=1)
    */
-  int(name, data) {
+  int(name: string, data: number | number[]): this {
     return this._addProperty(name, DataType.Int, 1, data);
   }
 
   /**
    * Add an int[2] property
    */
-  int2(name, data) {
+  int2(name: string, data: number[] | number[][]): this {
     return this._addProperty(name, DataType.Int, 2, data);
   }
 
   /**
    * Add an int[3] property
    */
-  int3(name, data) {
+  int3(name: string, data: number[] | number[][]): this {
     return this._addProperty(name, DataType.Int, 3, data);
   }
 
   /**
    * Add an int[4] property
    */
-  int4(name, data) {
+  int4(name: string, data: number[] | number[][]): this {
     return this._addProperty(name, DataType.Int, 4, data);
   }
 
@@ -127,42 +83,42 @@ class ComponentBuilder {
   /**
    * Add a float property (width=1)
    */
-  float(name, data) {
+  float(name: string, data: number | number[]): this {
     return this._addProperty(name, DataType.Float, 1, data);
   }
 
   /**
    * Add a float[2] property
    */
-  float2(name, data) {
+  float2(name: string, data: number[] | number[][]): this {
     return this._addProperty(name, DataType.Float, 2, data);
   }
 
   /**
    * Add a float[3] property
    */
-  float3(name, data) {
+  float3(name: string, data: number[] | number[][]): this {
     return this._addProperty(name, DataType.Float, 3, data);
   }
 
   /**
    * Add a float[4] property
    */
-  float4(name, data) {
+  float4(name: string, data: number[] | number[][]): this {
     return this._addProperty(name, DataType.Float, 4, data);
   }
 
   /**
    * Add a float[16] property (4x4 matrix)
    */
-  matrix4(name, data) {
+  matrix4(name: string, data: number[] | number[][]): this {
     return this._addProperty(name, DataType.Float, 16, data);
   }
 
   /**
    * Add a float[9] property (3x3 matrix)
    */
-  matrix3(name, data) {
+  matrix3(name: string, data: number[] | number[][]): this {
     return this._addProperty(name, DataType.Float, 9, data);
   }
 
@@ -173,21 +129,21 @@ class ComponentBuilder {
   /**
    * Add a double property (width=1)
    */
-  double(name, data) {
+  double(name: string, data: number | number[]): this {
     return this._addProperty(name, DataType.Double, 1, data);
   }
 
   /**
    * Add a double[2] property
    */
-  double2(name, data) {
+  double2(name: string, data: number[] | number[][]): this {
     return this._addProperty(name, DataType.Double, 2, data);
   }
 
   /**
    * Add a double[3] property
    */
-  double3(name, data) {
+  double3(name: string, data: number[] | number[][]): this {
     return this._addProperty(name, DataType.Double, 3, data);
   }
 
@@ -198,18 +154,16 @@ class ComponentBuilder {
   /**
    * Add a string property (width=1)
    */
-  string(name, data) {
+  string(name: string, data: string | string[]): this {
     // Wrap single string in array
-    if (typeof data === 'string') {
-      data = [data];
-    }
-    return this._addProperty(name, DataType.String, 1, data);
+    const normalizedData = typeof data === 'string' ? [data] : data;
+    return this._addProperty(name, DataType.String, 1, normalizedData);
   }
 
   /**
    * Add a string[N] property
    */
-  stringN(name, width, data) {
+  stringN(name: string, width: number, data: string[]): this {
     return this._addProperty(name, DataType.String, width, data);
   }
 
@@ -220,21 +174,21 @@ class ComponentBuilder {
   /**
    * Add a byte property
    */
-  byte(name, data) {
+  byte(name: string, data: number | number[]): this {
     return this._addProperty(name, DataType.Byte, 1, data);
   }
 
   /**
    * Add a short property
    */
-  short(name, data) {
+  short(name: string, data: number | number[]): this {
     return this._addProperty(name, DataType.Short, 1, data);
   }
 
   /**
    * Add a boolean property
    */
-  bool(name, data) {
+  bool(name: string, data: boolean | boolean[]): this {
     return this._addProperty(name, DataType.Boolean, 1, data);
   }
 
@@ -245,12 +199,12 @@ class ComponentBuilder {
   /**
    * Add a generic property with custom type and width
    */
-  property(name, type, width, data, interpretation = '') {
-    const prop = this._addProperty(name, type, width, data);
+  property(name: string, type: DataType, width: number, data: PropertyValue, interpretation: string = ''): this {
+    this._addProperty(name, type, width, data);
     if (interpretation) {
       this._properties[name].interpretation = interpretation;
     }
-    return prop;
+    return this;
   }
 
   // ============================================
@@ -260,15 +214,15 @@ class ComponentBuilder {
   /**
    * End component and return to parent object builder
    */
-  end() {
+  end(): ObjectBuilder {
     return this._parent;
   }
 
   /**
    * Build the component object
    */
-  build() {
-    const properties = {};
+  build(): ComponentData {
+    const properties: Record<string, PropertyData> = {};
     for (const [name, prop] of Object.entries(this._properties)) {
       properties[name] = prop;
     }
@@ -282,15 +236,15 @@ class ComponentBuilder {
   // Internal
   // ============================================
 
-  _addProperty(name, type, width, data) {
+  private _addProperty(name: string, type: DataType, width: number, data: PropertyValue): this {
     // Normalize data
-    let normalizedData = data;
-    let size;
+    let normalizedData: unknown[];
+    let size: number;
 
     if (Array.isArray(data) && data.length > 0 && Array.isArray(data[0])) {
       // Already grouped: [[1,2,3], [4,5,6]]
       size = data.length;
-      normalizedData = data;
+      normalizedData = data as unknown[];
     } else if (Array.isArray(data)) {
       // Flat array
       if (width > 1) {
@@ -298,11 +252,11 @@ class ComponentBuilder {
         size = Math.floor(data.length / width);
         normalizedData = [];
         for (let i = 0; i < data.length; i += width) {
-          normalizedData.push(data.slice(i, i + width));
+          normalizedData.push((data as unknown[]).slice(i, i + width));
         }
       } else {
         size = data.length;
-        normalizedData = data;
+        normalizedData = data as unknown[];
       }
     } else {
       // Single value
@@ -321,8 +275,8 @@ class ComponentBuilder {
     return this;
   }
 
-  _typeName(type) {
-    const names = {
+  private _typeName(type: DataType): string {
+    const names: Record<DataType, string> = {
       [DataType.Int]: 'int',
       [DataType.Float]: 'float',
       [DataType.Double]: 'double',
@@ -341,18 +295,23 @@ class ComponentBuilder {
  * Object builder
  */
 class ObjectBuilder {
-  constructor(name, protocol, version, parent) {
+  private _name: string;
+  private _protocol: string;
+  private _version: number;
+  private _parent: GTOBuilder;
+  private _components: Record<string, ComponentBuilder> = {};
+
+  constructor(name: string, protocol: string, version: number, parent: GTOBuilder) {
     this._name = name;
     this._protocol = protocol;
     this._version = version;
     this._parent = parent;
-    this._components = {};
   }
 
   /**
    * Start a new component
    */
-  component(name, interpretation = '') {
+  component(name: string, interpretation: string = ''): ComponentBuilder {
     const comp = new ComponentBuilder(name, this);
     if (interpretation) {
       comp.as(interpretation);
@@ -364,15 +323,15 @@ class ObjectBuilder {
   /**
    * End object and return to parent GTO builder
    */
-  end() {
+  end(): GTOBuilder {
     return this._parent;
   }
 
   /**
    * Build the object
    */
-  build() {
-    const components = {};
+  build(): ObjectData {
+    const components: Record<string, ComponentData> = {};
     for (const [name, comp] of Object.entries(this._components)) {
       components[name] = comp.build();
     }
@@ -400,26 +359,24 @@ class ObjectBuilder {
  *   .build();
  */
 export class GTOBuilder {
-  constructor() {
-    this._objects = [];
-    this._version = 4;
-  }
+  private _objects: ObjectBuilder[] = [];
+  private _version: number = 4;
 
   /**
    * Set GTO version
    */
-  version(v) {
+  version(v: number): this {
     this._version = v;
     return this;
   }
 
   /**
    * Start a new object
-   * @param {string} name - Object name
-   * @param {string} protocol - Protocol name
-   * @param {number} version - Protocol version
+   * @param name - Object name
+   * @param protocol - Protocol name
+   * @param version - Protocol version
    */
-  object(name, protocol, version = 1) {
+  object(name: string, protocol: string, version: number = 1): ObjectBuilder {
     const obj = new ObjectBuilder(name, protocol, version, this);
     this._objects.push(obj);
     return obj;
@@ -428,7 +385,7 @@ export class GTOBuilder {
   /**
    * Build the final GTO data structure
    */
-  build() {
+  build(): GTOData {
     return {
       version: this._version,
       objects: this._objects.map(obj => obj.build())
@@ -438,7 +395,7 @@ export class GTOBuilder {
   /**
    * Build and convert to JSON string
    */
-  toJSON(indent = 2) {
+  toJSON(indent: number = 2): string {
     return JSON.stringify(this.build(), null, indent);
   }
 }
@@ -450,14 +407,14 @@ export class GTOBuilder {
 /**
  * Create a polygon mesh builder
  */
-export function polygon(name, version = 2) {
+export function polygon(name: string, version: number = 2): PolygonBuilder {
   return new PolygonBuilder(name, version);
 }
 
 /**
  * Create a transform builder
  */
-export function transform(name, version = 1) {
+export function transform(name: string, version: number = 1): TransformBuilder {
   return new TransformBuilder(name, version);
 }
 
@@ -465,19 +422,22 @@ export function transform(name, version = 1) {
  * Polygon mesh builder with convenience methods
  */
 class PolygonBuilder {
-  constructor(name, version) {
+  private _builder: GTOBuilder;
+  private _obj: ObjectBuilder;
+  private _pointsComp: ComponentBuilder | null = null;
+  private _elementsComp: ComponentBuilder | null = null;
+  private _indicesComp: ComponentBuilder | null = null;
+
+  constructor(name: string, version: number) {
     this._builder = new GTOBuilder();
     this._obj = this._builder.object(name, 'polygon', version);
-    this._pointsComp = null;
-    this._elementsComp = null;
-    this._indicesComp = null;
   }
 
   /**
    * Set vertex positions
-   * @param {number[][]} positions - Array of [x,y,z] positions
+   * @param positions - Array of [x,y,z] positions
    */
-  positions(positions) {
+  positions(positions: number[][]): this {
     if (!this._pointsComp) {
       this._pointsComp = this._obj.component('points');
     }
@@ -487,9 +447,9 @@ class PolygonBuilder {
 
   /**
    * Set vertex normals
-   * @param {number[][]} normals - Array of [x,y,z] normals
+   * @param normals - Array of [x,y,z] normals
    */
-  normals(normals) {
+  normals(normals: number[][]): this {
     if (!this._pointsComp) {
       this._pointsComp = this._obj.component('points');
     }
@@ -499,9 +459,9 @@ class PolygonBuilder {
 
   /**
    * Set UV coordinates
-   * @param {number[][]} uvs - Array of [u,v] coordinates
+   * @param uvs - Array of [u,v] coordinates
    */
-  uvs(uvs) {
+  uvs(uvs: number[][]): this {
     if (!this._pointsComp) {
       this._pointsComp = this._obj.component('points');
     }
@@ -511,9 +471,9 @@ class PolygonBuilder {
 
   /**
    * Set polygon types (3=triangle, 4=quad, etc.)
-   * @param {number[]} types - Array of polygon types
+   * @param types - Array of polygon types
    */
-  types(types) {
+  types(types: number[]): this {
     if (!this._elementsComp) {
       this._elementsComp = this._obj.component('elements');
     }
@@ -523,9 +483,9 @@ class PolygonBuilder {
 
   /**
    * Set polygon sizes (vertices per polygon)
-   * @param {number[]} sizes - Array of polygon sizes
+   * @param sizes - Array of polygon sizes
    */
-  sizes(sizes) {
+  sizes(sizes: number[]): this {
     if (!this._elementsComp) {
       this._elementsComp = this._obj.component('elements');
     }
@@ -535,9 +495,9 @@ class PolygonBuilder {
 
   /**
    * Set vertex indices
-   * @param {number[]} indices - Array of vertex indices
+   * @param indices - Array of vertex indices
    */
-  indices(indices) {
+  indices(indices: number[]): this {
     if (!this._indicesComp) {
       this._indicesComp = this._obj.component('indices');
     }
@@ -548,7 +508,7 @@ class PolygonBuilder {
   /**
    * Build the polygon mesh
    */
-  build() {
+  build(): GTOData {
     if (this._pointsComp) this._pointsComp.end();
     if (this._elementsComp) this._elementsComp.end();
     if (this._indicesComp) this._indicesComp.end();
@@ -561,7 +521,11 @@ class PolygonBuilder {
  * Transform builder
  */
 class TransformBuilder {
-  constructor(name, version) {
+  private _builder: GTOBuilder;
+  private _obj: ObjectBuilder;
+  private _objComp: ComponentBuilder;
+
+  constructor(name: string, version: number) {
     this._builder = new GTOBuilder();
     this._obj = this._builder.object(name, 'transform', version);
     this._objComp = this._obj.component('object');
@@ -570,7 +534,7 @@ class TransformBuilder {
   /**
    * Set 4x4 transformation matrix
    */
-  matrix(m) {
+  matrix(m: number[]): this {
     this._objComp.matrix4('globalMatrix', m);
     return this;
   }
@@ -578,7 +542,7 @@ class TransformBuilder {
   /**
    * Set parent object name
    */
-  parent(name) {
+  parent(name: string): this {
     this._objComp.string('parent', name);
     return this;
   }
@@ -586,7 +550,7 @@ class TransformBuilder {
   /**
    * Build the transform
    */
-  build() {
+  build(): GTOData {
     this._objComp.end();
     this._obj.end();
     return this._builder.build();

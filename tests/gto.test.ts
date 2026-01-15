@@ -1,5 +1,4 @@
-import { test, describe } from 'node:test';
-import assert from 'node:assert';
+import { test, describe, expect } from 'vitest';
 import {
   Reader,
   SimpleReader,
@@ -18,6 +17,7 @@ import {
   PropertyDTO,
   ObjectCollection
 } from '../src/index.js';
+import type { PropertyInfo } from '../src/constants.js';
 
 describe('StringTable', () => {
   test('should intern and lookup strings', () => {
@@ -26,22 +26,22 @@ describe('StringTable', () => {
     const id2 = table.intern('world');
     const id3 = table.intern('hello'); // duplicate
 
-    assert.strictEqual(id1, 0);
-    assert.strictEqual(id2, 1);
-    assert.strictEqual(id3, 0); // same as first 'hello'
+    expect(id1).toBe(0);
+    expect(id2).toBe(1);
+    expect(id3).toBe(0); // same as first 'hello'
 
-    assert.strictEqual(table.stringFromId(0), 'hello');
-    assert.strictEqual(table.stringFromId(1), 'world');
-    assert.strictEqual(table.size, 2);
+    expect(table.stringFromId(0)).toBe('hello');
+    expect(table.stringFromId(1)).toBe('world');
+    expect(table.size).toBe(2);
   });
 
   test('should clear correctly', () => {
     const table = new StringTable();
     table.intern('test');
-    assert.strictEqual(table.size, 1);
+    expect(table.size).toBe(1);
 
     table.clear();
-    assert.strictEqual(table.size, 0);
+    expect(table.size).toBe(0);
   });
 });
 
@@ -61,24 +61,24 @@ myObject : testProtocol (1)
     const reader = new SimpleReader();
     const success = reader.open(content, 'test.gto');
 
-    assert.strictEqual(success, true);
-    assert.strictEqual(reader.result.version, 4);
-    assert.strictEqual(reader.result.objects.length, 1);
+    expect(success).toBe(true);
+    expect(reader.result.version).toBe(4);
+    expect(reader.result.objects.length).toBe(1);
 
     const obj = reader.result.objects[0];
-    assert.strictEqual(obj.name, 'myObject');
-    assert.strictEqual(obj.protocol, 'testProtocol');
-    assert.strictEqual(obj.protocolVersion, 1);
+    expect(obj.name).toBe('myObject');
+    expect(obj.protocol).toBe('testProtocol');
+    expect(obj.protocolVersion).toBe(1);
 
     const comp = obj.components.myComponent;
-    assert.ok(comp);
+    expect(comp).toBeTruthy();
 
     const prop = comp.properties.position;
-    assert.ok(prop);
-    assert.strictEqual(prop.type, 'float');
-    assert.strictEqual(prop.width, 3);
-    assert.strictEqual(prop.size, 2);
-    assert.deepStrictEqual(prop.data, [[1, 2, 3], [4, 5, 6]]);
+    expect(prop).toBeTruthy();
+    expect(prop.type).toBe('float');
+    expect(prop.width).toBe(3);
+    expect(prop.size).toBe(2);
+    expect(prop.data).toEqual([[1, 2, 3], [4, 5, 6]]);
   });
 
   test('should parse integer properties', () => {
@@ -97,8 +97,8 @@ mesh : polygon (2)
     reader.open(content);
 
     const prop = reader.result.objects[0].components.indices.properties.vertex;
-    assert.strictEqual(prop.type, 'int');
-    assert.deepStrictEqual(prop.data, [0, 1, 2, 3, 4, 5]);
+    expect(prop.type).toBe('int');
+    expect(prop.data).toEqual([0, 1, 2, 3, 4, 5]);
   });
 
   test('should parse string properties', () => {
@@ -117,8 +117,8 @@ config : settings (1)
     reader.open(content);
 
     const prop = reader.result.objects[0].components.info.properties.names;
-    assert.strictEqual(prop.type, 'string');
-    assert.deepStrictEqual(prop.data, ['Alice', 'Bob']);
+    expect(prop.type).toBe('string');
+    expect(prop.data).toEqual(['Alice', 'Bob']);
   });
 
   test('should handle component interpretation', () => {
@@ -137,7 +137,7 @@ obj : proto (1)
     reader.open(content);
 
     const comp = reader.result.objects[0].components.transform;
-    assert.strictEqual(comp.interpretation, 'matrix');
+    expect(comp.interpretation).toBe('matrix');
   });
 
   test('should handle property interpretation', () => {
@@ -156,7 +156,7 @@ obj : proto (1)
     reader.open(content);
 
     const prop = reader.result.objects[0].components.points.properties.position;
-    assert.strictEqual(prop.interpretation, 'coordinate');
+    expect(prop.interpretation).toBe('coordinate');
   });
 
   test('should parse multiple objects', () => {
@@ -182,9 +182,9 @@ object2 : proto (1)
     const reader = new SimpleReader();
     reader.open(content);
 
-    assert.strictEqual(reader.result.objects.length, 2);
-    assert.strictEqual(reader.result.objects[0].name, 'object1');
-    assert.strictEqual(reader.result.objects[1].name, 'object2');
+    expect(reader.result.objects.length).toBe(2);
+    expect(reader.result.objects[0].name).toBe('object1');
+    expect(reader.result.objects[1].name).toBe('object2');
   });
 
   test('should handle comments', () => {
@@ -204,9 +204,9 @@ obj : proto (1)
     const reader = new SimpleReader();
     const success = reader.open(content);
 
-    assert.strictEqual(success, true);
+    expect(success).toBe(true);
     const prop = reader.result.objects[0].components.comp.properties.value;
-    assert.deepStrictEqual(prop.data, [42]);
+    expect(prop.data).toEqual([42]);
   });
 
   test('should handle negative numbers', () => {
@@ -225,7 +225,7 @@ obj : proto (1)
     reader.open(content);
 
     const prop = reader.result.objects[0].components.comp.properties.pos;
-    assert.deepStrictEqual(prop.data, [[-1.5, -2.0, -3.25]]);
+    expect(prop.data).toEqual([[-1.5, -2.0, -3.25]]);
   });
 
   test('should handle scientific notation', () => {
@@ -244,18 +244,16 @@ obj : proto (1)
     reader.open(content);
 
     const prop = reader.result.objects[0].components.comp.properties.values;
-    assert.deepStrictEqual(prop.data, [1e10, 2.5e-3, -1.0e5]);
+    expect(prop.data).toEqual([1e10, 2.5e-3, -1.0e5]);
   });
 
   test('custom reader with selective reading', () => {
     class SelectiveReader extends Reader {
-      constructor() {
-        super();
-        this.readObjects = [];
-        this.skippedObjects = [];
-      }
+      readObjects: string[] = [];
+      skippedObjects: string[] = [];
+      lastData: number[] = [];
 
-      object(name, protocol, protocolVersion, info) {
+      object(name: string, protocol: string, protocolVersion: number, info: unknown): number {
         if (name === 'wanted') {
           this.readObjects.push(name);
           return Request.Read;
@@ -264,15 +262,15 @@ obj : proto (1)
         return Request.Skip;
       }
 
-      component(name, info) {
+      component(name: string, info: unknown): number {
         return Request.Read;
       }
 
-      property(name, interpretation, info) {
+      property(name: string, interpretation: string, info: PropertyInfo): number {
         return Request.Read;
       }
 
-      dataRead(info, data) {
+      dataRead(info: PropertyInfo, data: number[]): void {
         this.lastData = data;
       }
     }
@@ -299,9 +297,9 @@ wanted : proto (1)
     const reader = new SelectiveReader();
     reader.open(content);
 
-    assert.deepStrictEqual(reader.readObjects, ['wanted']);
-    assert.deepStrictEqual(reader.skippedObjects, ['unwanted']);
-    assert.deepStrictEqual(reader.lastData, [42]);
+    expect(reader.readObjects).toEqual(['wanted']);
+    expect(reader.skippedObjects).toEqual(['unwanted']);
+    expect(reader.lastData).toEqual([42]);
   });
 });
 
@@ -320,12 +318,12 @@ describe('Writer', () => {
     writer.propertyData([1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
     writer.endData();
 
-    const output = writer.close();
+    const output = writer.close() as string;
 
-    assert.ok(output.includes('GTOa (4)'));
-    assert.ok(output.includes('cube : polygon (2)'));
-    assert.ok(output.includes('points'));
-    assert.ok(output.includes('float[3] position')); // width=3, size inferred from data
+    expect(output).toContain('GTOa (4)');
+    expect(output).toContain('cube : polygon (2)');
+    expect(output).toContain('points');
+    expect(output).toContain('float[3] position'); // width=3, size inferred from data
   });
 
   test('should write integer data', () => {
@@ -342,10 +340,10 @@ describe('Writer', () => {
     writer.propertyData([0, 1, 2, 3, 4, 5]);
     writer.endData();
 
-    const output = writer.close();
+    const output = writer.close() as string;
 
-    assert.ok(output.includes('int vertex')); // width=1, no brackets needed
-    assert.ok(output.includes('[ 0 1 2 3 4 5 ]'));
+    expect(output).toContain('int vertex'); // width=1, no brackets needed
+    expect(output).toContain('[ 0 1 2 3 4 5 ]');
   });
 
   test('should write string data', () => {
@@ -362,11 +360,11 @@ describe('Writer', () => {
     writer.propertyData([writer.intern('Alice'), writer.intern('Bob')]);
     writer.endData();
 
-    const output = writer.close();
+    const output = writer.close() as string;
 
-    assert.ok(output.includes('string names')); // width=1, no brackets
-    assert.ok(output.includes('"Alice"'));
-    assert.ok(output.includes('"Bob"'));
+    expect(output).toContain('string names'); // width=1, no brackets
+    expect(output).toContain('"Alice"');
+    expect(output).toContain('"Bob"');
   });
 
   test('should handle property interpretation', () => {
@@ -383,9 +381,9 @@ describe('Writer', () => {
     writer.propertyData([1.0, 2.0, 3.0]);
     writer.endData();
 
-    const output = writer.close();
+    const output = writer.close() as string;
 
-    assert.ok(output.includes('position as coordinate'));
+    expect(output).toContain('position as coordinate');
   });
 
   test('should handle component interpretation', () => {
@@ -402,9 +400,9 @@ describe('Writer', () => {
     writer.propertyData(new Array(16).fill(0));
     writer.endData();
 
-    const output = writer.close();
+    const output = writer.close() as string;
 
-    assert.ok(output.includes('transform as matrix'));
+    expect(output).toContain('transform as matrix');
   });
 
   test('should escape strings properly', () => {
@@ -421,11 +419,11 @@ describe('Writer', () => {
     writer.propertyData([writer.intern('hello\nworld\t"test"')]);
     writer.endData();
 
-    const output = writer.close();
+    const output = writer.close() as string;
 
-    assert.ok(output.includes('\\n'));
-    assert.ok(output.includes('\\t'));
-    assert.ok(output.includes('\\"'));
+    expect(output).toContain('\\n');
+    expect(output).toContain('\\t');
+    expect(output).toContain('\\"');
   });
 });
 
@@ -453,9 +451,9 @@ describe('SimpleWriter', () => {
 
     const output = SimpleWriter.write(data);
 
-    assert.ok(output.includes('GTOa (4)'));
-    assert.ok(output.includes('cube : polygon (2)'));
-    assert.ok(output.includes('float[3] position')); // width=3, size inferred
+    expect(output).toContain('GTOa (4)');
+    expect(output).toContain('cube : polygon (2)');
+    expect(output).toContain('float[3] position'); // width=3, size inferred
   });
 });
 
@@ -501,18 +499,18 @@ describe('Round-trip', () => {
 
     // Verify
     const result = reader.result;
-    assert.strictEqual(result.objects.length, 1);
+    expect(result.objects.length).toBe(1);
 
     const obj = result.objects[0];
-    assert.strictEqual(obj.name, 'testObject');
-    assert.strictEqual(obj.protocol, 'testProto');
-    assert.strictEqual(obj.protocolVersion, 3);
+    expect(obj.name).toBe('testObject');
+    expect(obj.protocol).toBe('testProto');
+    expect(obj.protocolVersion).toBe(3);
 
     const posData = obj.components.positions.properties.pos.data;
-    assert.deepStrictEqual(posData, [[1, 2, 3], [4, 5, 6], [7, 8, 9]]);
+    expect(posData).toEqual([[1, 2, 3], [4, 5, 6], [7, 8, 9]]);
 
     const countData = obj.components.metadata.properties.count.data;
-    assert.deepStrictEqual(countData, [42]);
+    expect(countData).toEqual([42]);
   });
 });
 
@@ -528,15 +526,15 @@ describe('GTOBuilder', () => {
       .end()
       .build();
 
-    assert.strictEqual(data.version, 4);
-    assert.strictEqual(data.objects.length, 1);
-    assert.strictEqual(data.objects[0].name, 'myObject');
-    assert.strictEqual(data.objects[0].protocol, 'testProto');
+    expect(data.version).toBe(4);
+    expect(data.objects.length).toBe(1);
+    expect(data.objects[0].name).toBe('myObject');
+    expect(data.objects[0].protocol).toBe('testProto');
 
     const props = data.objects[0].components.settings.properties;
-    assert.deepStrictEqual(props.count.data, [42]);
-    assert.deepStrictEqual(props.scale.data, [1.5]);
-    assert.deepStrictEqual(props.name.data, ['test']);
+    expect(props.count.data).toEqual([42]);
+    expect(props.scale.data).toEqual([1.5]);
+    expect(props.name.data).toEqual(['test']);
   });
 
   test('should build with vector properties', () => {
@@ -551,12 +549,12 @@ describe('GTOBuilder', () => {
       .build();
 
     const props = data.objects[0].components.data.properties;
-    assert.strictEqual(props.uv.width, 2);
-    assert.strictEqual(props.uv.size, 4);
-    assert.strictEqual(props.position.width, 3);
-    assert.strictEqual(props.position.size, 3);
-    assert.strictEqual(props.color.width, 4);
-    assert.strictEqual(props.color.size, 2);
+    expect(props.uv.width).toBe(2);
+    expect(props.uv.size).toBe(4);
+    expect(props.position.width).toBe(3);
+    expect(props.position.size).toBe(3);
+    expect(props.color.width).toBe(4);
+    expect(props.color.size).toBe(2);
   });
 
   test('should build with flat array conversion', () => {
@@ -569,8 +567,8 @@ describe('GTOBuilder', () => {
       .build();
 
     const pos = data.objects[0].components.data.properties.position;
-    assert.strictEqual(pos.size, 3);
-    assert.deepStrictEqual(pos.data, [[0, 0, 0], [1, 1, 1], [2, 2, 2]]);
+    expect(pos.size).toBe(3);
+    expect(pos.data).toEqual([[0, 0, 0], [1, 1, 1], [2, 2, 2]]);
   });
 
   test('should build multiple objects', () => {
@@ -587,9 +585,9 @@ describe('GTOBuilder', () => {
       .end()
       .build();
 
-    assert.strictEqual(data.objects.length, 2);
-    assert.strictEqual(data.objects[0].name, 'obj1');
-    assert.strictEqual(data.objects[1].name, 'obj2');
+    expect(data.objects.length).toBe(2);
+    expect(data.objects[0].name).toBe('obj1');
+    expect(data.objects[1].name).toBe('obj2');
   });
 
   test('should build with matrix property', () => {
@@ -603,8 +601,8 @@ describe('GTOBuilder', () => {
       .build();
 
     const mat = data.objects[0].components.matrix.properties.globalMatrix;
-    assert.strictEqual(mat.width, 16);
-    assert.strictEqual(mat.size, 1);
+    expect(mat.width).toBe(16);
+    expect(mat.size).toBe(1);
   });
 
   test('should convert to JSON', () => {
@@ -617,7 +615,7 @@ describe('GTOBuilder', () => {
       .toJSON();
 
     const parsed = JSON.parse(json);
-    assert.strictEqual(parsed.objects[0].name, 'test');
+    expect(parsed.objects[0].name).toBe('test');
   });
 
   test('builder output should be readable by SimpleReader', () => {
@@ -639,8 +637,8 @@ describe('GTOBuilder', () => {
     const reader = new SimpleReader();
     reader.open(rv);
 
-    assert.strictEqual(reader.result.objects[0].name, 'mesh');
-    assert.strictEqual(reader.result.objects[0].components.points.properties.position.size, 4);
+    expect(reader.result.objects[0].name).toBe('mesh');
+    expect(reader.result.objects[0].components.points.properties.position.size).toBe(4);
   });
 });
 
@@ -658,10 +656,10 @@ describe('Polygon Builder', () => {
       .indices([0, 1, 2, 3, 4, 5, 6, 7])
       .build();
 
-    assert.strictEqual(data.objects[0].name, 'cube');
-    assert.strictEqual(data.objects[0].protocol, 'polygon');
-    assert.ok(data.objects[0].components.points);
-    assert.ok(data.objects[0].components.indices);
+    expect(data.objects[0].name).toBe('cube');
+    expect(data.objects[0].protocol).toBe('polygon');
+    expect(data.objects[0].components.points).toBeTruthy();
+    expect(data.objects[0].components.indices).toBeTruthy();
   });
 });
 
@@ -673,10 +671,10 @@ describe('Transform Builder', () => {
       .parent('root')
       .build();
 
-    assert.strictEqual(data.objects[0].name, 'myTransform');
-    assert.strictEqual(data.objects[0].protocol, 'transform');
-    assert.ok(data.objects[0].components.object.properties.globalMatrix);
-    assert.deepStrictEqual(data.objects[0].components.object.properties.parent.data, ['root']);
+    expect(data.objects[0].name).toBe('myTransform');
+    expect(data.objects[0].protocol).toBe('transform');
+    expect(data.objects[0].components.object.properties.globalMatrix).toBeTruthy();
+    expect(data.objects[0].components.object.properties.parent.data).toEqual(['root']);
   });
 });
 
@@ -746,84 +744,84 @@ describe('GTODTO', () => {
   test('should create DTO from parsed data', () => {
     const dto = new GTODTO(sampleData);
 
-    assert.strictEqual(dto.version, 4);
-    assert.strictEqual(dto.objectCount, 4);
+    expect(dto.version).toBe(4);
+    expect(dto.objectCount).toBe(4);
   });
 
   test('should get object by name', () => {
     const dto = new GTODTO(sampleData);
     const rv = dto.object('rv');
 
-    assert.strictEqual(rv.name, 'rv');
-    assert.strictEqual(rv.protocol, 'RVSession');
-    assert.strictEqual(rv.protocolVersion, 1);
-    assert.ok(rv.exists());
+    expect(rv.name).toBe('rv');
+    expect(rv.protocol).toBe('RVSession');
+    expect(rv.protocolVersion).toBe(1);
+    expect(rv.exists()).toBe(true);
   });
 
   test('should return null object for non-existent name', () => {
     const dto = new GTODTO(sampleData);
     const missing = dto.object('nonexistent');
 
-    assert.strictEqual(missing.exists(), false);
-    assert.strictEqual(missing.name, '');
+    expect(missing.exists()).toBe(false);
+    expect(missing.name).toBe('');
   });
 
   test('should filter by protocol', () => {
     const dto = new GTODTO(sampleData);
     const sources = dto.byProtocol('RVFileSource');
 
-    assert.strictEqual(sources.length, 2);
-    assert.strictEqual(sources.first().name, 'source1');
-    assert.strictEqual(sources.last().name, 'source2');
+    expect(sources.length).toBe(2);
+    expect(sources.first().name).toBe('source1');
+    expect(sources.last().name).toBe('source2');
   });
 
   test('should filter by name pattern', () => {
     const dto = new GTODTO(sampleData);
     const sources = dto.byName(/^source/);
 
-    assert.strictEqual(sources.length, 2);
+    expect(sources.length).toBe(2);
   });
 
   test('should get protocols list', () => {
     const dto = new GTODTO(sampleData);
     const protocols = dto.protocols();
 
-    assert.ok(protocols.includes('RVSession'));
-    assert.ok(protocols.includes('RVFileSource'));
-    assert.ok(protocols.includes('RVPaint'));
+    expect(protocols).toContain('RVSession');
+    expect(protocols).toContain('RVFileSource');
+    expect(protocols).toContain('RVPaint');
   });
 
   test('should get component from object', () => {
     const dto = new GTODTO(sampleData);
     const session = dto.object('rv').component('session');
 
-    assert.strictEqual(session.name, 'session');
-    assert.ok(session.exists());
+    expect(session.name).toBe('session');
+    expect(session.exists()).toBe(true);
   });
 
   test('should return null component for non-existent name', () => {
     const dto = new GTODTO(sampleData);
     const missing = dto.object('rv').component('nonexistent');
 
-    assert.strictEqual(missing.exists(), false);
+    expect(missing.exists()).toBe(false);
   });
 
   test('should get property from component', () => {
     const dto = new GTODTO(sampleData);
     const fps = dto.object('rv').component('session').property('fps');
 
-    assert.strictEqual(fps.name, 'fps');
-    assert.strictEqual(fps.type, 'float');
-    assert.strictEqual(fps.value(), 24);
-    assert.ok(fps.exists());
+    expect(fps.name).toBe('fps');
+    expect(fps.type).toBe('float');
+    expect(fps.value()).toBe(24);
+    expect(fps.exists()).toBe(true);
   });
 
   test('should return null property for non-existent name', () => {
     const dto = new GTODTO(sampleData);
     const missing = dto.object('rv').component('session').property('nonexistent');
 
-    assert.strictEqual(missing.exists(), false);
-    assert.strictEqual(missing.value(), null);
+    expect(missing.exists()).toBe(false);
+    expect(missing.value()).toBe(null);
   });
 
   test('property value() should unwrap single values', () => {
@@ -831,27 +829,27 @@ describe('GTODTO', () => {
 
     // Single value
     const fps = dto.object('rv').component('session').property('fps').value();
-    assert.strictEqual(fps, 24);
+    expect(fps).toBe(24);
 
     // Array value
     const range = dto.object('rv').component('session').property('range').value();
-    assert.deepStrictEqual(range, [1, 500]);
+    expect(range).toEqual([1, 500]);
   });
 
   test('property at() should get specific index', () => {
     const dto = new GTODTO(sampleData);
     const range = dto.object('rv').component('session').property('range');
 
-    assert.strictEqual(range.at(0), 1);
-    assert.strictEqual(range.at(1), 500);
-    assert.strictEqual(range.at(999), null);
+    expect(range.at(0)).toBe(1);
+    expect(range.at(1)).toBe(500);
+    expect(range.at(999)).toBe(null);
   });
 
   test('property valueOr() should return default for missing', () => {
     const dto = new GTODTO(sampleData);
     const missing = dto.object('rv').component('session').property('nonexistent');
 
-    assert.strictEqual(missing.valueOr(42), 42);
+    expect(missing.valueOr(42)).toBe(42);
   });
 
   test('shorthand prop() method should work', () => {
@@ -859,11 +857,11 @@ describe('GTODTO', () => {
 
     // Component.prop()
     const fps = dto.object('rv').component('session').prop('fps');
-    assert.strictEqual(fps, 24);
+    expect(fps).toBe(24);
 
     // Object.prop(component, property)
     const currentFrame = dto.object('rv').prop('session', 'currentFrame');
-    assert.strictEqual(currentFrame, 100);
+    expect(currentFrame).toBe(100);
   });
 
   test('ObjectCollection map should work', () => {
@@ -871,81 +869,81 @@ describe('GTODTO', () => {
     const moviePaths = dto.byProtocol('RVFileSource')
       .map(s => s.component('media').property('movie').value());
 
-    assert.deepStrictEqual(moviePaths, ['/path/to/movie1.mov', '/path/to/movie2.mov']);
+    expect(moviePaths).toEqual(['/path/to/movie1.mov', '/path/to/movie2.mov']);
   });
 
   test('ObjectCollection filter should work', () => {
     const dto = new GTODTO(sampleData);
     const filtered = dto.objects().filter(o => o.name.startsWith('source'));
 
-    assert.strictEqual(filtered.length, 2);
+    expect(filtered.length).toBe(2);
   });
 
   test('ObjectCollection find should work', () => {
     const dto = new GTODTO(sampleData);
     const found = dto.objects().find(o => o.name === 'source2');
 
-    assert.strictEqual(found.name, 'source2');
+    expect(found.name).toBe('source2');
   });
 
   test('ObjectCollection groupByProtocol should work', () => {
     const dto = new GTODTO(sampleData);
     const groups = dto.groupByProtocol();
 
-    assert.ok(groups.has('RVSession'));
-    assert.ok(groups.has('RVFileSource'));
-    assert.strictEqual(groups.get('RVFileSource').length, 2);
+    expect(groups.has('RVSession')).toBe(true);
+    expect(groups.has('RVFileSource')).toBe(true);
+    expect(groups.get('RVFileSource')!.length).toBe(2);
   });
 
   test('ObjectCollection should be iterable', () => {
     const dto = new GTODTO(sampleData);
-    const names = [];
+    const names: string[] = [];
     for (const obj of dto.objects()) {
       names.push(obj.name);
     }
 
-    assert.strictEqual(names.length, 4);
-    assert.ok(names.includes('rv'));
+    expect(names.length).toBe(4);
+    expect(names).toContain('rv');
   });
 
   test('component propertyNames should return all names', () => {
     const dto = new GTODTO(sampleData);
     const names = dto.object('rv').component('session').propertyNames();
 
-    assert.ok(names.includes('fps'));
-    assert.ok(names.includes('currentFrame'));
-    assert.ok(names.includes('range'));
+    expect(names).toContain('fps');
+    expect(names).toContain('currentFrame');
+    expect(names).toContain('range');
   });
 
   test('component properties should return PropertyDTO array', () => {
     const dto = new GTODTO(sampleData);
     const props = dto.object('rv').component('session').properties();
 
-    assert.strictEqual(props.length, 3);
-    assert.ok(props.every(p => p instanceof PropertyDTO));
+    expect(props.length).toBe(3);
+    expect(props.every(p => p instanceof PropertyDTO)).toBe(true);
   });
 
   test('object componentNames should return all names', () => {
     const dto = new GTODTO(sampleData);
     const names = dto.object('rv').componentNames();
 
-    assert.deepStrictEqual(names, ['session']);
+    expect(names).toEqual(['session']);
   });
 
   test('object components should return ComponentDTO array', () => {
     const dto = new GTODTO(sampleData);
     const comps = dto.object('rv').components();
 
-    assert.strictEqual(comps.length, 1);
-    assert.ok(comps.every(c => c instanceof ComponentDTO));
+    expect(comps.length).toBe(1);
+    expect(comps.every(c => c instanceof ComponentDTO)).toBe(true);
   });
 
   test('object componentsByPattern should filter by regex', () => {
     const dto = new GTODTO(sampleData);
     const penComps = dto.object('paint1').componentsByPattern(/^pen:/);
 
-    assert.strictEqual(penComps.length, 1);
-    assert.strictEqual(penComps[0].name, 'pen:1:50:User');
+    expect(penComps.length).toBe(1);
+    expect(penComps[0].name).toBe('pen:1:50:User');
   });
 
   test('safe chaining should not throw', () => {
@@ -958,7 +956,7 @@ describe('GTODTO', () => {
       .property('nope')
       .value();
 
-    assert.strictEqual(value, null);
+    expect(value).toBe(null);
   });
 
   test('property flat() should flatten nested arrays', () => {
@@ -966,31 +964,31 @@ describe('GTODTO', () => {
     const points = dto.object('paint1').component('pen:1:50:User').property('points');
 
     const flat = points.flat();
-    assert.deepStrictEqual(flat, [10, 20, 30, 40, 50, 60]);
+    expect(flat).toEqual([10, 20, 30, 40, 50, 60]);
   });
 
   test('property map and filter should work', () => {
     const dto = new GTODTO(sampleData);
     const points = dto.object('paint1').component('pen:1:50:User').property('points');
 
-    const mapped = points.map(p => p[0]);
-    assert.deepStrictEqual(mapped, [10, 30, 50]);
+    const mapped = points.map((p: number[]) => p[0]);
+    expect(mapped).toEqual([10, 30, 50]);
 
-    const filtered = points.filter(p => p[0] > 20);
-    assert.deepStrictEqual(filtered, [[30, 40], [50, 60]]);
+    const filtered = points.filter((p: number[]) => p[0] > 20);
+    expect(filtered).toEqual([[30, 40], [50, 60]]);
   });
 
   test('toObject methods should work', () => {
     const dto = new GTODTO(sampleData);
 
     const objData = dto.object('rv').toObject();
-    assert.strictEqual(objData.name, 'rv');
+    expect(objData.name).toBe('rv');
 
     const compData = dto.object('rv').component('session').toObject();
-    assert.strictEqual(compData.name, 'session');
+    expect(compData.name).toBe('session');
 
     const propData = dto.object('rv').component('session').property('fps').toObject();
-    assert.strictEqual(propData.type, 'float');
+    expect(propData.type).toBe('float');
   });
 
   test('toJSON should serialize correctly', () => {
@@ -998,8 +996,8 @@ describe('GTODTO', () => {
     const json = dto.toJSON();
     const parsed = JSON.parse(json);
 
-    assert.strictEqual(parsed.version, 4);
-    assert.strictEqual(parsed.objects.length, 4);
+    expect(parsed.version).toBe(4);
+    expect(parsed.objects.length).toBe(4);
   });
 });
 
@@ -1063,56 +1061,56 @@ describe('GTODTO RV Helpers', () => {
     const dto = new GTODTO(rvSessionData);
     const session = dto.session();
 
-    assert.strictEqual(session.protocol, 'RVSession');
-    assert.strictEqual(session.name, 'rv');
+    expect(session.protocol).toBe('RVSession');
+    expect(session.name).toBe('rv');
   });
 
   test('timeline() should return timeline info', () => {
     const dto = new GTODTO(rvSessionData);
     const timeline = dto.timeline();
 
-    assert.strictEqual(timeline.fps, 30);
-    assert.strictEqual(timeline.currentFrame, 50);
-    assert.deepStrictEqual(timeline.range, [1, 200]);
-    assert.deepStrictEqual(timeline.region, [25, 175]);
-    assert.deepStrictEqual(timeline.marks, [50, 100, 150]);
+    expect(timeline.fps).toBe(30);
+    expect(timeline.currentFrame).toBe(50);
+    expect(timeline.range).toEqual([1, 200]);
+    expect(timeline.region).toEqual([25, 175]);
+    expect(timeline.marks).toEqual([50, 100, 150]);
   });
 
   test('fileSources() should return file sources', () => {
     const dto = new GTODTO(rvSessionData);
     const sources = dto.fileSources();
 
-    assert.strictEqual(sources.length, 1);
-    assert.strictEqual(sources.first().protocol, 'RVFileSource');
+    expect(sources.length).toBe(1);
+    expect(sources.first().protocol).toBe('RVFileSource');
   });
 
   test('sourceGroups() should return source groups', () => {
     const dto = new GTODTO(rvSessionData);
     const groups = dto.sourceGroups();
 
-    assert.strictEqual(groups.length, 1);
-    assert.strictEqual(groups.first().protocol, 'RVSourceGroup');
+    expect(groups.length).toBe(1);
+    expect(groups.first().protocol).toBe('RVSourceGroup');
   });
 
   test('mediaPaths() should extract media paths', () => {
     const dto = new GTODTO(rvSessionData);
     const paths = dto.mediaPaths();
 
-    assert.deepStrictEqual(paths, ['/renders/shot_001.exr']);
+    expect(paths).toEqual(['/renders/shot_001.exr']);
   });
 
   test('connections() should return connection object', () => {
     const dto = new GTODTO(rvSessionData);
     const conn = dto.connections();
 
-    assert.strictEqual(conn.protocol, 'connection');
+    expect(conn.protocol).toBe('connection');
   });
 
   test('connectionEdges() should return edge pairs', () => {
     const dto = new GTODTO(rvSessionData);
     const edges = dto.connectionEdges();
 
-    assert.deepStrictEqual(edges, [['node1', 'node2'], ['node2', 'node3']]);
+    expect(edges).toEqual([['node1', 'node2'], ['node2', 'node3']]);
   });
 });
 
@@ -1132,15 +1130,15 @@ describe('GTODTO with Builder Integration', () => {
 
     const dto = new GTODTO(data);
 
-    assert.strictEqual(dto.objectCount, 1);
-    assert.strictEqual(dto.object('myMesh').protocol, 'polygon');
+    expect(dto.objectCount).toBe(1);
+    expect(dto.object('myMesh').protocol).toBe('polygon');
 
     const positions = dto.object('myMesh').component('points').property('position');
-    assert.strictEqual(positions.size, 3);
-    assert.deepStrictEqual(positions.at(0), [0, 0, 0]);
+    expect(positions.size).toBe(3);
+    expect(positions.at(0)).toEqual([0, 0, 0]);
 
     const indices = dto.object('myMesh').prop('indices', 'vertex');
-    assert.deepStrictEqual(indices, [0, 1, 2]);
+    expect(indices).toEqual([0, 1, 2]);
   });
 
   test('should work with round-trip data', () => {
@@ -1161,8 +1159,8 @@ describe('GTODTO with Builder Integration', () => {
 
     const dto = new GTODTO(reader.result);
 
-    assert.strictEqual(dto.object('config').prop('user', 'name'), 'TestUser');
-    assert.strictEqual(dto.object('config').prop('user', 'level'), 42);
+    expect(dto.object('config').prop('user', 'name')).toBe('TestUser');
+    expect(dto.object('config').prop('user', 'level')).toBe(42);
   });
 });
 
@@ -1186,29 +1184,29 @@ describe('Binary Format', () => {
     const binary = SimpleWriter.write(data, { binary: true });
 
     // Verify it's an ArrayBuffer
-    assert.ok(binary instanceof ArrayBuffer, 'Should return ArrayBuffer');
-    assert.ok(binary.byteLength > 0, 'Should have content');
+    expect(binary instanceof ArrayBuffer).toBe(true);
+    expect((binary as ArrayBuffer).byteLength > 0).toBe(true);
 
     // Read binary back
     const reader = new SimpleReader();
     const success = reader.open(binary);
 
-    assert.strictEqual(success, true, 'Should read successfully');
-    assert.strictEqual(reader.result.version, 4);
-    assert.strictEqual(reader.result.objects.length, 1);
+    expect(success).toBe(true);
+    expect(reader.result.version).toBe(4);
+    expect(reader.result.objects.length).toBe(1);
 
     const obj = reader.result.objects[0];
-    assert.strictEqual(obj.name, 'test');
-    assert.strictEqual(obj.protocol, 'TestProtocol');
+    expect(obj.name).toBe('test');
+    expect(obj.protocol).toBe('TestProtocol');
 
     const intVal = obj.components.values.properties.intVal;
-    assert.deepStrictEqual(intVal.data, [1, 2, 3]);
+    expect(intVal.data).toEqual([1, 2, 3]);
 
     const floatVal = obj.components.values.properties.floatVal;
-    assert.strictEqual(floatVal.data.length, 3);
-    assert.ok(Math.abs(floatVal.data[0] - 1.5) < 0.001);
-    assert.ok(Math.abs(floatVal.data[1] - 2.5) < 0.001);
-    assert.ok(Math.abs(floatVal.data[2] - 3.5) < 0.001);
+    expect(floatVal.data.length).toBe(3);
+    expect(Math.abs((floatVal.data[0] as number) - 1.5) < 0.001).toBe(true);
+    expect(Math.abs((floatVal.data[1] as number) - 2.5) < 0.001).toBe(true);
+    expect(Math.abs((floatVal.data[2] as number) - 3.5) < 0.001).toBe(true);
   });
 
   test('should handle string data in binary format', () => {
@@ -1225,7 +1223,7 @@ describe('Binary Format', () => {
     reader.open(binary);
 
     const names = reader.result.objects[0].components.user.properties.name.data;
-    assert.deepStrictEqual(names, ['Alice', 'Bob', 'Charlie']);
+    expect(names).toEqual(['Alice', 'Bob', 'Charlie']);
   });
 
   test('should handle multiple objects and components', () => {
@@ -1249,18 +1247,18 @@ describe('Binary Format', () => {
     const reader = new SimpleReader();
     reader.open(binary);
 
-    assert.strictEqual(reader.result.objects.length, 2);
+    expect(reader.result.objects.length).toBe(2);
 
     const obj1 = reader.result.objects[0];
-    assert.strictEqual(obj1.name, 'obj1');
-    assert.strictEqual(obj1.protocol, 'Proto1');
-    assert.ok(obj1.components.comp1);
-    assert.ok(obj1.components.comp2);
+    expect(obj1.name).toBe('obj1');
+    expect(obj1.protocol).toBe('Proto1');
+    expect(obj1.components.comp1).toBeTruthy();
+    expect(obj1.components.comp2).toBeTruthy();
 
     const obj2 = reader.result.objects[1];
-    assert.strictEqual(obj2.name, 'obj2');
-    assert.strictEqual(obj2.protocol, 'Proto2');
-    assert.strictEqual(obj2.protocolVersion, 2);
+    expect(obj2.name).toBe('obj2');
+    expect(obj2.protocol).toBe('Proto2');
+    expect(obj2.protocolVersion).toBe(2);
   });
 
   test('should round-trip text to binary to text', () => {
@@ -1288,15 +1286,15 @@ roundTrip : TestProto (1)
     reader2.open(binary);
 
     // Compare
-    assert.strictEqual(reader2.result.objects.length, reader1.result.objects.length);
-    assert.strictEqual(reader2.result.objects[0].name, 'roundTrip');
-    assert.strictEqual(reader2.result.objects[0].protocol, 'TestProto');
+    expect(reader2.result.objects.length).toBe(reader1.result.objects.length);
+    expect(reader2.result.objects[0].name).toBe('roundTrip');
+    expect(reader2.result.objects[0].protocol).toBe('TestProto');
 
     const prop1 = reader1.result.objects[0].components.data.properties.values;
     const prop2 = reader2.result.objects[0].components.data.properties.values;
-    assert.strictEqual(prop2.size, prop1.size);
-    assert.strictEqual(prop2.width, prop1.width);
-    assert.deepStrictEqual(prop2.data, prop1.data);
+    expect(prop2.size).toBe(prop1.size);
+    expect(prop2.width).toBe(prop1.width);
+    expect(prop2.data).toEqual(prop1.data);
   });
 
   test('should handle Uint8Array input', () => {
@@ -1308,14 +1306,14 @@ roundTrip : TestProto (1)
       .end()
       .build();
 
-    const binary = SimpleWriter.write(data, { binary: true });
+    const binary = SimpleWriter.write(data, { binary: true }) as ArrayBuffer;
     const uint8 = new Uint8Array(binary);
 
     const reader = new SimpleReader();
     const success = reader.open(uint8);
 
-    assert.strictEqual(success, true);
-    assert.strictEqual(reader.result.objects[0].components.c.properties.v.data[0], 42);
+    expect(success).toBe(true);
+    expect(reader.result.objects[0].components.c.properties.v.data[0]).toBe(42);
   });
 
   test('should handle double type', () => {
@@ -1331,9 +1329,9 @@ roundTrip : TestProto (1)
     const reader = new SimpleReader();
     reader.open(binary);
 
-    const d = reader.result.objects[0].components.c.properties.d.data;
-    assert.ok(Math.abs(d[0] - Math.PI) < 1e-10);
-    assert.ok(Math.abs(d[1] - Math.E) < 1e-10);
+    const d = reader.result.objects[0].components.c.properties.d.data as number[];
+    expect(Math.abs(d[0] - Math.PI) < 1e-10).toBe(true);
+    expect(Math.abs(d[1] - Math.E) < 1e-10).toBe(true);
   });
 
   test('should handle byte type', () => {
@@ -1350,7 +1348,7 @@ roundTrip : TestProto (1)
     reader.open(binary);
 
     const b = reader.result.objects[0].components.c.properties.b.data;
-    assert.deepStrictEqual(b, [0, 127, 255]);
+    expect(b).toEqual([0, 127, 255]);
   });
 
   test('should handle short type', () => {
@@ -1367,7 +1365,7 @@ roundTrip : TestProto (1)
     reader.open(binary);
 
     const s = reader.result.objects[0].components.c.properties.s.data;
-    assert.deepStrictEqual(s, [0, 1000, 65535]);
+    expect(s).toEqual([0, 1000, 65535]);
   });
 
   test('should handle vector properties (width > 1)', () => {
@@ -1384,14 +1382,14 @@ roundTrip : TestProto (1)
     reader.open(binary);
 
     const pos = reader.result.objects[0].components.points.properties.position;
-    assert.strictEqual(pos.width, 3);
-    assert.strictEqual(pos.size, 3);
-    assert.deepStrictEqual(pos.data, [[0, 0, 0], [1, 0, 0], [0, 1, 0]]);
+    expect(pos.width).toBe(3);
+    expect(pos.size).toBe(3);
+    expect(pos.data).toEqual([[0, 0, 0], [1, 0, 0], [0, 1, 0]]);
   });
 
   test('should produce smaller output than text for numeric data', () => {
     // Create data with lots of numbers
-    const positions = [];
+    const positions: number[][] = [];
     for (let i = 0; i < 100; i++) {
       positions.push([i * 0.1, i * 0.2, i * 0.3]);
     }
@@ -1404,12 +1402,11 @@ roundTrip : TestProto (1)
       .end()
       .build();
 
-    const text = SimpleWriter.write(data);
-    const binary = SimpleWriter.write(data, { binary: true });
+    const text = SimpleWriter.write(data) as string;
+    const binary = SimpleWriter.write(data, { binary: true }) as ArrayBuffer;
 
     // Binary should be smaller for numeric data
-    assert.ok(binary.byteLength < text.length,
-      `Binary (${binary.byteLength}) should be smaller than text (${text.length})`);
+    expect(binary.byteLength < text.length).toBe(true);
   });
 
   test('should handle UTF-8 strings in binary format', () => {
@@ -1426,7 +1423,7 @@ roundTrip : TestProto (1)
     reader.open(binary);
 
     const names = reader.result.objects[0].components.strings.properties.names.data;
-    assert.deepStrictEqual(names, ['hello', 'мир', '世界', 'émoji 🎉']);
+    expect(names).toEqual(['hello', 'мир', '世界', 'émoji 🎉']);
   });
 });
 
@@ -1443,15 +1440,14 @@ describe('Binary Format with Writer API', () => {
 
     const binary = writer.close();
 
-    assert.ok(binary instanceof ArrayBuffer);
+    expect(binary instanceof ArrayBuffer).toBe(true);
 
     const reader = new SimpleReader();
     reader.open(binary);
 
-    assert.strictEqual(reader.result.objects[0].name, 'myObj');
-    assert.deepStrictEqual(
-      reader.result.objects[0].components.data.properties.values.data,
-      [10, 20, 30]
-    );
+    expect(reader.result.objects[0].name).toBe('myObj');
+    expect(
+      reader.result.objects[0].components.data.properties.values.data
+    ).toEqual([10, 20, 30]);
   });
 });

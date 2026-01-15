@@ -7,15 +7,13 @@
  */
 
 export class StringTable {
-  constructor() {
-    this._strings = [];           // Array of strings (index -> string)
-    this._lookup = new Map();     // Reverse lookup (string -> index)
-  }
+  private _strings: string[] = [];           // Array of strings (index -> string)
+  private _lookup: Map<string, number> = new Map();     // Reverse lookup (string -> index)
 
   /**
    * Clear the string table
    */
-  clear() {
+  clear(): void {
     this._strings = [];
     this._lookup.clear();
   }
@@ -23,23 +21,23 @@ export class StringTable {
   /**
    * Get number of strings in the table
    */
-  get size() {
+  get size(): number {
     return this._strings.length;
   }
 
   /**
    * Get all strings as an array
    */
-  get strings() {
+  get strings(): string[] {
     return [...this._strings];
   }
 
   /**
    * Add a string to the table (for reading)
-   * @param {string} str - String to add
-   * @returns {number} - Index of the string
+   * @param str - String to add
+   * @returns Index of the string
    */
-  add(str) {
+  add(str: string): number {
     const index = this._strings.length;
     this._strings.push(str);
     this._lookup.set(str, index);
@@ -48,10 +46,10 @@ export class StringTable {
 
   /**
    * Intern a string - add if not present, return index
-   * @param {string} str - String to intern
-   * @returns {number} - Index of the string
+   * @param str - String to intern
+   * @returns Index of the string
    */
-  intern(str) {
+  intern(str: string): number {
     const existing = this._lookup.get(str);
     if (existing !== undefined) {
       return existing;
@@ -61,10 +59,10 @@ export class StringTable {
 
   /**
    * Lookup a string by index
-   * @param {number} index - Index of the string
-   * @returns {string} - The string at the index
+   * @param index - Index of the string
+   * @returns The string at the index
    */
-  stringFromId(index) {
+  stringFromId(index: number): string {
     if (index < 0 || index >= this._strings.length) {
       throw new Error(`String index ${index} out of range (0-${this._strings.length - 1})`);
     }
@@ -73,31 +71,30 @@ export class StringTable {
 
   /**
    * Lookup an index by string
-   * @param {string} str - String to lookup
-   * @returns {number|undefined} - Index of the string, or undefined if not found
+   * @param str - String to lookup
+   * @returns Index of the string, or undefined if not found
    */
-  lookup(str) {
+  lookup(str: string): number | undefined {
     return this._lookup.get(str);
   }
 
   /**
    * Check if a string exists in the table
-   * @param {string} str - String to check
-   * @returns {boolean}
+   * @param str - String to check
    */
-  has(str) {
+  has(str: string): boolean {
     return this._lookup.has(str);
   }
 
   /**
    * Read string table from a DataView (binary format)
-   * @param {DataView} view - DataView containing the string data
-   * @param {number} offset - Starting offset in the view
-   * @param {number} numStrings - Number of strings to read
-   * @param {boolean} littleEndian - Byte order
-   * @returns {number} - Number of bytes consumed
+   * @param view - DataView containing the string data
+   * @param offset - Starting offset in the view
+   * @param numStrings - Number of strings to read
+   * @param _littleEndian - Byte order (unused, strings are byte-aligned)
+   * @returns Number of bytes consumed
    */
-  readFromBinary(view, offset, numStrings, littleEndian = true) {
+  readFromBinary(view: DataView, offset: number, numStrings: number, _littleEndian: boolean = true): number {
     this.clear();
     let pos = offset;
     const decoder = new TextDecoder('utf-8');
@@ -120,24 +117,24 @@ export class StringTable {
 
   /**
    * Write string table to binary format
-   * @returns {Uint8Array} - Binary representation of the string table
+   * @returns Binary representation of the string table
    */
-  writeToBinary() {
+  writeToBinary(): Uint8Array {
     // Calculate total size needed
+    const encoder = new TextEncoder();
     let totalSize = 0;
     for (const str of this._strings) {
-      totalSize += new TextEncoder().encode(str).length + 1; // +1 for null terminator
+      totalSize += encoder.encode(str).length + 1; // +1 for null terminator
     }
 
     const buffer = new Uint8Array(totalSize);
-    let offset = 0;
+    let bufferOffset = 0;
 
-    const encoder = new TextEncoder();
     for (const str of this._strings) {
       const encoded = encoder.encode(str);
-      buffer.set(encoded, offset);
-      offset += encoded.length;
-      buffer[offset++] = 0; // Null terminator
+      buffer.set(encoded, bufferOffset);
+      bufferOffset += encoded.length;
+      buffer[bufferOffset++] = 0; // Null terminator
     }
 
     return buffer;

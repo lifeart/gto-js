@@ -15,16 +15,56 @@ import {
 } from './constants.js';
 import { StringTable } from './string-table.js';
 import { floatToHalf } from './utils.js';
+import type { GTOData, ComponentData, PropertyData } from './dto.js';
 
 /**
  * Writer states
  */
-const WriterState = {
-  Initial: 0,
-  Object: 1,
-  Component: 2,
-  Closed: 3
-};
+enum WriterState {
+  Initial = 0,
+  Object = 1,
+  Component = 2,
+  Closed = 3
+}
+
+/** Binary object info for assembly */
+interface BinaryObjectInfo {
+  nameId: number;
+  protocolId: number;
+  protocolVersion: number;
+  numComponents: number;
+  componentStartIdx: number;
+}
+
+/** Binary component info for assembly */
+interface BinaryComponentInfo {
+  nameId: number;
+  interpretationId: number;
+  numProperties: number;
+  flags: number;
+  propertyStartIdx: number;
+}
+
+/** Binary property info for assembly */
+interface BinaryPropertyInfo {
+  nameId: number;
+  interpretationId: number;
+  type: DataType;
+  size: number;
+  width: number;
+  dims: [number, number, number, number];
+}
+
+/** Pending property for two-phase API */
+interface PendingProperty {
+  name: string;
+  type: DataType;
+  size: number;
+  width: number;
+  interpretation: string;
+}
+
+type DataArray = number[] | string[] | boolean[] | ArrayLike<number>;
 
 /**
  * GTO Text Format Writer
@@ -41,26 +81,32 @@ const WriterState = {
  * - Phase 2: beginData/propertyData/endData
  */
 export class Writer {
-  constructor() {
-    this._stringTable = new StringTable();
-    this._state = WriterState.Initial;
-    this._output = '';
-    this._indent = 0;
-    this._version = GTO_VERSION;
-    this._binaryMode = false;
-    // Binary mode storage
-    this._objectInfos = [];
-    this._componentInfos = [];
-    this._propertyInfos = [];
-    this._propertyData = [];
-  }
+  private _stringTable: StringTable = new StringTable();
+  private _state: WriterState = WriterState.Initial;
+  private _output: string = '';
+  private _indent: number = 0;
+  private _version: number = GTO_VERSION;
+  private _binaryMode: boolean = false;
+  private _fileType: FileType = FileType.TextGTO;
+  // Binary mode storage
+  private _objectInfos: BinaryObjectInfo[] = [];
+  private _componentInfos: BinaryComponentInfo[] = [];
+  private _propertyInfos: BinaryPropertyInfo[] = [];
+  private _propertyData: number[][] = [];
+  private _currentObjectIdx: number = -1;
+  private _currentComponentIdx: number = -1;
+  // Two-phase API storage
+  private _pendingProperties: PendingProperty[] = [];
+  private _propertyIndex: number = 0;
 
   /**
    * Intern a string into the string table
-   * @param {string|string[]} str - String or array of strings to intern
-   * @returns {number|number[]} - String ID(s)
+   * @param str - String or array of strings to intern
+   * @returns String ID(s)
    */
-  intern(str) {
+  intern(str: string): number;
+  intern(str: string[]): number[];
+  intern(str: string | string[]): number | number[] {
     if (Array.isArray(str)) {
       return str.map(s => this._stringTable.intern(s));
     }
@@ -69,28 +115,25 @@ export class Writer {
 
   /**
    * Lookup a string ID
-   * @param {string} str - String to lookup
-   * @returns {number|undefined} - String ID or undefined
+   * @param str - String to lookup
+   * @returns String ID or undefined
    */
-  lookup(str) {
+  lookup(str: string): number | undefined {
     return this._stringTable.lookup(str);
   }
 
   /**
    * Get string from ID
-   * @param {number} id - String ID
-   * @returns {string}
    */
-  stringFromId(id) {
+  stringFromId(id: number): string {
     return this._stringTable.stringFromId(id);
   }
 
   /**
    * Open/initialize the writer
-   * @param {FileType} type - File type (TextGTO or BinaryGTO)
-   * @returns {boolean}
+   * @param type - File type (TextGTO or BinaryGTO)
    */
-  open(type = FileType.TextGTO) {
+  open(type: FileType = FileType.TextGTO): boolean {
     this._fileType = type;
     this._state = WriterState.Initial;
 
@@ -112,9 +155,9 @@ export class Writer {
 
   /**
    * Close the writer and finalize output
-   * @returns {string|ArrayBuffer} - GTO text content or binary ArrayBuffer
+   * @returns GTO text content or binary ArrayBuffer
    */
-  close() {
+  close(): string | ArrayBuffer {
     this._state = WriterState.Closed;
     if (this._binaryMode) {
       return this._buildBinary();
@@ -124,25 +167,22 @@ export class Writer {
 
   /**
    * Get the current output as string
-   * @returns {string}
    */
-  toString() {
+  toString(): string {
     return `GTOa (${this._version})\n\n${this._output}`;
   }
 
   /**
    * Add indentation to output
-   * @private
    */
-  _writeIndent() {
+  private _writeIndent(): void {
     this._output += '    '.repeat(this._indent);
   }
 
   /**
    * Write a line with proper indentation
-   * @private
    */
-  _writeLine(line = '') {
+  private _writeLine(line: string = ''): void {
     if (line) {
       this._writeIndent();
       this._output += line;
@@ -152,11 +192,11 @@ export class Writer {
 
   /**
    * Begin a new object
-   * @param {string} name - Object name
-   * @param {string} protocol - Protocol name
-   * @param {number} protocolVersion - Protocol version
+   * @param name - Object name
+   * @param protocol - Protocol name
+   * @param protocolVersion - Protocol version
    */
-  beginObject(name, protocol, protocolVersion = 1) {
+  beginObject(name: string, protocol: string, protocolVersion: number = 1): void {
     if (this._state === WriterState.Object || this._state === WriterState.Component) {
       throw new Error('Cannot begin object while inside another object');
     }
@@ -191,7 +231,7 @@ export class Writer {
   /**
    * End the current object
    */
-  endObject() {
+  endObject(): void {
     if (this._state !== WriterState.Object) {
       throw new Error('No object to end');
     }
@@ -211,11 +251,11 @@ export class Writer {
 
   /**
    * Begin a new component within the current object
-   * @param {string} name - Component name
-   * @param {string} interpretation - Optional interpretation string
-   * @param {boolean} transposed - Whether data is transposed
+   * @param name - Component name
+   * @param interpretation - Optional interpretation string
+   * @param transposed - Whether data is transposed
    */
-  beginComponent(name, interpretation = '', transposed = false) {
+  beginComponent(name: string, interpretation: string = '', transposed: boolean = false): void {
     if (this._state !== WriterState.Object) {
       throw new Error('Must be inside an object to begin component');
     }
@@ -250,7 +290,7 @@ export class Writer {
   /**
    * End the current component
    */
-  endComponent() {
+  endComponent(): void {
     if (this._state !== WriterState.Component) {
       throw new Error('No component to end');
     }
@@ -270,14 +310,14 @@ export class Writer {
 
   /**
    * Declare a property and write its data inline (recommended for text format)
-   * @param {string} name - Property name
-   * @param {number} type - Data type (DataType.*)
-   * @param {number} size - Number of elements
-   * @param {number} width - Parts per element (e.g., 3 for xyz)
-   * @param {string} interpretation - Optional interpretation string
-   * @param {Array|TypedArray} data - The property data
+   * @param name - Property name
+   * @param type - Data type (DataType.*)
+   * @param size - Number of elements
+   * @param width - Parts per element (e.g., 3 for xyz)
+   * @param interpretation - Optional interpretation string
+   * @param data - The property data
    */
-  propertyWithData(name, type, size, width, interpretation, data) {
+  propertyWithData(name: string, type: DataType, size: number, width: number, interpretation: string, data: DataArray): void {
     if (this._state !== WriterState.Component) {
       throw new Error('Must be inside a component to declare property');
     }
@@ -287,9 +327,9 @@ export class Writer {
     const interpretationId = interpretation ? this.intern(interpretation) : 0;
 
     // Flatten data if nested
-    let flatData = data;
+    let flatData: number[] = Array.from(data as ArrayLike<number>);
     if (Array.isArray(data) && data.length > 0 && Array.isArray(data[0])) {
-      flatData = data.flat();
+      flatData = (data as unknown as number[][]).flat();
     }
 
     if (this._binaryMode) {
@@ -302,7 +342,7 @@ export class Writer {
         width,
         dims: [1, 1, 1, 1]
       });
-      this._propertyData.push(Array.from(flatData));
+      this._propertyData.push(flatData);
     } else {
       // Build declaration
       const typeName = DataTypeName[type];
@@ -334,17 +374,14 @@ export class Writer {
   /**
    * Declare a property (for two-phase API compatibility)
    * Note: For text format, prefer propertyWithData instead
-   * @param {string} name - Property name
-   * @param {number} type - Data type (DataType.*)
-   * @param {number} size - Number of elements
-   * @param {number} width - Parts per element (e.g., 3 for xyz)
-   * @param {string} interpretation - Optional interpretation string
+   * @param name - Property name
+   * @param type - Data type (DataType.*)
+   * @param size - Number of elements
+   * @param width - Parts per element (e.g., 3 for xyz)
+   * @param interpretation - Optional interpretation string
    */
-  property(name, type, size, width = 1, interpretation = '') {
+  property(name: string, type: DataType, size: number, width: number = 1, interpretation: string = ''): void {
     // For text format, we need to store pending properties
-    if (!this._pendingProperties) {
-      this._pendingProperties = [];
-    }
     this._pendingProperties.push({ name, type, size, width, interpretation });
 
     // Intern strings
@@ -357,15 +394,15 @@ export class Writer {
   /**
    * Begin the data section (for two-phase API)
    */
-  beginData() {
+  beginData(): void {
     this._propertyIndex = 0;
   }
 
   /**
    * Write data for the next property (for two-phase API)
-   * @param {Array|TypedArray} data - The property data
+   * @param data - The property data
    */
-  propertyData(data) {
+  propertyData(data: DataArray): void {
     if (!this._pendingProperties || this._propertyIndex >= this._pendingProperties.length) {
       throw new Error('No more properties to write data for');
     }
@@ -386,7 +423,8 @@ export class Writer {
       declaration += ` as ${prop.interpretation}`;
     }
 
-    const formattedData = this._formatData(prop.type, prop.width, prop.size, data);
+    const flatData = Array.from(data as ArrayLike<number>);
+    const formattedData = this._formatData(prop.type, prop.width, prop.size, flatData);
     declaration += ` = ${formattedData}`;
 
     this._writeLine(declaration);
@@ -395,26 +433,22 @@ export class Writer {
   /**
    * End the data section (for two-phase API)
    */
-  endData() {
+  endData(): void {
     this._pendingProperties = [];
     this._propertyIndex = 0;
   }
 
   /**
    * Format property data for text output
-   * @private
    */
-  _formatData(type, width, size, data) {
+  private _formatData(type: DataType, width: number, size: number, data: number[]): string {
     if (!data || data.length === 0) {
       return '[ ]';
     }
 
-    // Convert to array if TypedArray
-    const arr = Array.from(data);
-
     // Handle string type
     if (type === DataType.String) {
-      const strings = arr.map(id => {
+      const strings = data.map(id => {
         if (typeof id === 'string') {
           return `"${this._escapeString(id)}"`;
         }
@@ -428,7 +462,7 @@ export class Writer {
     }
 
     // Handle numeric types
-    const formatted = arr.map(v => this._formatNumber(v, type));
+    const formatted = data.map(v => this._formatNumber(v, type));
 
     // Single numeric value without brackets
     if (size === 1 && width === 1) {
@@ -440,15 +474,14 @@ export class Writer {
 
   /**
    * Format an array with grouping by width
-   * @private
    */
-  _formatArray(arr, width) {
+  private _formatArray(arr: string[], width: number): string {
     if (width <= 1 || arr.length <= width) {
       return `[ ${arr.join(' ')} ]`;
     }
 
     // Group by width
-    const groups = [];
+    const groups: string[] = [];
     for (let i = 0; i < arr.length; i += width) {
       const group = arr.slice(i, i + width);
       groups.push(`[ ${group.join(' ')} ]`);
@@ -465,9 +498,8 @@ export class Writer {
 
   /**
    * Format a number for text output
-   * @private
    */
-  _formatNumber(value, type) {
+  private _formatNumber(value: number, type: DataType): string {
     if (type === DataType.Float || type === DataType.Double || type === DataType.Half) {
       // Ensure float representation
       if (Number.isInteger(value)) {
@@ -481,9 +513,8 @@ export class Writer {
 
   /**
    * Escape a string for text output
-   * @private
    */
-  _escapeString(str) {
+  private _escapeString(str: string): string {
     return str
       .replace(/\\/g, '\\\\')
       .replace(/"/g, '\\"')
@@ -494,9 +525,8 @@ export class Writer {
 
   /**
    * Quote a name if it contains special characters
-   * @private
    */
-  _quoteName(name) {
+  private _quoteName(name: string): string {
     // Quote if contains special chars or starts with digit
     if (/[^a-zA-Z0-9_\-.]/.test(name) || /^[0-9]/.test(name)) {
       return `"${this._escapeString(name)}"`;
@@ -510,10 +540,8 @@ export class Writer {
 
   /**
    * Build complete binary GTO file
-   * @private
-   * @returns {ArrayBuffer}
    */
-  _buildBinary() {
+  private _buildBinary(): ArrayBuffer {
     const littleEndian = true; // Use little-endian by default
 
     // Get string table bytes
@@ -599,9 +627,8 @@ export class Writer {
 
   /**
    * Write a single binary value
-   * @private
    */
-  _writeBinaryValue(view, offset, type, value, littleEndian) {
+  private _writeBinaryValue(view: DataView, offset: number, type: DataType, value: number, littleEndian: boolean): void {
     switch (type) {
       case DataType.Int:
         view.setInt32(offset, value, littleEndian);
@@ -636,18 +663,22 @@ export class Writer {
   }
 }
 
+/** Options for SimpleWriter */
+export interface WriteOptions {
+  binary?: boolean;
+}
+
 /**
  * Simple writer that takes structured data and outputs GTO text or binary
  */
 export class SimpleWriter {
   /**
    * Write structured data to GTO format
-   * @param {Object} data - Structured data object
-   * @param {Object} options - Options object
-   * @param {boolean} options.binary - If true, output binary format (ArrayBuffer)
-   * @returns {string|ArrayBuffer} - GTO text content or binary ArrayBuffer
+   * @param data - Structured data object
+   * @param options - Options object
+   * @returns GTO text content or binary ArrayBuffer
    */
-  static write(data, options = {}) {
+  static write(data: GTOData, options: WriteOptions = {}): string | ArrayBuffer {
     const writer = new Writer();
     const fileType = options.binary ? FileType.BinaryGTO : FileType.TextGTO;
     writer.open(fileType);
@@ -655,23 +686,32 @@ export class SimpleWriter {
     for (const obj of data.objects) {
       writer.beginObject(obj.name, obj.protocol, obj.protocolVersion || 1);
 
-      for (const [compName, component] of Object.entries(obj.components)) {
+      for (const [compName, component] of Object.entries(obj.components) as [string, ComponentData][]) {
         writer.beginComponent(compName, component.interpretation || '');
 
-        for (const [propName, prop] of Object.entries(component.properties)) {
-          const type = typeof prop.type === 'string'
-            ? DataType[prop.type.charAt(0).toUpperCase() + prop.type.slice(1)]
-            : prop.type;
+        for (const [propName, prop] of Object.entries(component.properties) as [string, PropertyData][]) {
+          // Convert string type name to DataType enum
+          let type: DataType;
+          if (typeof prop.type === 'string') {
+            const typeName = prop.type.charAt(0).toUpperCase() + prop.type.slice(1);
+            type = DataType[typeName as keyof typeof DataType] as DataType;
+            if (type === undefined) {
+              // Handle 'bool' -> 'Boolean'
+              type = prop.type === 'bool' ? DataType.Boolean : DataType.Float;
+            }
+          } else {
+            type = prop.type as unknown as DataType;
+          }
 
           // Flatten grouped data
-          let flatData = prop.data;
+          let flatData: number[] = prop.data as number[];
           if (Array.isArray(prop.data) && Array.isArray(prop.data[0])) {
-            flatData = prop.data.flat();
+            flatData = (prop.data as number[][]).flat();
           }
 
           // Intern strings if needed
           if (type === DataType.String && flatData.length > 0 && typeof flatData[0] === 'string') {
-            flatData = flatData.map(s => writer.intern(s));
+            flatData = (flatData as unknown as string[]).map(s => writer.intern(s));
           }
 
           const size = prop.size || Math.floor(flatData.length / (prop.width || 1));

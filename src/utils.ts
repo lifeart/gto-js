@@ -4,10 +4,10 @@
 
 /**
  * Convert a 16-bit half-precision float to 32-bit float
- * @param {number} half - 16-bit half-precision float as integer
- * @returns {number} - 32-bit float value
+ * @param half - 16-bit half-precision float as integer
+ * @returns 32-bit float value
  */
-export function halfToFloat(half) {
+export function halfToFloat(half: number): number {
   const sign = (half >> 15) & 0x1;
   const exponent = (half >> 10) & 0x1f;
   const mantissa = half & 0x3ff;
@@ -36,10 +36,10 @@ export function halfToFloat(half) {
 
 /**
  * Convert a 32-bit float to 16-bit half-precision float
- * @param {number} float32 - 32-bit float value
- * @returns {number} - 16-bit half-precision float as integer
+ * @param float32 - 32-bit float value
+ * @returns 16-bit half-precision float as integer
  */
-export function floatToHalf(float32) {
+export function floatToHalf(float32: number): number {
   const buffer = new ArrayBuffer(4);
   const view = new DataView(buffer);
   view.setFloat32(0, float32, true);
@@ -78,19 +78,19 @@ export function floatToHalf(float32) {
 
 /**
  * Swap byte order for 16-bit values
- * @param {number} value - 16-bit value
- * @returns {number} - Byte-swapped value
+ * @param value - 16-bit value
+ * @returns Byte-swapped value
  */
-export function swap16(value) {
+export function swap16(value: number): number {
   return ((value & 0xff) << 8) | ((value >> 8) & 0xff);
 }
 
 /**
  * Swap byte order for 32-bit values
- * @param {number} value - 32-bit value
- * @returns {number} - Byte-swapped value
+ * @param value - 32-bit value
+ * @returns Byte-swapped value
  */
-export function swap32(value) {
+export function swap32(value: number): number {
   return (
     ((value & 0xff) << 24) |
     ((value & 0xff00) << 8) |
@@ -101,10 +101,10 @@ export function swap32(value) {
 
 /**
  * Swap byte order for 64-bit values (as BigInt)
- * @param {bigint} value - 64-bit value
- * @returns {bigint} - Byte-swapped value
+ * @param value - 64-bit value
+ * @returns Byte-swapped value
  */
-export function swap64(value) {
+export function swap64(value: bigint): bigint {
   const hi = Number(value >> 32n) >>> 0;
   const lo = Number(value & 0xffffffffn) >>> 0;
   return (BigInt(swap32(lo)) << 32n) | BigInt(swap32(hi));
@@ -112,9 +112,9 @@ export function swap64(value) {
 
 /**
  * Detect system endianness
- * @returns {boolean} - True if little-endian
+ * @returns True if little-endian
  */
-export function isLittleEndian() {
+export function isLittleEndian(): boolean {
   const buffer = new ArrayBuffer(2);
   new DataView(buffer).setInt16(0, 256, true);
   return new Int16Array(buffer)[0] === 256;
@@ -122,20 +122,20 @@ export function isLittleEndian() {
 
 /**
  * Align offset to next boundary
- * @param {number} offset - Current offset
- * @param {number} alignment - Alignment boundary
- * @returns {number} - Aligned offset
+ * @param offset - Current offset
+ * @param alignment - Alignment boundary
+ * @returns Aligned offset
  */
-export function alignTo(offset, alignment) {
+export function alignTo(offset: number, alignment: number): number {
   return Math.ceil(offset / alignment) * alignment;
 }
 
 /**
  * Parse dimension string like "[4,10,20,30]" to array
- * @param {string} dimStr - Dimension string
- * @returns {number[]} - Array of dimensions
+ * @param dimStr - Dimension string
+ * @returns Array of dimensions
  */
-export function parseDimensions(dimStr) {
+export function parseDimensions(dimStr: string): number[] {
   if (!dimStr || dimStr === '[]') return [1];
   const inner = dimStr.slice(1, -1); // Remove [ and ]
   if (!inner) return [1];
@@ -144,10 +144,10 @@ export function parseDimensions(dimStr) {
 
 /**
  * Format dimensions array to string
- * @param {number[]} dims - Array of dimensions
- * @returns {string} - Dimension string
+ * @param dims - Array of dimensions
+ * @returns Dimension string
  */
-export function formatDimensions(dims) {
+export function formatDimensions(dims: number[] | undefined): string {
   if (!dims || dims.length === 0 || (dims.length === 1 && dims[0] === 1)) {
     return '';
   }

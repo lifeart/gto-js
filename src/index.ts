@@ -1,7 +1,7 @@
 /**
- * GTO (Graph Topology Object) JavaScript Library
+ * GTO (Graph Topology Object) TypeScript Library
  *
- * A JavaScript implementation of the GTO file format for text-based (.rv) files.
+ * A TypeScript implementation of the GTO file format for text-based (.rv) and binary (.gto) files.
  *
  * @example
  * // Reading a GTO file
@@ -55,12 +55,21 @@ export { Reader, SimpleReader } from './reader.js';
 
 // Writer classes
 export { Writer, SimpleWriter } from './writer.js';
+export type { WriteOptions } from './writer.js';
 
 // Builder
 export { GTOBuilder, polygon, transform } from './builder.js';
 
 // DTO (Data Transfer Object)
 export { GTODTO, ObjectDTO, ComponentDTO, PropertyDTO, ObjectCollection } from './dto.js';
+export type {
+  GTOData,
+  ObjectData,
+  ComponentData,
+  PropertyData,
+  TimelineInfo,
+  Annotation
+} from './dto.js';
 
 // Utilities
 export {

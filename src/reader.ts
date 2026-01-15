@@ -11,7 +11,6 @@ import {
   TypeNameToDataType,
   DataTypeSize,
   GTO_MAGIC,
-  GTO_VERSION,
   ReaderMode,
   Request,
   Header,
@@ -21,43 +20,51 @@ import {
 } from './constants.js';
 import { StringTable } from './string-table.js';
 import { halfToFloat } from './utils.js';
+import type { GTOData, ObjectData, ComponentData, PropertyData } from './dto.js';
 
 /**
  * Token types for lexer
  */
-const TokenType = {
-  EOF: 'EOF',
-  IDENTIFIER: 'IDENTIFIER',
-  STRING: 'STRING',
-  NUMBER: 'NUMBER',
-  LBRACE: 'LBRACE',         // {
-  RBRACE: 'RBRACE',         // }
-  LBRACKET: 'LBRACKET',     // [
-  RBRACKET: 'RBRACKET',     // ]
-  LPAREN: 'LPAREN',         // (
-  RPAREN: 'RPAREN',         // )
-  COLON: 'COLON',           // :
-  EQUALS: 'EQUALS',         // =
-  COMMA: 'COMMA',           // ,
-  AS: 'AS'                  // 'as' keyword
-};
+enum TokenType {
+  EOF = 'EOF',
+  IDENTIFIER = 'IDENTIFIER',
+  STRING = 'STRING',
+  NUMBER = 'NUMBER',
+  LBRACE = 'LBRACE',         // {
+  RBRACE = 'RBRACE',         // }
+  LBRACKET = 'LBRACKET',     // [
+  RBRACKET = 'RBRACKET',     // ]
+  LPAREN = 'LPAREN',         // (
+  RPAREN = 'RPAREN',         // )
+  COLON = 'COLON',           // :
+  EQUALS = 'EQUALS',         // =
+  COMMA = 'COMMA',           // ,
+  AS = 'AS'                  // 'as' keyword
+}
+
+interface Token {
+  type: TokenType;
+  value: string | number | null;
+}
 
 /**
  * Simple lexer for GTO text format
  */
 class Lexer {
-  constructor(input) {
+  private input: string;
+  private pos: number = 0;
+  line: number = 1;
+  column: number = 1;
+
+  constructor(input: string) {
     this.input = input;
-    this.pos = 0;
-    this.line = 1;
-    this.column = 1;
   }
 
-  peek() {
+  peek(): string {
     return this.input[this.pos] || '';
   }
 
-  advance() {
+  advance(): string {
     const ch = this.input[this.pos++] || '';
     if (ch === '\n') {
       this.line++;
@@ -68,7 +75,7 @@ class Lexer {
     return ch;
   }
 
-  skipWhitespace() {
+  skipWhitespace(): void {
     while (this.pos < this.input.length) {
       const ch = this.peek();
       if (ch === ' ' || ch === '\t' || ch === '\n' || ch === '\r') {
@@ -84,7 +91,7 @@ class Lexer {
     }
   }
 
-  readString() {
+  readString(): Token {
     const quote = this.advance(); // consume opening quote
     let str = '';
     while (this.pos < this.input.length) {
@@ -109,7 +116,7 @@ class Lexer {
     return { type: TokenType.STRING, value: str };
   }
 
-  readNumber() {
+  readNumber(): Token {
     let str = '';
     let hasDecimal = false;
     let hasExponent = false;
@@ -141,7 +148,7 @@ class Lexer {
     return { type: TokenType.NUMBER, value };
   }
 
-  readIdentifier() {
+  readIdentifier(): Token {
     let str = '';
     while (this.pos < this.input.length) {
       const ch = this.peek();
@@ -161,7 +168,7 @@ class Lexer {
     return { type: TokenType.IDENTIFIER, value: str };
   }
 
-  nextToken() {
+  nextToken(): Token {
     this.skipWhitespace();
 
     if (this.pos >= this.input.length) {
@@ -210,67 +217,66 @@ class Lexer {
  * Extend this class and override the callback methods to process the data.
  */
 export class Reader {
+  protected _mode: ReaderMode;
+  protected _stringTable: StringTable = new StringTable();
+  protected _header: Header = new Header();
+  protected _objects: ObjectInfo[] = [];
+  protected _components: ComponentInfo[] = [];
+  protected _properties: PropertyInfo[] = [];
+  private _filename: string = '<string>';
+  private _lexer!: Lexer;
+  private _currentToken!: Token;
+
   /**
    * Create a new Reader
-   * @param {number} mode - Reader mode flags (ReaderMode.*)
+   * @param mode - Reader mode flags (ReaderMode.*)
    */
-  constructor(mode = ReaderMode.None) {
+  constructor(mode: ReaderMode = ReaderMode.None) {
     this._mode = mode;
-    this._stringTable = new StringTable();
-    this._header = new Header();
-    this._objects = [];
-    this._components = [];
-    this._properties = [];
   }
 
   /**
    * Get string from string table by ID
-   * @param {number} id - String index
-   * @returns {string}
    */
-  stringFromId(id) {
+  stringFromId(id: number): string {
     return this._stringTable.stringFromId(id);
   }
 
   /**
    * Get the full string table
-   * @returns {string[]}
    */
-  stringTable() {
+  stringTable(): string[] {
     return this._stringTable.strings;
   }
 
   /**
    * Get all objects (for RandomAccess mode)
-   * @returns {ObjectInfo[]}
    */
-  objects() {
+  objects(): ObjectInfo[] {
     return this._objects;
   }
 
   /**
    * Get all components (for RandomAccess mode)
-   * @returns {ComponentInfo[]}
    */
-  components() {
+  components(): ComponentInfo[] {
     return this._components;
   }
 
   /**
    * Get all properties (for RandomAccess mode)
-   * @returns {PropertyInfo[]}
    */
-  properties() {
+  properties(): PropertyInfo[] {
     return this._properties;
   }
 
   /**
    * Open and parse a GTO file (text or binary)
-   * @param {string|ArrayBuffer|Uint8Array} content - File content
-   * @param {string} name - Optional filename for error messages
-   * @returns {boolean} - True if successful
+   * @param content - File content
+   * @param name - Optional filename for error messages
+   * @returns True if successful
    */
-  open(content, name = '<string>') {
+  open(content: string | ArrayBuffer | Uint8Array, name: string = '<string>'): boolean {
     this._filename = name;
     this._stringTable.clear();
     this._objects = [];
@@ -292,16 +298,15 @@ export class Reader {
       }
       return true;
     } catch (e) {
-      console.error(`Error parsing GTO file ${name}: ${e.message}`);
+      console.error(`Error parsing GTO file ${name}: ${(e as Error).message}`);
       return false;
     }
   }
 
   /**
    * Parse the GTO text content
-   * @private
    */
-  _parse(content) {
+  private _parse(content: string): void {
     const lexer = new Lexer(content);
     this._lexer = lexer;
     this._currentToken = lexer.nextToken();
@@ -325,7 +330,7 @@ export class Reader {
   /**
    * Get current token and advance
    */
-  _advance() {
+  private _advance(): Token {
     const token = this._currentToken;
     this._currentToken = this._lexer.nextToken();
     return token;
@@ -334,7 +339,7 @@ export class Reader {
   /**
    * Expect a specific token type
    */
-  _expect(type) {
+  private _expect(type: TokenType): Token {
     const token = this._currentToken;
     if (token.type !== type) {
       throw new Error(`Expected ${type} but got ${token.type} (${token.value}) at line ${this._lexer.line}`);
@@ -345,7 +350,7 @@ export class Reader {
   /**
    * Parse the file header
    */
-  _parseHeader() {
+  private _parseHeader(): void {
     // Expect "GTOa"
     const gtoToken = this._expect(TokenType.IDENTIFIER);
     if (gtoToken.value !== 'GTOa') {
@@ -357,19 +362,19 @@ export class Reader {
     const version = this._expect(TokenType.NUMBER);
     this._expect(TokenType.RPAREN);
 
-    this._header.version = version.value;
+    this._header.version = version.value as number;
   }
 
   /**
    * Parse an object declaration
    */
-  _parseObject() {
+  private _parseObject(): void {
     // ObjectName : protocol (version) { ... }
     const objectInfo = new ObjectInfo();
 
     // Object name
     const nameToken = this._expect(TokenType.IDENTIFIER);
-    objectInfo.name = nameToken.value;
+    objectInfo.name = nameToken.value as string;
     objectInfo._nameId = this._stringTable.intern(objectInfo.name);
 
     // Colon
@@ -377,14 +382,14 @@ export class Reader {
 
     // Protocol name
     const protocolToken = this._expect(TokenType.IDENTIFIER);
-    objectInfo.protocol = protocolToken.value;
+    objectInfo.protocol = protocolToken.value as string;
     objectInfo._protocolId = this._stringTable.intern(objectInfo.protocol);
 
     // Protocol version (optional)
     if (this._currentToken.type === TokenType.LPAREN) {
       this._advance();
       const versionToken = this._expect(TokenType.NUMBER);
-      objectInfo.protocolVersion = versionToken.value;
+      objectInfo.protocolVersion = versionToken.value as number;
       this._expect(TokenType.RPAREN);
     }
 
@@ -414,25 +419,25 @@ export class Reader {
   /**
    * Parse a component declaration
    */
-  _parseComponent(objectInfo, objectRequest) {
+  private _parseComponent(objectInfo: ObjectInfo, objectRequest: Request): void {
     const componentInfo = new ComponentInfo();
     componentInfo._object = objectInfo;
 
     // Component name (can be identifier or quoted string)
-    let nameToken;
+    let nameToken: Token;
     if (this._currentToken.type === TokenType.STRING) {
       nameToken = this._advance();
     } else {
       nameToken = this._expect(TokenType.IDENTIFIER);
     }
-    componentInfo.name = nameToken.value;
+    componentInfo.name = nameToken.value as string;
     componentInfo._nameId = this._stringTable.intern(componentInfo.name);
 
     // Optional interpretation: "as interpretation"
     if (this._currentToken.type === TokenType.AS) {
       this._advance();
       const interpToken = this._expect(TokenType.IDENTIFIER);
-      componentInfo.interpretation = interpToken.value;
+      componentInfo.interpretation = interpToken.value as string;
       componentInfo._interpretationId = this._stringTable.intern(componentInfo.interpretation);
     }
 
@@ -460,13 +465,13 @@ export class Reader {
   /**
    * Parse a property declaration
    */
-  _parseProperty(componentInfo, componentRequest) {
+  private _parseProperty(componentInfo: ComponentInfo, componentRequest: Request): void {
     const propertyInfo = new PropertyInfo();
     propertyInfo._component = componentInfo;
 
     // Type: float, int, double, etc.
     const typeToken = this._expect(TokenType.IDENTIFIER);
-    const typeName = typeToken.value;
+    const typeName = typeToken.value as string;
     if (!(typeName in TypeNameToDataType)) {
       throw new Error(`Unknown type '${typeName}' at line ${this._lexer.line}`);
     }
@@ -475,38 +480,38 @@ export class Reader {
     // Optional dimensions: [dim1,dim2,...]
     if (this._currentToken.type === TokenType.LBRACKET) {
       this._advance();
-      const dims = [];
-      dims.push(this._expect(TokenType.NUMBER).value);
-      while (this._currentToken.type === TokenType.COMMA) {
+      const dims: number[] = [];
+      dims.push(this._expect(TokenType.NUMBER).value as number);
+      while ((this._currentToken as Token).type === TokenType.COMMA) {
         this._advance();
-        dims.push(this._expect(TokenType.NUMBER).value);
+        dims.push(this._expect(TokenType.NUMBER).value as number);
       }
       this._expect(TokenType.RBRACKET);
       propertyInfo.width = dims.length === 1 ? dims[0] : 1;
       if (dims.length > 1) {
-        propertyInfo.dims = dims;
+        propertyInfo.dims = dims as [number, number, number, number];
       } else {
         propertyInfo.width = dims[0];
       }
     }
 
-    // Size: [count]
-    if (this._currentToken.type === TokenType.LBRACKET) {
+    // Size: [count] - need fresh check as _currentToken changes
+    if ((this._currentToken as Token).type === TokenType.LBRACKET) {
       this._advance();
-      propertyInfo.size = this._expect(TokenType.NUMBER).value;
+      propertyInfo.size = this._expect(TokenType.NUMBER).value as number;
       this._expect(TokenType.RBRACKET);
     }
 
     // Property name
     const nameToken = this._expect(TokenType.IDENTIFIER);
-    propertyInfo.name = nameToken.value;
+    propertyInfo.name = nameToken.value as string;
     propertyInfo._nameId = this._stringTable.intern(propertyInfo.name);
 
     // Optional interpretation: "as interpretation"
     if (this._currentToken.type === TokenType.AS) {
       this._advance();
       const interpToken = this._expect(TokenType.IDENTIFIER);
-      propertyInfo.interpretation = interpToken.value;
+      propertyInfo.interpretation = interpToken.value as string;
       propertyInfo._interpretationId = this._stringTable.intern(propertyInfo.interpretation);
     }
 
@@ -526,7 +531,7 @@ export class Reader {
     this._expect(TokenType.EQUALS);
 
     // Parse data - can be array or single value
-    let data;
+    let data: number[];
     if (this._currentToken.type === TokenType.LBRACKET) {
       data = this._parseData(propertyInfo);
     } else {
@@ -552,8 +557,8 @@ export class Reader {
   /**
    * Parse property data values
    */
-  _parseData(propertyInfo) {
-    const data = [];
+  private _parseData(propertyInfo: PropertyInfo): number[] {
+    const data: number[] = [];
 
     this._expect(TokenType.LBRACKET);
 
@@ -563,17 +568,17 @@ export class Reader {
         const nested = this._parseNestedData(propertyInfo);
         data.push(...nested);
       } else if (this._currentToken.type === TokenType.NUMBER) {
-        data.push(this._advance().value);
+        data.push(this._advance().value as number);
       } else if (this._currentToken.type === TokenType.STRING) {
-        const strValue = this._advance().value;
+        const strValue = this._advance().value as string;
         if (propertyInfo.type === DataType.String) {
           data.push(this._stringTable.intern(strValue));
         } else {
-          data.push(strValue);
+          data.push(strValue as unknown as number);
         }
       } else if (this._currentToken.type === TokenType.IDENTIFIER) {
         // Could be a string reference or special value
-        const id = this._advance().value;
+        const id = this._advance().value as string;
         if (id === 'true') {
           data.push(1);
         } else if (id === 'false') {
@@ -586,7 +591,7 @@ export class Reader {
       }
 
       // Optional comma
-      if (this._currentToken.type === TokenType.COMMA) {
+      if ((this._currentToken as Token).type === TokenType.COMMA) {
         this._advance();
       }
     }
@@ -599,8 +604,8 @@ export class Reader {
   /**
    * Parse nested array data
    */
-  _parseNestedData(propertyInfo) {
-    const data = [];
+  private _parseNestedData(propertyInfo: PropertyInfo): number[] {
+    const data: number[] = [];
 
     this._expect(TokenType.LBRACKET);
 
@@ -610,16 +615,16 @@ export class Reader {
         const nested = this._parseNestedData(propertyInfo);
         data.push(...nested);
       } else if (this._currentToken.type === TokenType.NUMBER) {
-        data.push(this._advance().value);
+        data.push(this._advance().value as number);
       } else if (this._currentToken.type === TokenType.STRING) {
-        const strValue = this._advance().value;
+        const strValue = this._advance().value as string;
         if (propertyInfo.type === DataType.String) {
           data.push(this._stringTable.intern(strValue));
         } else {
-          data.push(strValue);
+          data.push(strValue as unknown as number);
         }
       } else if (this._currentToken.type === TokenType.IDENTIFIER) {
-        const id = this._advance().value;
+        const id = this._advance().value as string;
         if (id === 'true') {
           data.push(1);
         } else if (id === 'false') {
@@ -632,7 +637,7 @@ export class Reader {
       }
 
       // Optional comma
-      if (this._currentToken.type === TokenType.COMMA) {
+      if ((this._currentToken as Token).type === TokenType.COMMA) {
         this._advance();
       }
     }
@@ -645,17 +650,17 @@ export class Reader {
   /**
    * Parse a single value (not in array brackets)
    */
-  _parseSingleValue(propertyInfo) {
+  private _parseSingleValue(propertyInfo: PropertyInfo): number[] {
     if (this._currentToken.type === TokenType.NUMBER) {
-      return [this._advance().value];
+      return [this._advance().value as number];
     } else if (this._currentToken.type === TokenType.STRING) {
-      const strValue = this._advance().value;
+      const strValue = this._advance().value as string;
       if (propertyInfo.type === DataType.String) {
         return [this._stringTable.intern(strValue)];
       }
-      return [strValue];
+      return [strValue as unknown as number];
     } else if (this._currentToken.type === TokenType.IDENTIFIER) {
-      const id = this._advance().value;
+      const id = this._advance().value as string;
       if (id === 'true') {
         return [1];
       } else if (id === 'false') {
@@ -672,15 +677,14 @@ export class Reader {
 
   /**
    * Parse binary GTO content
-   * @private
    */
-  _parseBinary(content) {
+  private _parseBinary(content: ArrayBuffer | Uint8Array): void {
     const buffer = content instanceof ArrayBuffer ? content : content.buffer.slice(content.byteOffset, content.byteOffset + content.byteLength);
     const view = new DataView(buffer);
 
     // Detect endianness from magic number
     const magic = view.getUint32(0, true); // Try little-endian first
-    let littleEndian;
+    let littleEndian: boolean;
     if (magic === GTO_MAGIC) {
       littleEndian = true;
     } else if (view.getUint32(0, false) === GTO_MAGIC) {
@@ -716,7 +720,13 @@ export class Reader {
     offset += stringTableBytes;
 
     // Read object headers
-    const objectHeaders = [];
+    interface BinaryObjectHeader {
+      nameId: number;
+      protocolId: number;
+      protocolVersion: number;
+      numComponents: number;
+    }
+    const objectHeaders: BinaryObjectHeader[] = [];
     for (let i = 0; i < numObjects; i++) {
       const nameId = view.getUint32(offset, littleEndian); offset += 4;
       const protocolId = view.getUint32(offset, littleEndian); offset += 4;
@@ -734,7 +744,13 @@ export class Reader {
     }
 
     // Read component headers
-    const componentHeaders = [];
+    interface BinaryComponentHeader {
+      nameId: number;
+      interpretationId: number;
+      numProperties: number;
+      flags: number;
+    }
+    const componentHeaders: BinaryComponentHeader[] = [];
     for (let i = 0; i < totalComponents; i++) {
       const nameId = view.getUint32(offset, littleEndian); offset += 4;
       const interpretationId = view.getUint32(offset, littleEndian); offset += 4;
@@ -751,17 +767,25 @@ export class Reader {
     }
 
     // Read property headers
-    const propertyHeaders = [];
+    interface BinaryPropertyHeader {
+      nameId: number;
+      interpretationId: number;
+      type: DataType;
+      size: number;
+      width: number;
+      dims: [number, number, number, number];
+    }
+    const propertyHeaders: BinaryPropertyHeader[] = [];
     for (let i = 0; i < totalProperties; i++) {
       const nameId = view.getUint32(offset, littleEndian); offset += 4;
       const interpretationId = view.getUint32(offset, littleEndian); offset += 4;
-      const type = view.getUint8(offset); offset += 1;
+      const type = view.getUint8(offset) as DataType; offset += 1;
       offset += 3; // pad (1 byte + 2 bytes)
       const size = view.getUint32(offset, littleEndian); offset += 4;
       const width = view.getUint32(offset, littleEndian); offset += 4;
 
       // Read dims if version >= 4 (we'll read at least dims[0])
-      const dims = [1, 1, 1, 1];
+      const dims: [number, number, number, number] = [1, 1, 1, 1];
       if (version >= 4) {
         dims[0] = view.getUint32(offset, littleEndian); offset += 4;
       }
@@ -847,8 +871,8 @@ export class Reader {
 
           if (propertyRequest === Request.Read && totalCount > 0) {
             const data = this._readBinaryData(view, offset, propertyInfo, totalCount, littleEndian);
-            const buffer = this.data(propertyInfo, dataBytes);
-            if (buffer !== null) {
+            const dataBuffer = this.data(propertyInfo, dataBytes);
+            if (dataBuffer !== null) {
               this.dataRead(propertyInfo, data);
             }
           }
@@ -861,10 +885,9 @@ export class Reader {
 
   /**
    * Read binary property data
-   * @private
    */
-  _readBinaryData(view, offset, propertyInfo, count, littleEndian) {
-    const data = [];
+  private _readBinaryData(view: DataView, offset: number, propertyInfo: PropertyInfo, count: number, littleEndian: boolean): number[] {
+    const data: number[] = [];
     const type = propertyInfo.type;
     const typeSize = DataTypeSize[type] || 4;
 
@@ -878,9 +901,8 @@ export class Reader {
 
   /**
    * Read a single binary value
-   * @private
    */
-  _readBinaryValue(view, offset, type, littleEndian) {
+  private _readBinaryValue(view: DataView, offset: number, type: DataType, littleEndian: boolean): number {
     switch (type) {
       case DataType.Int:
         return view.getInt32(offset, littleEndian);
@@ -911,119 +933,120 @@ export class Reader {
 
   /**
    * Called after the file header is read
-   * @param {Header} header - The file header
    */
-  header(header) {
+  header(_header: Header): void {
     // Override in subclass
   }
 
   /**
    * Called for each object in the file
-   * @param {string} name - Object name
-   * @param {string} protocol - Protocol name
-   * @param {number} protocolVersion - Protocol version
-   * @param {ObjectInfo} info - Object info
-   * @returns {number} - Request.Read to read object data, Request.Skip to skip
+   * @returns Request.Read to read object data, Request.Skip to skip
    */
-  object(name, protocol, protocolVersion, info) {
+  object(_name: string, _protocol: string, _protocolVersion: number, _info: ObjectInfo): Request {
     return Request.Read;
   }
 
   /**
    * Called for each component in an object
-   * @param {string} name - Component name
-   * @param {ComponentInfo} info - Component info
-   * @returns {number} - Request.Read to read component data, Request.Skip to skip
+   * @returns Request.Read to read component data, Request.Skip to skip
    */
-  component(name, info) {
+  component(_name: string, _info: ComponentInfo): Request {
     return Request.Read;
   }
 
   /**
    * Called for each property in a component
-   * @param {string} name - Property name
-   * @param {string} interpretation - Interpretation string
-   * @param {PropertyInfo} info - Property info
-   * @returns {number} - Request.Read to read property data, Request.Skip to skip
+   * @returns Request.Read to read property data, Request.Skip to skip
    */
-  property(name, interpretation, info) {
+  property(_name: string, _interpretation: string, _info: PropertyInfo): Request {
     return Request.Read;
   }
 
   /**
    * Called to allocate memory for property data
-   * @param {PropertyInfo} info - Property info
-   * @param {number} bytes - Number of bytes needed
-   * @returns {*} - Buffer to store data, or null to skip
+   * @returns Buffer to store data, or null to skip
    */
-  data(info, bytes) {
+  data(_info: PropertyInfo, _bytes: number): unknown {
     return true; // Default: accept data
   }
 
   /**
    * Called after property data is read
-   * @param {PropertyInfo} info - Property info
-   * @param {Array} data - The property data as an array
    */
-  dataRead(info, data) {
+  dataRead(_info: PropertyInfo, _data: number[]): void {
     // Override in subclass
   }
+}
+
+/** Parsed object structure for SimpleReader */
+interface ParsedObject {
+  name: string;
+  protocol: string;
+  protocolVersion: number;
+  components: Record<string, ParsedComponent>;
+}
+
+/** Parsed component structure for SimpleReader */
+interface ParsedComponent {
+  interpretation: string;
+  properties: Record<string, PropertyData>;
 }
 
 /**
  * Simple reader that collects all data into a structured object
  */
 export class SimpleReader extends Reader {
+  result: GTOData = {
+    version: 0,
+    objects: []
+  };
+  private _currentObject: ParsedObject | null = null;
+  private _currentComponent: ParsedComponent | null = null;
+
   constructor() {
     super(ReaderMode.None);
-    this.result = {
-      version: 0,
-      objects: []
-    };
-    this._currentObject = null;
-    this._currentComponent = null;
   }
 
-  header(header) {
+  override header(header: Header): void {
     this.result.version = header.version;
   }
 
-  object(name, protocol, protocolVersion, info) {
+  override object(name: string, protocol: string, protocolVersion: number, _info: ObjectInfo): Request {
     this._currentObject = {
       name,
       protocol,
       protocolVersion,
       components: {}
     };
-    this.result.objects.push(this._currentObject);
+    this.result.objects.push(this._currentObject as ObjectData);
     return Request.Read;
   }
 
-  component(name, info) {
+  override component(name: string, info: ComponentInfo): Request {
     this._currentComponent = {
       interpretation: info.interpretation,
       properties: {}
     };
-    this._currentObject.components[name] = this._currentComponent;
+    this._currentObject!.components[name] = this._currentComponent as ComponentData;
     return Request.Read;
   }
 
-  property(name, interpretation, info) {
+  override property(_name: string, _interpretation: string, _info: PropertyInfo): Request {
     return Request.Read;
   }
 
-  dataRead(info, data) {
-    const prop = {
+  override dataRead(info: PropertyInfo, data: number[]): void {
+    const prop: PropertyData = {
       type: DataTypeName[info.type],
       size: info.size,
       width: info.width,
       interpretation: info.interpretation,
       data: this._formatData(info, data)
     };
-    this._currentComponent.properties[info.name] = prop;
+    this._currentComponent!.properties[info.name] = prop;
   }
 
-  _formatData(info, data) {
+  private _formatData(info: PropertyInfo, data: number[]): unknown[] {
     // Convert string indices back to strings
     if (info.type === DataType.String) {
       return data.map(id => this.stringFromId(id));
@@ -1031,7 +1054,7 @@ export class SimpleReader extends Reader {
 
     // Group data by width if > 1
     if (info.width > 1) {
-      const grouped = [];
+      const grouped: number[][] = [];
       for (let i = 0; i < data.length; i += info.width) {
         grouped.push(data.slice(i, i + info.width));
       }
