@@ -997,6 +997,176 @@ function renderComponentVisualizer(compName: string, comp: ComponentData): strin
   }
 }
 
+// ============= Lens Warp Visualizer =============
+
+function renderLensWarpVisualizer(obj: ObjectData): string {
+  const warp = obj.components.warp?.properties;
+  if (!warp) return '';
+
+  const model = (warp.model?.data?.[0] as string) || 'brown';
+  const k1 = (warp.k1?.data?.[0] as number) || 0;
+  const k2 = (warp.k2?.data?.[0] as number) || 0;
+  const k3 = (warp.k3?.data?.[0] as number) || 0;
+  const p1 = (warp.p1?.data?.[0] as number) || 0;
+  const p2 = (warp.p2?.data?.[0] as number) || 0;
+  const d = (warp.d?.data?.[0] as number) || 1;
+  const center = (warp.center?.data?.[0] as number[]) || [0.5, 0.5];
+  const fx = (warp.fx?.data?.[0] as number) || 1;
+  const fy = (warp.fy?.data?.[0] as number) || 1;
+
+  const size = 200;
+  const gridLines = 9;
+  const padding = 10;
+
+  // Apply Brown-Conrady distortion model
+  const distort = (x: number, y: number): [number, number] => {
+    // Normalize to center
+    const cx = center[0];
+    const cy = center[1];
+    const dx = (x - cx) * fx;
+    const dy = (y - cy) * fy;
+
+    const r2 = dx * dx + dy * dy;
+    const r4 = r2 * r2;
+    const r6 = r4 * r2;
+
+    // Radial distortion
+    const radial = 1 + k1 * r2 + k2 * r4 + k3 * r6;
+
+    // Tangential distortion
+    const tx = p1 * (r2 + 2 * dx * dx) + 2 * p2 * dx * dy;
+    const ty = p2 * (r2 + 2 * dy * dy) + 2 * p1 * dx * dy;
+
+    // Apply distortion
+    const xd = dx * radial * d + tx;
+    const yd = dy * radial * d + ty;
+
+    return [xd / fx + cx, yd / fy + cy];
+  };
+
+  // Convert normalized coords to SVG
+  const toSvg = (x: number, y: number): [number, number] => {
+    return [
+      padding + x * (size - 2 * padding),
+      padding + (1 - y) * (size - 2 * padding)
+    ];
+  };
+
+  // Generate distorted grid lines
+  const gridPaths: string[] = [];
+  const steps = 20;
+
+  // Horizontal lines
+  for (let i = 0; i <= gridLines; i++) {
+    const y = i / gridLines;
+    const points: string[] = [];
+    for (let j = 0; j <= steps; j++) {
+      const x = j / steps;
+      const [dx, dy] = distort(x, y);
+      const [sx, sy] = toSvg(dx, dy);
+      points.push(`${sx.toFixed(1)},${sy.toFixed(1)}`);
+    }
+    gridPaths.push(`<polyline points="${points.join(' ')}" fill="none" stroke="var(--accent-blue)" stroke-width="1" opacity="0.6"/>`);
+  }
+
+  // Vertical lines
+  for (let i = 0; i <= gridLines; i++) {
+    const x = i / gridLines;
+    const points: string[] = [];
+    for (let j = 0; j <= steps; j++) {
+      const y = j / steps;
+      const [dx, dy] = distort(x, y);
+      const [sx, sy] = toSvg(dx, dy);
+      points.push(`${sx.toFixed(1)},${sy.toFixed(1)}`);
+    }
+    gridPaths.push(`<polyline points="${points.join(' ')}" fill="none" stroke="var(--accent-blue)" stroke-width="1" opacity="0.6"/>`);
+  }
+
+  // Center point
+  const [dcx, dcy] = distort(center[0], center[1]);
+  const [scx, scy] = toSvg(dcx, dcy);
+
+  // Determine distortion type description
+  let distortionType = 'None';
+  if (k1 > 0 || k2 > 0) distortionType = 'Pincushion';
+  else if (k1 < 0 || k2 < 0) distortionType = 'Barrel';
+  if (Math.abs(k1) < 0.001 && Math.abs(k2) < 0.001) distortionType = 'None';
+
+  const hasDistortion = k1 !== 0 || k2 !== 0 || k3 !== 0 || p1 !== 0 || p2 !== 0;
+
+  return `
+    <div class="detail-card lens-warp-visualizer">
+      <div class="detail-header">
+        <div class="detail-title">🔍 Lens Warp</div>
+        <span class="type-badge string">${model}</span>
+      </div>
+      <div class="detail-body">
+        <div class="warp-preview-container">
+          <svg viewBox="0 0 ${size} ${size}" class="warp-preview">
+            <!-- Background -->
+            <rect x="${padding}" y="${padding}" width="${size - 2 * padding}" height="${size - 2 * padding}" fill="var(--bg-tertiary)" rx="4"/>
+
+            <!-- Distorted grid -->
+            ${gridPaths.join('\n            ')}
+
+            <!-- Center marker -->
+            <circle cx="${scx.toFixed(1)}" cy="${scy.toFixed(1)}" r="4" fill="var(--accent-orange)" stroke="white" stroke-width="1"/>
+            <line x1="${scx - 8}" y1="${scy}" x2="${scx + 8}" y2="${scy}" stroke="var(--accent-orange)" stroke-width="1"/>
+            <line x1="${scx}" y1="${scy - 8}" x2="${scx}" y2="${scy + 8}" stroke="var(--accent-orange)" stroke-width="1"/>
+          </svg>
+          ${!hasDistortion ? '<div class="warp-no-distortion">No distortion applied</div>' : ''}
+        </div>
+
+        <div class="warp-params">
+          <div class="warp-section">
+            <div class="warp-section-title">Radial Distortion</div>
+            <div class="warp-param">
+              <span class="param-name">k1</span>
+              <span class="param-value ${k1 !== 0 ? 'active' : ''}">${k1.toFixed(6)}</span>
+            </div>
+            <div class="warp-param">
+              <span class="param-name">k2</span>
+              <span class="param-value ${k2 !== 0 ? 'active' : ''}">${k2.toFixed(6)}</span>
+            </div>
+            <div class="warp-param">
+              <span class="param-name">k3</span>
+              <span class="param-value ${k3 !== 0 ? 'active' : ''}">${k3.toFixed(6)}</span>
+            </div>
+          </div>
+
+          <div class="warp-section">
+            <div class="warp-section-title">Tangential Distortion</div>
+            <div class="warp-param">
+              <span class="param-name">p1</span>
+              <span class="param-value ${p1 !== 0 ? 'active' : ''}">${p1.toFixed(6)}</span>
+            </div>
+            <div class="warp-param">
+              <span class="param-name">p2</span>
+              <span class="param-value ${p2 !== 0 ? 'active' : ''}">${p2.toFixed(6)}</span>
+            </div>
+          </div>
+
+          <div class="warp-section">
+            <div class="warp-section-title">Center & Scale</div>
+            <div class="warp-param">
+              <span class="param-name">center</span>
+              <span class="param-value">(${center[0].toFixed(3)}, ${center[1].toFixed(3)})</span>
+            </div>
+            <div class="warp-param">
+              <span class="param-name">focal</span>
+              <span class="param-value">(${fx.toFixed(3)}, ${fy.toFixed(3)})</span>
+            </div>
+            <div class="warp-param">
+              <span class="param-name">type</span>
+              <span class="param-value">${distortionType}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 function renderProtocolVisualizer(obj: ObjectData): string {
   switch (obj.protocol) {
     case 'RVColor':
@@ -1016,6 +1186,8 @@ function renderProtocolVisualizer(obj: ObjectData): string {
     case 'RVSequence':
     case 'RVSequenceGroup':
       return renderSequenceVisualizer(obj);
+    case 'RVLensWarp':
+      return renderLensWarpVisualizer(obj);
     default:
       return '';
   }
