@@ -1,11 +1,16 @@
 {
-  "name": "gto",
+  "name": "gto-js",
   "version": "1.0.0",
   "description": "TypeScript implementation of the GTO (Graph Topology Object) file format",
   "type": "module",
   "main": "dist/gto.js",
   "module": "dist/gto.js",
   "types": "dist/index.d.ts",
+  "author": "Aleksandr Kanunnikov <lifeart92@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lifeart/gto-js.git"
+  },
   "exports": {
     ".": {
       "import": "./dist/gto.js",
