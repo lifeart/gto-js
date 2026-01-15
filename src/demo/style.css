@@ -1981,9 +1981,33 @@
     }
 
     .annotation-user {
-      margin-left: auto;
       color: var(--text-muted);
+    }
+
+    .annotation-goto {
+      margin-left: auto;
       font-size: 11px;
+      padding: 4px 10px;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .annotation-card:hover .annotation-goto {
+      opacity: 1;
+    }
+
+    .annotation-goto:hover {
+      background: var(--accent-blue);
+      border-color: var(--accent-blue);
+      color: #fff;
+    }
+
+    .annotation-frame {
+      cursor: pointer;
+    }
+
+    .annotation-frame:hover {
+      background: var(--accent-pink);
     }
 
     .color-swatch {

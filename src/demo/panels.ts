@@ -1741,6 +1741,8 @@ interface StrokeData {
   points: number[][];
   join: number;
   cap: number;
+  objectName: string;
+  componentName: string;
 }
 
 interface TextAnnotation {
@@ -1753,6 +1755,8 @@ interface TextAnnotation {
   size: number;
   scale: number;
   rotation: number;
+  objectName: string;
+  componentName: string;
 }
 
 interface FrameAnnotations {
@@ -1904,7 +1908,9 @@ function collectFrameAnnotations(paintNodes: ObjectData[]): Map<number, FrameAnn
           brush: (props.brush?.data?.[0] as string) || 'circle',
           points: (props.points?.data as number[][]) || [],
           join: (props.join?.data?.[0] as number) ?? 1,
-          cap: (props.cap?.data?.[0] as number) ?? 1
+          cap: (props.cap?.data?.[0] as number) ?? 1,
+          objectName: paint.name,
+          componentName: compName
         });
       } else if (compName.startsWith('text:')) {
         // text:{id}:{frame}:{user}
@@ -1927,7 +1933,9 @@ function collectFrameAnnotations(paintNodes: ObjectData[]): Map<number, FrameAnn
           text: (props.text?.data?.[0] as string) || '',
           size: (props.size?.data?.[0] as number) || 0.01,
           scale: (props.scale?.data?.[0] as number) || 1,
-          rotation: (props.rotation?.data?.[0] as number) || 0
+          rotation: (props.rotation?.data?.[0] as number) || 0,
+          objectName: paint.name,
+          componentName: compName
         });
       }
     }
@@ -2176,13 +2184,16 @@ export function renderAnnotationsPanel(): void {
       const capStyle = CAP_STYLES[stroke.cap] || 'round';
 
       html += `
-        <div class="annotation-card" data-frame="${frame}" onclick="selectAnnotationFrame(${frame})">
+        <div class="annotation-card" data-frame="${frame}">
           <div class="annotation-header">
-            <span class="annotation-frame">Frame ${frame}</span>
+            <span class="annotation-frame" onclick="selectAnnotationFrame(${frame})">Frame ${frame}</span>
             <span class="annotation-type">Drawing</span>
             <span class="annotation-user">${escapeHtml(stroke.user)}</span>
+            <button class="btn btn-sm annotation-goto" onclick="event.stopPropagation(); selectFromProtocolView('${escapeAttr(stroke.objectName)}'); setTimeout(() => document.getElementById('comp-${escapeAttr(stroke.componentName)}')?.scrollIntoView({behavior:'smooth'}), 100)" title="Edit this annotation">
+              Go to Object →
+            </button>
           </div>
-          <div class="annotation-body">
+          <div class="annotation-body" onclick="selectAnnotationFrame(${frame})">
             <div class="annotation-preview">
               <svg viewBox="0 0 300 80" preserveAspectRatio="xMidYMid meet" style="width: 100%; height: 80px; overflow: visible;">
                 ${renderStrokePath(stroke.points, colorStr, 2, stroke.join, stroke.cap)}
@@ -2205,13 +2216,16 @@ export function renderAnnotationsPanel(): void {
       const colorStr = `rgba(${Math.round(text.color[0]*255)}, ${Math.round(text.color[1]*255)}, ${Math.round(text.color[2]*255)}, ${text.color[3]})`;
 
       html += `
-        <div class="annotation-card" data-frame="${frame}" onclick="selectAnnotationFrame(${frame})">
+        <div class="annotation-card" data-frame="${frame}">
           <div class="annotation-header">
-            <span class="annotation-frame">Frame ${frame}</span>
+            <span class="annotation-frame" onclick="selectAnnotationFrame(${frame})">Frame ${frame}</span>
             <span class="annotation-type">Text</span>
             <span class="annotation-user">${escapeHtml(text.user)}</span>
+            <button class="btn btn-sm annotation-goto" onclick="event.stopPropagation(); selectFromProtocolView('${escapeAttr(text.objectName)}'); setTimeout(() => document.getElementById('comp-${escapeAttr(text.componentName)}')?.scrollIntoView({behavior:'smooth'}), 100)" title="Edit this annotation">
+              Go to Object →
+            </button>
           </div>
-          <div class="annotation-body">
+          <div class="annotation-body" onclick="selectAnnotationFrame(${frame})">
             <div class="annotation-preview">
               <div class="annotation-text-content" style="color: ${colorStr}">
                 ${escapeHtml(text.text)}
