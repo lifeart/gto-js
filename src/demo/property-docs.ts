@@ -1230,18 +1230,6 @@ export const PROPERTY_DOCS: Record<string, ProtocolDoc> = {
     }
   },
 
-  'RVSwitchGroup': {
-    description: 'Switch group: toggle between multiple inputs',
-    components: {
-      'ui': {
-        description: 'User interface',
-        properties: {
-          'name': { description: 'Display name for this switch', type: 'string' }
-        }
-      }
-    }
-  },
-
   'RVSwitch': {
     description: 'Switch node: controls which input is active',
     components: {
@@ -1393,27 +1381,78 @@ export const PROPERTY_DOCS: Record<string, ProtocolDoc> = {
 
   // ============= LUT nodes =============
   'RVCacheLUT': {
-    description: 'Cache LUT: baked color transforms for caching',
+    description: 'Cache LUT: baked color transforms for caching. Properties verified from LUTIPNode.cpp.',
     components: {
       'lut': {
         description: 'LUT settings',
         properties: {
           'active': { description: 'Enable cache LUT', type: 'int', default: 0 },
-          'type': { description: 'LUT type identifier', type: 'string' }
+          'file': { description: 'Path to LUT file (.cube, .3dl, .csp, etc.)', type: 'string' },
+          'name': { description: 'LUT name identifier', type: 'string' },
+          'type': { description: 'LUT type: Luminance, RGB, RGBA, 3D, Half3D, etc.', type: 'string', default: 'Luminance' },
+          'lut': { description: 'LUT data array (float values)', type: 'float[]' },
+          'prelut': { description: 'Pre-LUT shaper curve data', type: 'float[]' },
+          'size': { description: 'LUT dimensions [width, height, depth]', type: 'int[3]' },
+          'preLUTSize': { description: 'Pre-LUT shaper size', type: 'int' },
+          'scale': { description: 'Output scale multiplier', type: 'float', default: 1.0 },
+          'offset': { description: 'Output offset', type: 'float', default: 0.0 },
+          'conditioningGamma': { description: 'Gamma applied before LUT lookup', type: 'float', default: 1.0 },
+          'inMatrix': { description: 'Input matrix transform (4x4)', type: 'float[16]' },
+          'outMatrix': { description: 'Output matrix transform (4x4)', type: 'float[16]' }
+        }
+      },
+      'lut:output': {
+        description: 'LUT output cache (non-persistent)',
+        properties: {
+          'size': { description: 'Output LUT size', type: 'int', default: 256 },
+          'type': { description: 'Output LUT type', type: 'string', default: 'Luminance' },
+          'lut': { description: 'Computed LUT data', type: 'float[]' },
+          'prelut': { description: 'Computed pre-LUT data', type: 'float[]' }
+        }
+      },
+      'matrix:output': {
+        description: 'Matrix output (non-persistent)',
+        properties: {
+          'RGBA': { description: 'Computed RGBA matrix', type: 'float[16]' }
         }
       }
     }
   },
 
   'RVLookLUT': {
-    description: 'Look LUT: creative color grades',
+    description: 'Look LUT: creative color grades. Properties verified from LUTIPNode.cpp (inherits from LookIPNode).',
     components: {
       'lut': {
         description: 'LUT settings',
         properties: {
           'active': { description: 'Enable look LUT', type: 'int', default: 0 },
-          'file': { description: 'Path to LUT file', type: 'string' },
-          'type': { description: 'LUT type identifier', type: 'string' }
+          'file': { description: 'Path to LUT file (.cube, .3dl, .csp, etc.)', type: 'string' },
+          'name': { description: 'LUT name identifier', type: 'string' },
+          'type': { description: 'LUT type: Luminance, RGB, RGBA, 3D, Half3D, etc.', type: 'string', default: 'Luminance' },
+          'lut': { description: 'LUT data array (float values)', type: 'float[]' },
+          'prelut': { description: 'Pre-LUT shaper curve data', type: 'float[]' },
+          'size': { description: 'LUT dimensions [width, height, depth]', type: 'int[3]' },
+          'preLUTSize': { description: 'Pre-LUT shaper size', type: 'int' },
+          'scale': { description: 'Output scale multiplier', type: 'float', default: 1.0 },
+          'offset': { description: 'Output offset', type: 'float', default: 0.0 },
+          'conditioningGamma': { description: 'Gamma applied before LUT lookup', type: 'float', default: 1.0 },
+          'inMatrix': { description: 'Input matrix transform (4x4)', type: 'float[16]' },
+          'outMatrix': { description: 'Output matrix transform (4x4)', type: 'float[16]' }
+        }
+      },
+      'lut:output': {
+        description: 'LUT output cache (non-persistent)',
+        properties: {
+          'size': { description: 'Output LUT size', type: 'int', default: 256 },
+          'type': { description: 'Output LUT type', type: 'string', default: 'Luminance' },
+          'lut': { description: 'Computed LUT data', type: 'float[]' },
+          'prelut': { description: 'Computed pre-LUT data', type: 'float[]' }
+        }
+      },
+      'matrix:output': {
+        description: 'Matrix output (non-persistent)',
+        properties: {
+          'RGBA': { description: 'Computed RGBA matrix', type: 'float[16]' }
         }
       }
     }
