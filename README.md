@@ -28,13 +28,33 @@ Then open http://localhost:8080
   - Paint: stroke counts, text annotations per frame
   - Pipelines: node chains for color/display/linearize
   - Output: resolution, data type, audio settings
-- Hierarchical object browser with search
-- Property inspector with type badges and value previews
-- Media source viewer (paths, frame ranges, resolution)
-- Timeline visualization with current frame marker
-- Annotation previews (paint strokes, text)
-- Node connection graph
-- JSON export with syntax highlighting
+- **Hierarchical object browser** with deep search (objects, components, properties)
+- **Property inspector** with type badges, value previews, and type filters
+- **Media source viewer** (paths, frame ranges, resolution)
+- **Interactive timeline** - Click to change frame, drag to adjust range
+- **Annotation previews** (paint strokes, text)
+- **Node connection graph** with zoom/pan controls
+- **Object comparison** - Compare two objects side by side with diff highlighting
+- **Deep linking** - URL hash navigation (`#object=name&tab=details`)
+- **Dark/light theme** - Toggle with `T` key, persisted in localStorage
+- **Recently viewed** - Quick access to recently inspected objects
+- **Copy to clipboard** - Copy property values and paths
+- **Search highlighting** - Matched terms highlighted in results
+- **Breadcrumb navigation** - Shows current location hierarchy
+- **JSON export** with syntax highlighting
+
+**Keyboard Shortcuts:**
+| Key | Action |
+|-----|--------|
+| `1-8` | Switch tabs (Protocols, Objects, Details, etc.) |
+| `?` | Show keyboard shortcuts help |
+| `T` | Toggle dark/light theme |
+| `E` | Expand all sidebar items |
+| `C` | Collapse all sidebar items |
+| `Ctrl/Cmd+F` | Focus search box |
+| `↑/↓` | Navigate sidebar |
+| `Enter` | Select focused item |
+| `Esc` | Clear search/close modals |
 
 ![GTO Session Viewer](https://img.shields.io/badge/GTO-Session%20Viewer-blue)
 

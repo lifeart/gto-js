@@ -1031,6 +1031,388 @@
       min-width: 4px;
     }
 
+    /* Breadcrumb */
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-color);
+      font-size: 13px;
+      flex-wrap: wrap;
+    }
+
+    .breadcrumb-item {
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: color 0.15s;
+    }
+
+    .breadcrumb-item:hover {
+      color: var(--accent-blue);
+    }
+
+    .breadcrumb-item.current {
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    .breadcrumb-sep {
+      color: var(--text-muted);
+    }
+
+    /* Copy button */
+    .copy-btn {
+      padding: 4px 8px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: 12px;
+      opacity: 0;
+      transition: all 0.15s;
+    }
+
+    .copy-btn:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+
+    .copy-btn.copied {
+      color: var(--accent-green);
+    }
+
+    tr:hover .copy-btn,
+    .data-preview:hover .copy-btn,
+    .source-path:hover .copy-btn {
+      opacity: 1;
+    }
+
+    .copyable {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Search highlight */
+    .highlight {
+      background: rgba(210, 153, 34, 0.3);
+      border-radius: 2px;
+      padding: 0 2px;
+    }
+
+    /* Recently viewed */
+    .recent-section {
+      padding: 12px;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .recent-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      letter-spacing: 0.5px;
+    }
+
+    .recent-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .recent-item {
+      padding: 6px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-secondary);
+      transition: all 0.15s;
+    }
+
+    .recent-item:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+
+    /* Theme toggle */
+    .theme-toggle {
+      padding: 8px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-color);
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      cursor: pointer;
+      font-size: 16px;
+      transition: all 0.2s;
+    }
+
+    .theme-toggle:hover {
+      border-color: var(--accent-blue);
+    }
+
+    /* Light theme */
+    .light-theme {
+      --bg-primary: #ffffff;
+      --bg-secondary: #f6f8fa;
+      --bg-tertiary: #eaeef2;
+      --bg-card: #ffffff;
+      --border-color: #d0d7de;
+      --text-primary: #1f2328;
+      --text-secondary: #656d76;
+      --text-muted: #8c959f;
+    }
+
+    /* Property filters */
+    .detail-filters {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .filter-chip {
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      cursor: pointer;
+      border: 1px solid var(--border-color);
+      background: transparent;
+      color: var(--text-secondary);
+      transition: all 0.15s;
+    }
+
+    .filter-chip:hover {
+      border-color: var(--accent-blue);
+      color: var(--text-primary);
+    }
+
+    .filter-chip.active {
+      background: var(--accent-blue);
+      border-color: var(--accent-blue);
+      color: #fff;
+    }
+
+    /* Comparison view */
+    .compare-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .compare-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .compare-header {
+      padding: 12px 16px;
+      background: var(--bg-tertiary);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .compare-select {
+      padding: 6px 10px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-color);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-size: 13px;
+      min-width: 200px;
+    }
+
+    .compare-body {
+      padding: 16px;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+
+    .diff-added {
+      background: rgba(63, 185, 80, 0.15);
+    }
+
+    .diff-removed {
+      background: rgba(248, 81, 73, 0.15);
+    }
+
+    .diff-changed {
+      background: rgba(210, 153, 34, 0.15);
+    }
+
+    /* Keyboard shortcuts modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s;
+    }
+
+    .modal-overlay.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      width: 500px;
+      max-width: 90%;
+      max-height: 80vh;
+      overflow: hidden;
+      transform: scale(0.95);
+      transition: transform 0.2s;
+    }
+
+    .modal-overlay.visible .modal {
+      transform: scale(1);
+    }
+
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 20px;
+      padding: 4px;
+    }
+
+    .modal-close:hover {
+      color: var(--text-primary);
+    }
+
+    .modal-body {
+      padding: 20px;
+      overflow-y: auto;
+      max-height: 60vh;
+    }
+
+    .shortcut-group {
+      margin-bottom: 20px;
+    }
+
+    .shortcut-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .shortcut-group-title {
+      font-size: 12px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      letter-spacing: 0.5px;
+    }
+
+    .shortcut-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .shortcut-row:last-child {
+      border-bottom: none;
+    }
+
+    .shortcut-keys {
+      display: flex;
+      gap: 6px;
+    }
+
+    .key {
+      padding: 4px 8px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 12px;
+      min-width: 24px;
+      text-align: center;
+    }
+
+    /* Graph zoom/pan controls */
+    .graph-controls {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      display: flex;
+      gap: 4px;
+      z-index: 10;
+    }
+
+    .graph-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-color);
+      background: var(--bg-card);
+      color: var(--text-primary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      transition: all 0.15s;
+    }
+
+    .graph-btn:hover {
+      border-color: var(--accent-blue);
+      background: var(--bg-tertiary);
+    }
+
+    .graph-wrapper {
+      position: relative;
+      overflow: hidden;
+      width: 100%;
+      height: 400px;
+    }
+
+    .graph-canvas-inner {
+      transform-origin: 0 0;
+      transition: transform 0.1s ease-out;
+    }
+
+    /* Timeline clickable */
+    .timeline-track {
+      cursor: pointer;
+    }
+
+    .timeline-track:hover .timeline-range {
+      filter: brightness(1.1);
+    }
+
     /* Scrollbar */
     ::-webkit-scrollbar {
       width: 8px;
@@ -1096,6 +1478,13 @@
       <button class="btn" id="export-btn" style="display: none;" onclick="exportJSON()">
         <span>💾</span> Export JSON
       </button>
+      <button class="btn" id="compare-btn" style="display: none;" onclick="toggleCompareMode()">
+        <span>⚖</span> Compare
+      </button>
+      <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+      <button class="btn" onclick="showShortcutsModal()" title="Keyboard shortcuts">
+        <span>⌨</span>
+      </button>
     </div>
   </header>
 
@@ -1117,6 +1506,10 @@
         <div class="match-count" id="match-count"></div>
       </div>
       <div class="object-tree" id="object-tree" tabindex="0"></div>
+      <div class="recent-section" id="recent-section" style="display: none;">
+        <div class="recent-title">Recently Viewed</div>
+        <div class="recent-list" id="recent-list"></div>
+      </div>
     </aside>
 
     <div class="content">
@@ -1134,6 +1527,7 @@
 
       <div class="data-view" id="data-view">
         <div class="stats-bar" id="stats-bar"></div>
+        <div class="breadcrumb" id="breadcrumb" style="display: none;"></div>
 
         <div class="tabs">
           <button class="tab active" data-panel="protocols">Protocols</button>
@@ -1142,6 +1536,7 @@
           <button class="tab" data-panel="timeline">Timeline</button>
           <button class="tab" data-panel="annotations">Annotations</button>
           <button class="tab" data-panel="graph">Graph</button>
+          <button class="tab" data-panel="compare">Compare</button>
           <button class="tab" data-panel="json">JSON</button>
         </div>
 
@@ -1151,10 +1546,107 @@
         <div class="panel" id="panel-timeline"></div>
         <div class="panel" id="panel-annotations"></div>
         <div class="panel" id="panel-graph"></div>
+        <div class="panel" id="panel-compare"></div>
         <div class="panel" id="panel-json"></div>
       </div>
     </div>
   </main>
+
+  <!-- Keyboard Shortcuts Modal -->
+  <div class="modal-overlay" id="shortcuts-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Keyboard Shortcuts</div>
+        <button class="modal-close" onclick="hideShortcutsModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="shortcut-group">
+          <div class="shortcut-group-title">Navigation</div>
+          <div class="shortcut-row">
+            <span>Navigate tree</span>
+            <div class="shortcut-keys"><span class="key">↑</span><span class="key">↓</span></div>
+          </div>
+          <div class="shortcut-row">
+            <span>Expand / Collapse</span>
+            <div class="shortcut-keys"><span class="key">→</span><span class="key">←</span></div>
+          </div>
+          <div class="shortcut-row">
+            <span>Select item</span>
+            <div class="shortcut-keys"><span class="key">Enter</span></div>
+          </div>
+          <div class="shortcut-row">
+            <span>First / Last item</span>
+            <div class="shortcut-keys"><span class="key">Home</span><span class="key">End</span></div>
+          </div>
+        </div>
+        <div class="shortcut-group">
+          <div class="shortcut-group-title">Search</div>
+          <div class="shortcut-row">
+            <span>Focus search</span>
+            <div class="shortcut-keys"><span class="key">/</span></div>
+          </div>
+          <div class="shortcut-row">
+            <span>Clear search</span>
+            <div class="shortcut-keys"><span class="key">Esc</span></div>
+          </div>
+        </div>
+        <div class="shortcut-group">
+          <div class="shortcut-group-title">Tabs</div>
+          <div class="shortcut-row">
+            <span>Protocols</span>
+            <div class="shortcut-keys"><span class="key">1</span></div>
+          </div>
+          <div class="shortcut-row">
+            <span>Details</span>
+            <div class="shortcut-keys"><span class="key">2</span></div>
+          </div>
+          <div class="shortcut-row">
+            <span>Sources</span>
+            <div class="shortcut-keys"><span class="key">3</span></div>
+          </div>
+          <div class="shortcut-row">
+            <span>Timeline</span>
+            <div class="shortcut-keys"><span class="key">4</span></div>
+          </div>
+          <div class="shortcut-row">
+            <span>Annotations</span>
+            <div class="shortcut-keys"><span class="key">5</span></div>
+          </div>
+          <div class="shortcut-row">
+            <span>Graph</span>
+            <div class="shortcut-keys"><span class="key">6</span></div>
+          </div>
+          <div class="shortcut-row">
+            <span>Compare</span>
+            <div class="shortcut-keys"><span class="key">7</span></div>
+          </div>
+          <div class="shortcut-row">
+            <span>JSON</span>
+            <div class="shortcut-keys"><span class="key">8</span></div>
+          </div>
+        </div>
+        <div class="shortcut-group">
+          <div class="shortcut-group-title">General</div>
+          <div class="shortcut-row">
+            <span>Show shortcuts</span>
+            <div class="shortcut-keys"><span class="key">?</span></div>
+          </div>
+          <div class="shortcut-row">
+            <span>Toggle theme</span>
+            <div class="shortcut-keys"><span class="key">T</span></div>
+          </div>
+          <div class="shortcut-row">
+            <span>Expand all</span>
+            <div class="shortcut-keys"><span class="key">E</span></div>
+          </div>
+          <div class="shortcut-row">
+            <span>Collapse all</span>
+            <div class="shortcut-keys"><span class="key">C</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script type="module">
     import { SimpleReader, SimpleWriter } from './src/index.js';
@@ -2751,6 +3243,424 @@
         console.log('Sample file not available, waiting for user upload');
       }
     }
+
+    // ===== NEW FEATURES =====
+
+    // Recently viewed
+    const recentlyViewed = [];
+    const MAX_RECENT = 5;
+
+    function addToRecent(objName) {
+      const idx = recentlyViewed.indexOf(objName);
+      if (idx !== -1) {
+        recentlyViewed.splice(idx, 1);
+      }
+      recentlyViewed.unshift(objName);
+      if (recentlyViewed.length > MAX_RECENT) {
+        recentlyViewed.pop();
+      }
+      renderRecentlyViewed();
+    }
+
+    function renderRecentlyViewed() {
+      const section = document.getElementById('recent-section');
+      const list = document.getElementById('recent-list');
+
+      if (recentlyViewed.length === 0) {
+        section.style.display = 'none';
+        return;
+      }
+
+      section.style.display = 'block';
+      list.innerHTML = recentlyViewed.map(name => {
+        const obj = gtoData?.objects.find(o => o.name === name);
+        const icon = obj ? getProtocolIcon(obj.protocol) : '○';
+        return `<div class="recent-item" onclick="selectFromProtocolView('${escapeAttr(name)}')">${icon} ${escapeHtml(name)}</div>`;
+      }).join('');
+    }
+
+    // Breadcrumb navigation
+    let currentBreadcrumb = { object: null, component: null, property: null };
+
+    function updateBreadcrumb(objName, compName = null, propName = null) {
+      currentBreadcrumb = { object: objName, component: compName, property: propName };
+      renderBreadcrumb();
+    }
+
+    function renderBreadcrumb() {
+      const container = document.getElementById('breadcrumb');
+
+      if (!currentBreadcrumb.object) {
+        container.style.display = 'none';
+        return;
+      }
+
+      container.style.display = 'flex';
+      let html = `<span class="breadcrumb-item${!currentBreadcrumb.component ? ' current' : ''}" onclick="selectFromProtocolView('${escapeAttr(currentBreadcrumb.object)}')">${escapeHtml(currentBreadcrumb.object)}</span>`;
+
+      if (currentBreadcrumb.component) {
+        html += `<span class="breadcrumb-sep">›</span>`;
+        html += `<span class="breadcrumb-item${!currentBreadcrumb.property ? ' current' : ''}">${escapeHtml(currentBreadcrumb.component)}</span>`;
+      }
+
+      if (currentBreadcrumb.property) {
+        html += `<span class="breadcrumb-sep">›</span>`;
+        html += `<span class="breadcrumb-item current">${escapeHtml(currentBreadcrumb.property)}</span>`;
+      }
+
+      container.innerHTML = html;
+    }
+
+    // Copy to clipboard
+    function copyToClipboard(text, btn) {
+      navigator.clipboard.writeText(text).then(() => {
+        if (btn) {
+          btn.textContent = '✓';
+          btn.classList.add('copied');
+          setTimeout(() => {
+            btn.textContent = '📋';
+            btn.classList.remove('copied');
+          }, 1500);
+        }
+      });
+    }
+    window.copyToClipboard = copyToClipboard;
+
+    // Search highlighting
+    let currentSearchQuery = '';
+
+    function highlightText(text, query) {
+      if (!query || !text) return escapeHtml(String(text));
+      const escaped = escapeHtml(String(text));
+      const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+      return escaped.replace(regex, '<span class="highlight">$1</span>');
+    }
+
+    // Theme toggle
+    let isDarkTheme = true;
+
+    function toggleTheme() {
+      isDarkTheme = !isDarkTheme;
+      document.body.classList.toggle('light-theme', !isDarkTheme);
+      document.querySelector('.theme-toggle').textContent = isDarkTheme ? '🌙' : '☀️';
+      localStorage.setItem('gto-theme', isDarkTheme ? 'dark' : 'light');
+    }
+    window.toggleTheme = toggleTheme;
+
+    // Load saved theme
+    function loadTheme() {
+      const saved = localStorage.getItem('gto-theme');
+      if (saved === 'light') {
+        isDarkTheme = false;
+        document.body.classList.add('light-theme');
+        document.querySelector('.theme-toggle').textContent = '☀️';
+      }
+    }
+
+    // Keyboard shortcuts modal
+    function showShortcutsModal() {
+      document.getElementById('shortcuts-modal').classList.add('visible');
+    }
+    window.showShortcutsModal = showShortcutsModal;
+
+    function hideShortcutsModal() {
+      document.getElementById('shortcuts-modal').classList.remove('visible');
+    }
+    window.hideShortcutsModal = hideShortcutsModal;
+
+    // Global keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      // Don't trigger if typing in input
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      const modal = document.getElementById('shortcuts-modal');
+      if (modal.classList.contains('visible')) {
+        if (e.key === 'Escape') hideShortcutsModal();
+        return;
+      }
+
+      if (!gtoData) return;
+
+      switch (e.key) {
+        case '?':
+          showShortcutsModal();
+          break;
+        case '/':
+          e.preventDefault();
+          document.getElementById('search-box')?.focus();
+          break;
+        case 't':
+        case 'T':
+          toggleTheme();
+          break;
+        case 'e':
+        case 'E':
+          expandAll();
+          break;
+        case 'c':
+        case 'C':
+          if (!e.ctrlKey && !e.metaKey) collapseAll();
+          break;
+        case '1':
+          switchToTab('protocols');
+          break;
+        case '2':
+          switchToTab('details');
+          break;
+        case '3':
+          switchToTab('sources');
+          break;
+        case '4':
+          switchToTab('timeline');
+          break;
+        case '5':
+          switchToTab('annotations');
+          break;
+        case '6':
+          switchToTab('graph');
+          break;
+        case '7':
+          switchToTab('compare');
+          break;
+        case '8':
+          switchToTab('json');
+          break;
+      }
+    });
+
+    // URL hash navigation
+    function handleHashChange() {
+      const hash = window.location.hash.slice(1);
+      if (!hash || !gtoData) return;
+
+      const params = new URLSearchParams(hash);
+      const objName = params.get('object');
+      const tab = params.get('tab');
+
+      if (objName) {
+        const obj = gtoData.objects.find(o => o.name === objName);
+        if (obj) {
+          selectFromProtocolView(objName);
+        }
+      }
+
+      if (tab) {
+        switchToTab(tab);
+      }
+    }
+
+    function updateHash(objName = null, tab = null) {
+      const params = new URLSearchParams();
+      if (objName) params.set('object', objName);
+      if (tab) params.set('tab', tab);
+      const hash = params.toString();
+      if (hash) {
+        history.replaceState(null, '', '#' + hash);
+      }
+    }
+
+    window.addEventListener('hashchange', handleHashChange);
+
+    // Property type filters
+    let activeTypeFilters = new Set();
+
+    function toggleTypeFilter(type) {
+      if (activeTypeFilters.has(type)) {
+        activeTypeFilters.delete(type);
+      } else {
+        activeTypeFilters.add(type);
+      }
+      if (selectedObject) {
+        renderDetailsPanel(selectedObject);
+      }
+    }
+    window.toggleTypeFilter = toggleTypeFilter;
+
+    // Compare view
+    let compareObjects = { left: null, right: null };
+
+    function toggleCompareMode() {
+      switchToTab('compare');
+    }
+    window.toggleCompareMode = toggleCompareMode;
+
+    function renderComparePanel() {
+      const container = document.getElementById('panel-compare');
+
+      if (!gtoData || gtoData.objects.length < 2) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">⚖</div>
+            <div>Need at least 2 objects to compare</div>
+          </div>
+        `;
+        return;
+      }
+
+      const leftObj = compareObjects.left ? gtoData.objects.find(o => o.name === compareObjects.left) : null;
+      const rightObj = compareObjects.right ? gtoData.objects.find(o => o.name === compareObjects.right) : null;
+
+      container.innerHTML = `
+        <div class="compare-container">
+          <div class="compare-panel">
+            <div class="compare-header">
+              <span>Left Object</span>
+              <select class="compare-select" id="compare-left" onchange="setCompareObject('left', this.value)">
+                <option value="">Select object...</option>
+                ${gtoData.objects.map(o => `<option value="${escapeAttr(o.name)}" ${compareObjects.left === o.name ? 'selected' : ''}>${escapeHtml(o.name)}</option>`).join('')}
+              </select>
+            </div>
+            <div class="compare-body" id="compare-body-left">
+              ${leftObj ? renderCompareObject(leftObj, rightObj) : '<div class="empty-state">Select an object</div>'}
+            </div>
+          </div>
+          <div class="compare-panel">
+            <div class="compare-header">
+              <span>Right Object</span>
+              <select class="compare-select" id="compare-right" onchange="setCompareObject('right', this.value)">
+                <option value="">Select object...</option>
+                ${gtoData.objects.map(o => `<option value="${escapeAttr(o.name)}" ${compareObjects.right === o.name ? 'selected' : ''}>${escapeHtml(o.name)}</option>`).join('')}
+              </select>
+            </div>
+            <div class="compare-body" id="compare-body-right">
+              ${rightObj ? renderCompareObject(rightObj, leftObj) : '<div class="empty-state">Select an object</div>'}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function setCompareObject(side, name) {
+      compareObjects[side] = name || null;
+      renderComparePanel();
+    }
+    window.setCompareObject = setCompareObject;
+
+    function renderCompareObject(obj, otherObj) {
+      let html = `<div style="margin-bottom: 12px;"><strong>${escapeHtml(obj.protocol)}</strong> v${obj.protocolVersion}</div>`;
+
+      for (const [compName, comp] of Object.entries(obj.components)) {
+        const otherComp = otherObj?.components[compName];
+        const compClass = !otherComp ? 'diff-added' : '';
+
+        html += `<div class="detail-card ${compClass}" style="margin-bottom: 8px;">`;
+        html += `<div class="detail-header" style="padding: 8px 12px;"><strong>${escapeHtml(compName)}</strong></div>`;
+        html += `<div style="padding: 8px 12px; font-size: 12px;">`;
+
+        for (const [propName, prop] of Object.entries(comp.properties)) {
+          const otherProp = otherComp?.properties[propName];
+          let rowClass = '';
+
+          if (!otherProp) {
+            rowClass = 'diff-added';
+          } else {
+            const thisVal = JSON.stringify(prop.data);
+            const otherVal = JSON.stringify(otherProp.data);
+            if (thisVal !== otherVal) {
+              rowClass = 'diff-changed';
+            }
+          }
+
+          html += `<div class="${rowClass}" style="padding: 4px 0; display: flex; justify-content: space-between;">`;
+          html += `<span>${escapeHtml(propName)}</span>`;
+          html += `<span style="color: var(--text-muted); max-width: 150px; overflow: hidden; text-overflow: ellipsis;">${formatCompareValue(prop.data)}</span>`;
+          html += `</div>`;
+        }
+
+        // Check for removed properties
+        if (otherComp) {
+          for (const propName of Object.keys(otherComp.properties)) {
+            if (!comp.properties[propName]) {
+              html += `<div class="diff-removed" style="padding: 4px 0; display: flex; justify-content: space-between;">`;
+              html += `<span>${escapeHtml(propName)}</span>`;
+              html += `<span style="color: var(--text-muted);">(missing)</span>`;
+              html += `</div>`;
+            }
+          }
+        }
+
+        html += `</div></div>`;
+      }
+
+      // Check for removed components
+      if (otherObj) {
+        for (const compName of Object.keys(otherObj.components)) {
+          if (!obj.components[compName]) {
+            html += `<div class="detail-card diff-removed" style="margin-bottom: 8px;">`;
+            html += `<div class="detail-header" style="padding: 8px 12px;"><strong>${escapeHtml(compName)}</strong> (missing)</div>`;
+            html += `</div>`;
+          }
+        }
+      }
+
+      return html;
+    }
+
+    function formatCompareValue(data) {
+      if (!data || data.length === 0) return '[]';
+      if (data.length === 1) {
+        const val = data[0];
+        if (typeof val === 'string') return `"${val.slice(0, 20)}${val.length > 20 ? '...' : ''}"`;
+        if (Array.isArray(val)) return `[${val.slice(0, 3).join(', ')}${val.length > 3 ? '...' : ''}]`;
+        return String(val);
+      }
+      return `[${data.length} items]`;
+    }
+
+    // Graph zoom/pan state
+    let graphState = { scale: 1, panX: 0, panY: 0 };
+
+    function zoomGraph(delta) {
+      graphState.scale = Math.max(0.25, Math.min(2, graphState.scale + delta));
+      updateGraphTransform();
+    }
+    window.zoomGraph = zoomGraph;
+
+    function resetGraphView() {
+      graphState = { scale: 1, panX: 0, panY: 0 };
+      updateGraphTransform();
+    }
+    window.resetGraphView = resetGraphView;
+
+    function updateGraphTransform() {
+      const canvas = document.querySelector('.graph-canvas-inner');
+      if (canvas) {
+        canvas.style.transform = `translate(${graphState.panX}px, ${graphState.panY}px) scale(${graphState.scale})`;
+      }
+    }
+
+    // Update renderAllPanels to include compare
+    const originalRenderAllPanels = renderAllPanels;
+    renderAllPanels = function() {
+      originalRenderAllPanels();
+      renderComparePanel();
+    };
+
+    // Update selectFromProtocolView to track recent and breadcrumb
+    const originalSelectFromProtocolView = selectFromProtocolView;
+    selectFromProtocolView = function(objectName) {
+      originalSelectFromProtocolView(objectName);
+      addToRecent(objectName);
+      updateBreadcrumb(objectName);
+      updateHash(objectName, 'details');
+    };
+
+    // Update showDataView to show compare button
+    const originalShowDataView = showDataView;
+    showDataView = function() {
+      originalShowDataView();
+      document.getElementById('compare-btn').style.display = 'flex';
+    };
+
+    // Initialize on load
+    loadTheme();
+
+    // Handle initial hash
+    setTimeout(() => {
+      if (gtoData) handleHashChange();
+    }, 100);
 
     // Auto-load sample on page load
     loadSampleFile();
