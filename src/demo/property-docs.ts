@@ -2066,6 +2066,565 @@ export const PROPERTY_DOCS: Record<string, ProtocolDoc> = {
         }
       }
     }
+  },
+
+  // ============= Blend Mode Nodes =============
+  'Over': {
+    description: 'GLSL node: Porter-Duff over compositing. Places foreground over background using alpha channel.',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable over compositing', type: 'int', default: 1 }
+        }
+      }
+    }
+  },
+
+  'Add': {
+    description: 'GLSL node: Additive blend mode. Adds pixel values together (useful for light effects).',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable additive blend', type: 'int', default: 1 }
+        }
+      }
+    }
+  },
+
+  'Difference': {
+    description: 'GLSL node: Difference blend mode. Shows absolute difference between images (useful for comparison).',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable difference blend', type: 'int', default: 1 }
+        }
+      },
+      'parameters': {
+        description: 'Difference parameters',
+        properties: {
+          'scale': { description: 'Difference amplification scale', type: 'float', default: 1.0 },
+          'offset': { description: 'Offset added to result (0.5 for neutral gray)', type: 'float', default: 0.0 }
+        }
+      }
+    }
+  },
+
+  'Multiply': {
+    description: 'GLSL node: Multiply blend mode. Multiplies pixel values (darkens image).',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable multiply blend', type: 'int', default: 1 }
+        }
+      }
+    }
+  },
+
+  'Screen': {
+    description: 'GLSL node: Screen blend mode. Inverse of multiply (lightens image).',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable screen blend', type: 'int', default: 1 }
+        }
+      }
+    }
+  },
+
+  'Replace': {
+    description: 'GLSL node: Replace blend mode. Completely replaces background with foreground.',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable replace blend', type: 'int', default: 1 }
+        }
+      }
+    }
+  },
+
+  // ============= ARRI LogC Nodes =============
+  'LogCToLinear': {
+    description: 'GLSL node: Converts ARRI LogC encoded footage to linear light. Supports LogC3 (Alexa) and LogC4 (Alexa 35).',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable LogC to linear conversion', type: 'int', default: 1 }
+        }
+      },
+      'parameters': {
+        description: 'LogC parameters',
+        properties: {
+          'exposureIndex': { description: 'ARRI Exposure Index (EI) used during capture. Affects curve shape.', type: 'int', default: 800 },
+          'logCVersion': { description: 'LogC version: 3 (Alexa/Amira) or 4 (Alexa 35)', type: 'int', default: 3 }
+        }
+      }
+    }
+  },
+
+  'LinearToLogC': {
+    description: 'GLSL node: Converts linear light values to ARRI LogC encoding for output/export.',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable linear to LogC conversion', type: 'int', default: 1 }
+        }
+      },
+      'parameters': {
+        description: 'LogC parameters',
+        properties: {
+          'exposureIndex': { description: 'Target Exposure Index for encoding', type: 'int', default: 800 },
+          'logCVersion': { description: 'LogC version: 3 or 4', type: 'int', default: 3 }
+        }
+      }
+    }
+  },
+
+  // ============= RED Log Nodes =============
+  'REDLogToLinear': {
+    description: 'GLSL node: Converts RED camera log-encoded footage (Log3G10, REDlogFilm) to linear.',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable RED log to linear conversion', type: 'int', default: 1 }
+        }
+      },
+      'parameters': {
+        description: 'RED log parameters',
+        properties: {
+          'logType': { description: 'RED log curve type: Log3G10, REDlogFilm', type: 'string', default: 'Log3G10' }
+        }
+      }
+    }
+  },
+
+  'LinearToREDLog': {
+    description: 'GLSL node: Converts linear values to RED camera log encoding.',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable linear to RED log conversion', type: 'int', default: 1 }
+        }
+      },
+      'parameters': {
+        description: 'RED log parameters',
+        properties: {
+          'logType': { description: 'RED log curve type: Log3G10, REDlogFilm', type: 'string', default: 'Log3G10' }
+        }
+      }
+    }
+  },
+
+  // ============= Sony S-Log Nodes =============
+  'SLogToLinear': {
+    description: 'GLSL node: Converts Sony S-Log encoded footage to linear light.',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable S-Log to linear conversion', type: 'int', default: 1 }
+        }
+      },
+      'parameters': {
+        description: 'S-Log parameters',
+        properties: {
+          'slogVersion': { description: 'S-Log version: 2 or 3', type: 'int', default: 3 }
+        }
+      }
+    }
+  },
+
+  'LinearToSLog': {
+    description: 'GLSL node: Converts linear light to Sony S-Log encoding.',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable linear to S-Log conversion', type: 'int', default: 1 }
+        }
+      },
+      'parameters': {
+        description: 'S-Log parameters',
+        properties: {
+          'slogVersion': { description: 'S-Log version: 2 or 3', type: 'int', default: 3 }
+        }
+      }
+    }
+  },
+
+  // ============= PQ/HDR Nodes =============
+  'PQToLinear': {
+    description: 'GLSL node: Converts PQ (Perceptual Quantizer / SMPTE ST 2084) encoded HDR content to linear.',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable PQ to linear conversion', type: 'int', default: 1 }
+        }
+      },
+      'parameters': {
+        description: 'PQ parameters',
+        properties: {
+          'maxNits': { description: 'Maximum display luminance in nits (cd/m²)', type: 'float', default: 10000.0 }
+        }
+      }
+    }
+  },
+
+  'LinearToPQ': {
+    description: 'GLSL node: Converts linear light to PQ encoding for HDR display output.',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable linear to PQ conversion', type: 'int', default: 1 }
+        }
+      },
+      'parameters': {
+        description: 'PQ parameters',
+        properties: {
+          'maxNits': { description: 'Target maximum luminance in nits', type: 'float', default: 10000.0 }
+        }
+      }
+    }
+  },
+
+  'HLGToLinear': {
+    description: 'GLSL node: Converts HLG (Hybrid Log-Gamma) HDR content to linear light.',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable HLG to linear conversion', type: 'int', default: 1 }
+        }
+      },
+      'parameters': {
+        description: 'HLG parameters',
+        properties: {
+          'systemGamma': { description: 'HLG system gamma (1.2 typical)', type: 'float', default: 1.2 }
+        }
+      }
+    }
+  },
+
+  'LinearToHLG': {
+    description: 'GLSL node: Converts linear light to HLG encoding for broadcast HDR.',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable linear to HLG conversion', type: 'int', default: 1 }
+        }
+      },
+      'parameters': {
+        description: 'HLG parameters',
+        properties: {
+          'systemGamma': { description: 'Target system gamma', type: 'float', default: 1.2 }
+        }
+      }
+    }
+  },
+
+  // ============= ACES Color Space Nodes =============
+  'ACEScgToLinear': {
+    description: 'GLSL node: Converts ACEScg (AP1 primaries) to Rec.709 linear for display.',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable ACEScg to linear conversion', type: 'int', default: 1 }
+        }
+      }
+    }
+  },
+
+  'LinearToACEScg': {
+    description: 'GLSL node: Converts Rec.709 linear to ACEScg working space.',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable linear to ACEScg conversion', type: 'int', default: 1 }
+        }
+      }
+    }
+  },
+
+  'ACESccToLinear': {
+    description: 'GLSL node: Converts ACEScc (logarithmic ACES) to linear light.',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable ACEScc to linear conversion', type: 'int', default: 1 }
+        }
+      }
+    }
+  },
+
+  'LinearToACEScc': {
+    description: 'GLSL node: Converts linear light to ACEScc logarithmic encoding.',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable linear to ACEScc conversion', type: 'int', default: 1 }
+        }
+      }
+    }
+  },
+
+  // ============= Color Space Primaries Conversion =============
+  'Rec709ToRec2020': {
+    description: 'GLSL node: Converts from Rec.709 color primaries to Rec.2020 wide color gamut.',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable Rec.709 to Rec.2020 conversion', type: 'int', default: 1 }
+        }
+      }
+    }
+  },
+
+  'Rec2020ToRec709': {
+    description: 'GLSL node: Converts from Rec.2020 wide gamut to Rec.709 primaries with gamut mapping.',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable Rec.2020 to Rec.709 conversion', type: 'int', default: 1 }
+        }
+      },
+      'parameters': {
+        description: 'Gamut mapping parameters',
+        properties: {
+          'gamutMapping': { description: 'Gamut mapping method: clip, compress, or none', type: 'string', default: 'clip' }
+        }
+      }
+    }
+  },
+
+  'Rec709ToDCIP3': {
+    description: 'GLSL node: Converts from Rec.709 to DCI-P3 color primaries.',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable Rec.709 to DCI-P3 conversion', type: 'int', default: 1 }
+        }
+      }
+    }
+  },
+
+  'DCIP3ToRec709': {
+    description: 'GLSL node: Converts from DCI-P3 to Rec.709 color primaries.',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable DCI-P3 to Rec.709 conversion', type: 'int', default: 1 }
+        }
+      }
+    }
+  },
+
+  // ============= Channel Operations =============
+  'Invert': {
+    description: 'GLSL node: Inverts image values (creates negative). Formula: out = 1 - in',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable inversion', type: 'int', default: 1 }
+        }
+      },
+      'parameters': {
+        description: 'Invert parameters',
+        properties: {
+          'channels': { description: 'Channels to invert: rgb, rgba, r, g, b, a', type: 'string', default: 'rgb' }
+        }
+      }
+    }
+  },
+
+  'Clamp': {
+    description: 'GLSL node: Clamps pixel values to specified range.',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable clamping', type: 'int', default: 1 }
+        }
+      },
+      'parameters': {
+        description: 'Clamp parameters',
+        properties: {
+          'min': { description: 'Minimum output value', type: 'float', default: 0.0 },
+          'max': { description: 'Maximum output value', type: 'float', default: 1.0 }
+        }
+      }
+    }
+  },
+
+  'Normalize': {
+    description: 'GLSL node: Normalizes pixel values to 0-1 range based on min/max in image.',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable normalization', type: 'int', default: 1 }
+        }
+      },
+      'parameters': {
+        description: 'Normalize parameters',
+        properties: {
+          'inMin': { description: 'Input minimum value to map from', type: 'float', default: 0.0 },
+          'inMax': { description: 'Input maximum value to map from', type: 'float', default: 1.0 },
+          'outMin': { description: 'Output minimum value to map to', type: 'float', default: 0.0 },
+          'outMax': { description: 'Output maximum value to map to', type: 'float', default: 1.0 }
+        }
+      }
+    }
+  },
+
+  // ============= Grain/Noise =============
+  'FilmGrain': {
+    description: 'GLSL node: Adds realistic film grain effect to images.',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable film grain', type: 'int', default: 1 }
+        }
+      },
+      'parameters': {
+        description: 'Film grain parameters',
+        properties: {
+          'intensity': { description: 'Grain intensity/strength', type: 'float', default: 0.1, range: '0.0 to 1.0' },
+          'size': { description: 'Grain particle size', type: 'float', default: 1.0 },
+          'softness': { description: 'Grain softness/blur', type: 'float', default: 0.0 },
+          'saturation': { description: 'Grain color saturation (0=monochrome)', type: 'float', default: 0.0 },
+          'seed': { description: 'Random seed (animate for temporal grain)', type: 'int' }
+        }
+      }
+    }
+  },
+
+  // ============= Chromatic Aberration =============
+  'ChromaticAberration': {
+    description: 'GLSL node: Simulates lens chromatic aberration (color fringing).',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable chromatic aberration', type: 'int', default: 1 }
+        }
+      },
+      'parameters': {
+        description: 'Chromatic aberration parameters',
+        properties: {
+          'redOffset': { description: 'Red channel offset from center', type: 'float[2]', default: [0.002, 0] },
+          'blueOffset': { description: 'Blue channel offset from center', type: 'float[2]', default: [-0.002, 0] },
+          'center': { description: 'Aberration center point [x, y]', type: 'float[2]', default: [0.5, 0.5] }
+        }
+      }
+    }
+  },
+
+  // ============= Vignette =============
+  'Vignette': {
+    description: 'GLSL node: Applies vignette (darkening at edges) effect.',
+    components: {
+      'node': {
+        description: 'Node parameters',
+        properties: {
+          'active': { description: 'Enable vignette', type: 'int', default: 1 }
+        }
+      },
+      'parameters': {
+        description: 'Vignette parameters',
+        properties: {
+          'intensity': { description: 'Vignette darkness intensity', type: 'float', default: 0.3, range: '0.0 to 1.0' },
+          'radius': { description: 'Vignette radius (0=center, 1=corners)', type: 'float', default: 0.8 },
+          'softness': { description: 'Vignette edge softness', type: 'float', default: 0.5 },
+          'center': { description: 'Vignette center point [x, y]', type: 'float[2]', default: [0.5, 0.5] },
+          'aspectRatio': { description: 'Vignette aspect ratio (1=circular)', type: 'float', default: 1.0 }
+        }
+      }
+    }
+  },
+
+  // ============= GTO File Structure =============
+  'GTOHeader': {
+    description: 'GTO file header information. Contains magic number, version, and structure metadata.',
+    components: {
+      'header': {
+        description: 'File header data',
+        properties: {
+          'magic': { description: 'GTO magic number (0x47544F for "GTO" or 0xFF47544F for big-endian)', type: 'int' },
+          'version': { description: 'GTO format version number', type: 'int' },
+          'flags': { description: 'Format flags (text mode, compression)', type: 'int' },
+          'numObjects': { description: 'Total number of objects in file', type: 'int' },
+          'numStrings': { description: 'Number of strings in string table', type: 'int' }
+        }
+      }
+    }
+  },
+
+  // ============= SMPTE Timecode =============
+  'Timecode': {
+    description: 'SMPTE timecode metadata from source files.',
+    components: {
+      'timecode': {
+        description: 'Timecode values',
+        properties: {
+          'hours': { description: 'Timecode hours (0-23)', type: 'int', range: '0 to 23' },
+          'minutes': { description: 'Timecode minutes (0-59)', type: 'int', range: '0 to 59' },
+          'seconds': { description: 'Timecode seconds (0-59)', type: 'int', range: '0 to 59' },
+          'frames': { description: 'Timecode frames (0 to fps-1)', type: 'int' },
+          'dropFrame': { description: 'Drop-frame timecode flag (for 29.97fps)', type: 'int', default: 0 },
+          'frameRate': { description: 'Timecode frame rate', type: 'float' },
+          'string': { description: 'Formatted timecode string (HH:MM:SS:FF or HH:MM:SS;FF)', type: 'string' }
+        }
+      }
+    }
+  },
+
+  // ============= User Data / Custom Attributes =============
+  'userData': {
+    description: 'Custom user-defined attributes stored in GTO files. Arbitrary key-value pairs for pipeline integration.',
+    components: {
+      'custom': {
+        description: 'User-defined custom attributes',
+        properties: {
+          'name': { description: 'Custom attribute name', type: 'string' },
+          'value': { description: 'Custom attribute value (any type)', type: 'any' },
+          'type': { description: 'Attribute data type', type: 'string' }
+        }
+      },
+      'pipeline': {
+        description: 'Pipeline-specific metadata',
+        properties: {
+          'shotName': { description: 'Shot identifier from production pipeline', type: 'string' },
+          'sequenceName': { description: 'Sequence identifier', type: 'string' },
+          'version': { description: 'Version number from asset management', type: 'int' },
+          'status': { description: 'Review status: pending, approved, rejected', type: 'string' },
+          'artist': { description: 'Artist/author name', type: 'string' },
+          'notes': { description: 'Review notes or comments', type: 'string' },
+          'tags': { description: 'Searchable tags for filtering', type: 'string[]' }
+        }
+      }
+    }
   }
 };
 
