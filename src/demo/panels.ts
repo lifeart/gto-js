@@ -1581,15 +1581,17 @@ export function renderTimelinePanel(): void {
   const matteOpacity = (matteComp?.opacity?.data?.[0] as number) ?? 0.66;
   const matteColor = (matteComp?.color?.data as number[]) ?? [0, 0, 0, 1];
 
-  const totalFrames = range[1] - range[0] + 1;
+  // Note: range is [start, end) where end is exclusive (like Python ranges)
+  const totalFrames = range[1] - range[0];
   const duration = totalFrames / fps;
-  const rangeStart = Math.max(0, ((region[0] - range[0]) / (range[1] - range[0])) * 100);
-  const rangeWidth = Math.min(100, ((region[1] - region[0]) / (range[1] - range[0])) * 100);
-  const markerPos = Math.max(0, Math.min(100, ((currentFrame - range[0]) / (range[1] - range[0])) * 100));
+  const rangeSpan = range[1] - range[0] || 1;
+  const rangeStart = Math.max(0, ((region[0] - range[0]) / rangeSpan) * 100);
+  const rangeWidth = Math.min(100, ((region[1] - region[0]) / rangeSpan) * 100);
+  const markerPos = Math.max(0, Math.min(100, ((currentFrame - range[0]) / rangeSpan) * 100));
 
   // Generate marks on timeline
   const marksHtml = marks.map(m => {
-    const markPos = ((m - range[0]) / (range[1] - range[0])) * 100;
+    const markPos = ((m - range[0]) / rangeSpan) * 100;
     return `<div class="timeline-mark" style="left: ${markPos}%;" title="Mark: Frame ${m}"></div>`;
   }).join('');
 
@@ -1628,8 +1630,8 @@ export function renderTimelinePanel(): void {
         </div>
         <div class="timeline-region-info">
           In: <span class="region-value">${region[0]}</span> •
-          Out: <span class="region-value">${region[1]}</span> •
-          Duration: <span class="region-value">${region[1] - region[0] + 1}</span> frames
+          Out: <span class="region-value">${region[1] - 1}</span> •
+          Duration: <span class="region-value">${region[1] - region[0]}</span> frames
         </div>
       </div>
       <div class="timeline-track enhanced">
@@ -1639,8 +1641,8 @@ export function renderTimelinePanel(): void {
       </div>
       <div class="timeline-labels">
         <span>${range[0]}</span>
-        <span class="timeline-center">${Math.floor((range[0] + range[1]) / 2)}</span>
-        <span>${range[1]}</span>
+        <span class="timeline-center">${Math.floor((range[0] + range[1] - 1) / 2)}</span>
+        <span>${range[1] - 1}</span>
       </div>
     </div>
 
