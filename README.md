@@ -4,6 +4,31 @@ JavaScript implementation of the GTO (Graph Topology Object) file format for rea
 
 GTO is a flexible file format used primarily in visual effects and animation pipelines, notably by OpenRV for session files.
 
+## Web Visualizer
+
+A browser-based visualizer for VFX artists is included. Start a local server and open `index.html`:
+
+```bash
+# Using Python
+python3 -m http.server 8080
+
+# Using Node
+npx serve .
+```
+
+Then open http://localhost:8080
+
+**Features:**
+- Hierarchical object browser with search
+- Property inspector with type badges and value previews
+- Media source viewer (paths, frame ranges, resolution)
+- Timeline visualization with current frame marker
+- Annotation previews (paint strokes, text)
+- Node connection graph
+- JSON export with syntax highlighting
+
+![GTO Session Viewer](https://img.shields.io/badge/GTO-Session%20Viewer-blue)
+
 ## Installation
 
 ```bash
@@ -311,6 +336,30 @@ node scripts/rv-to-json.js input.rv output.json
 
 # JSON to RV
 node scripts/json-to-rv.js input.json output.rv
+```
+
+## Project Structure
+
+```
+gto-js/
+├── index.html            # Web visualizer for VFX artists
+├── README.md
+├── package.json
+├── src/
+│   ├── index.js          # Main entry point
+│   ├── constants.js      # Types, enums, info classes
+│   ├── reader.js         # Reader & SimpleReader
+│   ├── writer.js         # Writer & SimpleWriter
+│   ├── builder.js        # GTOBuilder, polygon(), transform()
+│   ├── string-table.js   # String table management
+│   └── utils.js          # Utilities
+├── scripts/
+│   ├── rv-to-json.js     # CLI: .rv → .json
+│   └── json-to-rv.js     # CLI: .json → .rv
+├── tests/
+│   └── gto.test.js       # Test suite
+└── sample/
+    └── test_session.rv   # Sample RV file
 ```
 
 ## Constants
