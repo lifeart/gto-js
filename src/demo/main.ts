@@ -1,8 +1,8 @@
 import './style.css';
-import { SimpleReader, SimpleWriter } from 'gto-js';
+import { SimpleReader, SimpleWriter, type GTOData, type ObjectData, type ComponentData, type PropertyData } from 'gto-js';
 
-let gtoData = null;
-let selectedObject = null;
+let gtoData: GTOData | null = null;
+let selectedObject: ObjectData | null = null;
 
 // Expose functions to window for inline handlers
 window.handleFileSelect = handleFileSelect;
@@ -10,7 +10,7 @@ window.filterTree = filterTree;
 window.exportJSON = exportJSON;
 
 // Drag and drop
-const uploadArea = document.getElementById('upload-area');
+const uploadArea = document.getElementById('upload-area')!;
 
 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
   uploadArea.addEventListener(eventName, preventDefaults, false);
@@ -27,33 +27,34 @@ const uploadArea = document.getElementById('upload-area');
 
 uploadArea.addEventListener('drop', handleDrop, false);
 
-function preventDefaults(e) {
+function preventDefaults(e: Event) {
   e.preventDefault();
   e.stopPropagation();
 }
 
-function handleDrop(e) {
+function handleDrop(e: DragEvent) {
   const dt = e.dataTransfer;
-  const files = dt.files;
-  if (files.length > 0) {
+  const files = dt?.files;
+  if (files && files.length > 0) {
     loadFile(files[0]);
   }
 }
 
-function handleFileSelect(event) {
-  const file = event.target.files[0];
+function handleFileSelect(event: Event) {
+  const target = event.target as HTMLInputElement;
+  const file = target.files?.[0];
   if (file) {
     loadFile(file);
   }
 }
 
-function loadFile(file) {
+function loadFile(file: File) {
   const reader = new FileReader();
   const isBinary = file.name.toLowerCase().endsWith('.gto');
 
   reader.onload = (e) => {
-    const content = e.target.result;
-    parseGTO(content, file.name);
+    const content = e.target?.result;
+    if (content) parseGTO(content, file.name);
   };
 
   if (isBinary) {
@@ -65,7 +66,7 @@ function loadFile(file) {
   }
 }
 
-function parseGTO(content, filename) {
+function parseGTO(content: string | ArrayBuffer, filename: string) {
   const reader = new SimpleReader();
   const success = reader.open(content, filename);
 
@@ -86,12 +87,12 @@ function parseGTO(content, filename) {
   }
 }
 
-function showDataView() {
-  document.getElementById('upload-container').style.display = 'none';
-  document.getElementById('data-view').classList.add('visible');
-  document.getElementById('sidebar').style.display = 'flex';
-  document.getElementById('export-btn').style.display = 'flex';
-}
+let showDataView = function() {
+  (document.getElementById('upload-container') as HTMLElement).style.display = 'none';
+  document.getElementById('data-view')!.classList.add('visible');
+  (document.getElementById('sidebar') as HTMLElement).style.display = 'flex';
+  (document.getElementById('export-btn') as HTMLElement).style.display = 'flex';
+};
 
 function renderStats() {
   const stats = calculateStats();
@@ -128,11 +129,11 @@ function calculateStats() {
   let annotations = 0;
   const protocolSet = new Set();
 
-  for (const obj of gtoData.objects) {
+  for (const obj of gtoData!.objects) {
     protocolSet.add(obj.protocol);
     components += Object.keys(obj.components).length;
 
-    for (const comp of Object.values(obj.components)) {
+    for (const comp of Object.values(obj.components) as ComponentData[]) {
       properties += Object.keys(comp.properties).length;
     }
 
@@ -141,9 +142,9 @@ function calculateStats() {
     }
 
     if (obj.protocol === 'RVPaint') {
-      const paintComp = obj.components.paint;
+      const paintComp = obj.components.paint as ComponentData | undefined;
       if (paintComp && paintComp.properties.nextId) {
-        annotations += paintComp.properties.nextId.data[0] || 0;
+        annotations += (paintComp.properties.nextId.data[0] as number) || 0;
       }
     }
   }
@@ -195,7 +196,7 @@ function createTreeItem(obj) {
       <div class="tree-badge">${componentCount}</div>
     </div>
     <div class="tree-children">
-      ${Object.entries(obj.components).map(([name, comp]) => `
+      ${(Object.entries(obj.components) as [string, ComponentData][]).map(([name, comp]) => `
         <div class="tree-item" data-name="${escapeAttr(name)}">
           <div class="tree-item-header" data-object="${escapeAttr(obj.name)}" data-component="${escapeAttr(name)}">
             <div class="tree-toggle">▶</div>
@@ -204,7 +205,7 @@ function createTreeItem(obj) {
             <div class="tree-badge">${Object.keys(comp.properties).length}</div>
           </div>
           <div class="tree-children">
-            ${Object.entries(comp.properties).map(([propName, prop]) => `
+            ${(Object.entries(comp.properties) as [string, PropertyData][]).map(([propName, prop]) => `
               <div class="tree-item" data-name="${escapeAttr(propName)}">
                 <div class="tree-item-header" data-object="${escapeAttr(obj.name)}" data-component="${escapeAttr(name)}" data-property="${escapeAttr(propName)}">
                   <div class="tree-toggle" style="visibility: hidden">▶</div>
@@ -231,9 +232,9 @@ function escapeAttr(str) {
   return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
-function getSearchText(obj) {
+function getSearchText(obj: ObjectData) {
   const parts = [obj.name, obj.protocol];
-  for (const [compName, comp] of Object.entries(obj.components)) {
+  for (const [compName, comp] of Object.entries(obj.components) as [string, ComponentData][]) {
     parts.push(compName);
     for (const propName of Object.keys(comp.properties)) {
       parts.push(propName);
@@ -253,8 +254,9 @@ function setupTreeEvents() {
 
   // Click delegation for tree
   container.addEventListener('click', (e) => {
-    const toggle = e.target.closest('.tree-toggle');
-    const header = e.target.closest('.tree-item-header');
+    const target = e.target as Element;
+    const toggle = target.closest('.tree-toggle') as HTMLElement | null;
+    const header = target.closest('.tree-item-header') as HTMLElement | null;
 
     if (toggle && toggle.style.visibility !== 'hidden') {
       e.stopPropagation();
@@ -275,9 +277,10 @@ function setupTreeEvents() {
 
   // Double-click to expand/collapse
   container.addEventListener('dblclick', (e) => {
-    const header = e.target.closest('.tree-item-header');
+    const target = e.target as Element;
+    const header = target.closest('.tree-item-header') as HTMLElement | null;
     if (header) {
-      const toggle = header.querySelector('.tree-toggle');
+      const toggle = header.querySelector('.tree-toggle') as HTMLElement | null;
       if (toggle && toggle.style.visibility !== 'hidden') {
         toggleTreeItem(toggle);
       }
@@ -524,14 +527,14 @@ document.querySelectorAll('.tab').forEach(tab => {
   });
 });
 
-function renderAllPanels() {
+let renderAllPanels = function() {
   renderProtocolsPanel();
   renderSourcesPanel();
   renderTimelinePanel();
   renderAnnotationsPanel();
   renderGraphPanel();
   renderJSONPanel();
-}
+};
 
 // Protocol metadata
 const PROTOCOL_INFO = {
@@ -1042,13 +1045,13 @@ function setupProtocolPanelEvents() {
   });
 }
 
-function selectFromProtocolView(objectName) {
+let selectFromProtocolView = function(objectName) {
   const obj = gtoData.objects.find(o => o.name === objectName);
   if (!obj) return;
 
   // Clear any filters to ensure item is visible
-  const searchBox = document.getElementById('search-box');
-  const protocolFilter = document.getElementById('protocol-filter');
+  const searchBox = document.getElementById('search-box') as HTMLInputElement;
+  const protocolFilter = document.getElementById('protocol-filter') as HTMLSelectElement;
   if (searchBox.value || protocolFilter.value) {
     searchBox.value = '';
     protocolFilter.value = '';
@@ -1063,7 +1066,7 @@ function selectFromProtocolView(objectName) {
     el.classList.remove('selected');
   });
 
-  const header = document.querySelector(`.tree-item-header[data-object="${escapeAttr(obj.name)}"]:not([data-component])`);
+  const header = document.querySelector(`.tree-item-header[data-object="${escapeAttr(obj.name)}"]:not([data-component])`) as HTMLElement | null;
   if (header) {
     header.classList.add('selected');
 
@@ -1071,7 +1074,7 @@ function selectFromProtocolView(objectName) {
     const toggle = header.querySelector('.tree-toggle');
     if (toggle && !toggle.classList.contains('expanded')) {
       toggle.classList.add('expanded');
-      header.closest('.tree-item').querySelector(':scope > .tree-children')?.classList.add('expanded');
+      (header.closest('.tree-item') as HTMLElement).querySelector(':scope > .tree-children')?.classList.add('expanded');
     }
 
     // Scroll sidebar to show the item
@@ -1083,7 +1086,7 @@ function selectFromProtocolView(objectName) {
   // Switch to details tab and render
   switchToTab('details');
   renderDetailsPanel(obj);
-}
+};
 
 window.toggleProtocolSection = function(header) {
   const body = header.nextElementSibling;
@@ -1132,7 +1135,7 @@ function renderDetailsPanel(obj, highlightComponent = null) {
     </div>
   `;
 
-  for (const [compName, comp] of Object.entries(obj.components)) {
+  for (const [compName, comp] of Object.entries(obj.components) as [string, ComponentData][]) {
     html += `
       <div class="detail-card" id="comp-${compName}">
         <div class="detail-header">
@@ -1153,7 +1156,7 @@ function renderDetailsPanel(obj, highlightComponent = null) {
               </tr>
             </thead>
             <tbody>
-              ${Object.entries(comp.properties).map(([propName, prop]) => `
+              ${(Object.entries(comp.properties) as [string, PropertyData][]).map(([propName, prop]) => `
                 <tr>
                   <td><strong>${propName}</strong></td>
                   <td><span class="type-badge ${prop.type}">${prop.type}${prop.width > 1 ? `[${prop.width}]` : ''}</span></td>
@@ -1215,7 +1218,7 @@ function renderSourcesPanel() {
     const proxy = source.components.proxy?.properties;
     const group = source.components.group?.properties;
 
-    const moviePath = media?.movie?.data?.[0] || 'Unknown';
+    const moviePath = (media?.movie?.data?.[0] as string) || 'Unknown';
     const fileName = moviePath.split(/[/\\]/).pop();
     const range = proxy?.range?.data?.[0] || [0, 0];
     const fps = proxy?.fps?.data?.[0] || group?.fps?.data?.[0] || 24;
@@ -1262,10 +1265,10 @@ function renderTimelinePanel() {
   }
 
   const sessionComp = session.components.session?.properties;
-  const range = sessionComp?.range?.data?.[0] || [1, 100];
-  const region = sessionComp?.region?.data?.[0] || range;
-  const fps = sessionComp?.fps?.data?.[0] || 24;
-  const currentFrame = sessionComp?.currentFrame?.data?.[0] || 1;
+  const range = (sessionComp?.range?.data?.[0] as number[]) || [1, 100];
+  const region = (sessionComp?.region?.data?.[0] as number[]) || range;
+  const fps = (sessionComp?.fps?.data?.[0] as number) || 24;
+  const currentFrame = (sessionComp?.currentFrame?.data?.[0] as number) || 1;
   const marks = sessionComp?.marks?.data || [];
 
   const duration = (range[1] - range[0] + 1) / fps;
@@ -1445,12 +1448,12 @@ function renderGraphPanel() {
     return;
   }
 
-  const connections = connObj.components.evaluation?.properties.connections?.data || [];
+  const connections = (connObj.components.evaluation?.properties.connections?.data || []) as string[][];
   const topNodes = connObj.components.top?.properties.nodes?.data || [];
 
   // Build graph
-  const nodes = new Set();
-  const edges = [];
+  const nodes = new Set<string>();
+  const edges: { from: string; to: string }[] = [];
 
   for (const conn of connections) {
     nodes.add(conn[0]);
@@ -1460,7 +1463,7 @@ function renderGraphPanel() {
 
   // Simple layout
   const nodeArray = Array.from(nodes);
-  const nodePositions = {};
+  const nodePositions: Record<string, { x: number; y: number }> = {};
   const cols = Math.ceil(Math.sqrt(nodeArray.length));
 
   nodeArray.forEach((node, i) => {
@@ -1599,7 +1602,7 @@ window.toggleExportMenu = toggleExportMenu;
 // Close export menu when clicking outside
 document.addEventListener('click', function(e) {
   const dropdown = document.getElementById('export-btn');
-  if (dropdown && !dropdown.contains(e.target)) {
+  if (dropdown && !dropdown.contains(e.target as Node)) {
     document.getElementById('export-menu')?.classList.remove('show');
   }
 });
@@ -1808,11 +1811,11 @@ document.addEventListener('keydown', (e) => {
       break;
     case 'e':
     case 'E':
-      expandAll();
+      window.expandAll();
       break;
     case 'c':
     case 'C':
-      if (!e.ctrlKey && !e.metaKey) collapseAll();
+      if (!e.ctrlKey && !e.metaKey) window.collapseAll();
       break;
     case '1':
       switchToTab('protocols');
@@ -1949,19 +1952,19 @@ function setCompareObject(side, name) {
 }
 window.setCompareObject = setCompareObject;
 
-function renderCompareObject(obj, otherObj) {
+function renderCompareObject(obj: ObjectData, otherObj: ObjectData | null) {
   let html = `<div style="margin-bottom: 12px;"><strong>${escapeHtml(obj.protocol)}</strong> v${obj.protocolVersion}</div>`;
 
-  for (const [compName, comp] of Object.entries(obj.components)) {
-    const otherComp = otherObj?.components[compName];
+  for (const [compName, comp] of Object.entries(obj.components) as [string, ComponentData][]) {
+    const otherComp = otherObj?.components[compName] as ComponentData | undefined;
     const compClass = !otherComp ? 'diff-added' : '';
 
     html += `<div class="detail-card ${compClass}" style="margin-bottom: 8px;">`;
     html += `<div class="detail-header" style="padding: 8px 12px;"><strong>${escapeHtml(compName)}</strong></div>`;
     html += `<div style="padding: 8px 12px; font-size: 12px;">`;
 
-    for (const [propName, prop] of Object.entries(comp.properties)) {
-      const otherProp = otherComp?.properties[propName];
+    for (const [propName, prop] of Object.entries(comp.properties) as [string, PropertyData][]) {
+      const otherProp = otherComp?.properties[propName] as PropertyData | undefined;
       let rowClass = '';
 
       if (!otherProp) {

@@ -7,6 +7,7 @@ const isLibBuild = process.env.BUILD_MODE === 'lib';
 export default defineConfig({
   // Set base path for GitHub Pages deployment
   base: process.env.GITHUB_ACTIONS ? '/gto-js/' : '/',
+  publicDir: 'public',
   resolve: {
     alias: {
       'gto-js': resolve(__dirname, 'src/index.ts')
@@ -33,6 +34,7 @@ export default defineConfig({
   } : {
     // Web app build configuration
     outDir: 'dist-app',
+    copyPublicDir: true,
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html')

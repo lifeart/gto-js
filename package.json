@@ -29,6 +29,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
+    "typecheck:demo": "tsc --noEmit -p src/demo/tsconfig.json",
     "prepublishOnly": "pnpm run clean && pnpm run test && pnpm run build:lib"
   },
   "keywords": [

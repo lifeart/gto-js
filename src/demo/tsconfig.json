@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": false,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "noPropertyAccessFromIndexSignature": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "baseUrl": ".",
+    "paths": {
+      "gto-js": ["../index.ts"]
+    }
+  },
+  "include": ["./**/*.ts", "./globals.d.ts"]
+}
