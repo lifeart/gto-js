@@ -139,6 +139,7 @@ export class ComponentInfo {
   interpretation: string = '';
   numProperties: number = 0;
   flags: number = 0;
+  childLevel: number = 0;  // Nesting depth for nested components (v4+)
   // Internal tracking
   _nameId: number = 0;
   _interpretationId: number = 0;

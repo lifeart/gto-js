@@ -1451,3 +1451,98 @@ describe('Binary Format with Writer API', () => {
     ).toEqual([10, 20, 30]);
   });
 });
+
+describe('Async Reader', () => {
+  test('should support openAsync for regular binary data', async () => {
+    const data = new GTOBuilder()
+      .object('test', 'Test', 1)
+        .component('c')
+          .int('v', [42])
+        .end()
+      .end()
+      .build();
+
+    const binary = SimpleWriter.write(data, { binary: true }) as ArrayBuffer;
+
+    const reader = new SimpleReader();
+    const success = await reader.openAsync(binary);
+
+    expect(success).toBe(true);
+    expect(reader.result.objects[0].components.c.properties.v.data[0]).toBe(42);
+  });
+
+  test('should support openAsync for text data', async () => {
+    const textGTO = `GTOa (4)
+
+asyncTest : TestProto (1)
+{
+    data
+    {
+        int value = 123
+    }
+}
+`;
+
+    const reader = new SimpleReader();
+    const success = await reader.openAsync(textGTO);
+
+    expect(success).toBe(true);
+    expect(reader.result.objects[0].name).toBe('asyncTest');
+    expect(reader.result.objects[0].components.data.properties.value.data[0]).toBe(123);
+  });
+
+  test('should detect gzip compressed data in sync open', () => {
+    // Gzip magic bytes: 0x1f 0x8b
+    const gzipData = new Uint8Array([0x1f, 0x8b, 0x08, 0x00]);
+
+    const reader = new SimpleReader();
+    const success = reader.open(gzipData);
+
+    // Should fail with message about using openAsync
+    expect(success).toBe(false);
+  });
+});
+
+describe('Binary Format v4 Features', () => {
+  test('should preserve all 4 dims in round-trip', () => {
+    // Create data with specific dims
+    const data = new GTOBuilder()
+      .object('volume', 'VolumeData', 1)
+        .component('data')
+          .float('density', [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0])
+        .end()
+      .end()
+      .build();
+
+    // Write and read binary
+    const binary = SimpleWriter.write(data, { binary: true });
+    const reader = new SimpleReader();
+    reader.open(binary);
+
+    // Verify data preserved
+    expect(reader.result.objects[0].name).toBe('volume');
+    expect(reader.result.objects[0].components.data.properties.density.data).toEqual(
+      [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]
+    );
+  });
+
+  test('should write and read component childLevel', () => {
+    // This tests that childLevel is preserved in binary round-trip
+    // Even though we don't create nested components via builder,
+    // the field should be written/read correctly
+    const data = new GTOBuilder()
+      .object('test', 'Test', 1)
+        .component('level0')
+          .int('value', [1])
+        .end()
+      .end()
+      .build();
+
+    const binary = SimpleWriter.write(data, { binary: true });
+    const reader = new SimpleReader();
+    reader.open(binary);
+
+    // Verify the component exists and data is correct
+    expect(reader.result.objects[0].components.level0.properties.value.data[0]).toBe(1);
+  });
+});

@@ -42,6 +42,7 @@ interface BinaryComponentInfo {
   interpretationId: number;
   numProperties: number;
   flags: number;
+  childLevel: number;
   propertyStartIdx: number;
 }
 
@@ -273,6 +274,7 @@ export class Writer {
         interpretationId,
         numProperties: 0,
         flags: transposed ? 1 : 0,
+        childLevel: 0,  // Nested components not yet supported in builder
         propertyStartIdx: this._propertyInfos.length
       });
     } else {
@@ -547,12 +549,12 @@ export class Writer {
     // Get string table bytes
     const stringTableBytes = this._stringTable.writeToBinary();
 
-    // Calculate total size
+    // Calculate total size (v4 format)
     const headerSize = 20;
     const stringTableSize = stringTableBytes.byteLength;
     const objectHeaderSize = this._objectInfos.length * 20;
-    const componentHeaderSize = this._componentInfos.length * 16;
-    const propertyHeaderSize = this._propertyInfos.length * 24; // 20 + 4 for dims[0]
+    const componentHeaderSize = this._componentInfos.length * 20; // v4: includes childLevel
+    const propertyHeaderSize = this._propertyInfos.length * 36;   // v4: includes all 4 dims
 
     // Calculate data section size
     let dataSize = 0;
@@ -592,15 +594,16 @@ export class Writer {
       view.setUint32(offset, 0, littleEndian); offset += 4; // pad
     }
 
-    // Write component headers (16 bytes each)
+    // Write component headers (20 bytes each for v4)
     for (const compInfo of this._componentInfos) {
       view.setUint32(offset, compInfo.nameId, littleEndian); offset += 4;
       view.setUint32(offset, compInfo.interpretationId, littleEndian); offset += 4;
       view.setUint32(offset, compInfo.numProperties, littleEndian); offset += 4;
       view.setUint32(offset, compInfo.flags, littleEndian); offset += 4;
+      view.setUint32(offset, compInfo.childLevel, littleEndian); offset += 4; // v4: childLevel
     }
 
-    // Write property headers (24 bytes each - includes dims[0])
+    // Write property headers (36 bytes each for v4 - includes all 4 dims)
     for (const propInfo of this._propertyInfos) {
       view.setUint32(offset, propInfo.nameId, littleEndian); offset += 4;
       view.setUint32(offset, propInfo.interpretationId, littleEndian); offset += 4;
@@ -608,7 +611,11 @@ export class Writer {
       offset += 3; // pad
       view.setUint32(offset, propInfo.size, littleEndian); offset += 4;
       view.setUint32(offset, propInfo.width, littleEndian); offset += 4;
-      view.setUint32(offset, propInfo.dims[0], littleEndian); offset += 4; // dims[0]
+      // v4: write all 4 dims
+      view.setUint32(offset, propInfo.dims[0], littleEndian); offset += 4;
+      view.setUint32(offset, propInfo.dims[1], littleEndian); offset += 4;
+      view.setUint32(offset, propInfo.dims[2], littleEndian); offset += 4;
+      view.setUint32(offset, propInfo.dims[3], littleEndian); offset += 4;
     }
 
     // Write data section

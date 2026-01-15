@@ -3,6 +3,7 @@
  *
  * Parses text-based GTO files (.rv format) using a callback-based architecture.
  * The text format starts with "GTOa (version)" and uses a human-readable syntax.
+ * Also supports binary GTO files (.gto) and gzip-compressed binary files.
  */
 
 import {
@@ -21,6 +22,66 @@ import {
 import { StringTable } from './string-table.js';
 import { halfToFloat } from './utils.js';
 import type { GTOData, ObjectData, ComponentData, PropertyData } from './dto.js';
+
+/** Gzip magic bytes */
+const GZIP_MAGIC = 0x1f8b;
+
+/**
+ * Check if data is gzip compressed
+ */
+function isGzipCompressed(data: Uint8Array): boolean {
+  return data.length >= 2 && data[0] === 0x1f && data[1] === 0x8b;
+}
+
+/**
+ * Decompress gzip data using DecompressionStream (browser/Node.js 18+)
+ */
+async function decompressGzip(data: Uint8Array): Promise<Uint8Array> {
+  // Check if DecompressionStream is available
+  if (typeof DecompressionStream !== 'undefined') {
+    const stream = new DecompressionStream('gzip');
+    const writer = stream.writable.getWriter();
+    // Create a copy with a proper ArrayBuffer to satisfy TypeScript
+    const copy = new Uint8Array(data.length);
+    copy.set(data);
+    writer.write(copy);
+    writer.close();
+
+    const chunks: Uint8Array[] = [];
+    const reader = stream.readable.getReader();
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+    }
+
+    // Concatenate chunks
+    const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+    const result = new Uint8Array(totalLength);
+    let offset = 0;
+    for (const chunk of chunks) {
+      result.set(chunk, offset);
+      offset += chunk.length;
+    }
+    return result;
+  }
+
+  throw new Error('Gzip decompression not available. DecompressionStream API required.');
+}
+
+/**
+ * Synchronous gzip decompression using pako-like inflate
+ * This is a fallback for environments without DecompressionStream
+ */
+function decompressGzipSync(data: Uint8Array): Uint8Array {
+  // For synchronous decompression, we need a library like pako
+  // Since we don't have dependencies, throw an error with instructions
+  throw new Error(
+    'Synchronous gzip decompression not available. ' +
+    'Use async reader.openAsync() or provide uncompressed data.'
+  );
+}
 
 /**
  * Token types for lexer
@@ -272,6 +333,7 @@ export class Reader {
 
   /**
    * Open and parse a GTO file (text or binary)
+   * Note: For gzip-compressed files, use openAsync() instead
    * @param content - File content
    * @param name - Optional filename for error messages
    * @returns True if successful
@@ -286,7 +348,60 @@ export class Reader {
     try {
       // Detect format from content type
       if (content instanceof ArrayBuffer || content instanceof Uint8Array) {
+        const uint8 = content instanceof ArrayBuffer
+          ? new Uint8Array(content)
+          : content;
+
+        // Check for gzip compression
+        if (isGzipCompressed(uint8)) {
+          throw new Error(
+            'Gzip-compressed GTO file detected. Use openAsync() for compressed files.'
+          );
+        }
+
         this._parseBinary(content);
+      } else if (typeof content === 'string') {
+        if (content.trimStart().startsWith('GTOa')) {
+          this._parse(content);
+        } else {
+          throw new Error('Unknown GTO format - text files must start with "GTOa"');
+        }
+      } else {
+        throw new Error('Content must be string, ArrayBuffer, or Uint8Array');
+      }
+      return true;
+    } catch (e) {
+      console.error(`Error parsing GTO file ${name}: ${(e as Error).message}`);
+      return false;
+    }
+  }
+
+  /**
+   * Open and parse a GTO file asynchronously (supports gzip-compressed files)
+   * @param content - File content
+   * @param name - Optional filename for error messages
+   * @returns Promise resolving to true if successful
+   */
+  async openAsync(content: string | ArrayBuffer | Uint8Array, name: string = '<string>'): Promise<boolean> {
+    this._filename = name;
+    this._stringTable.clear();
+    this._objects = [];
+    this._components = [];
+    this._properties = [];
+
+    try {
+      // Detect format from content type
+      if (content instanceof ArrayBuffer || content instanceof Uint8Array) {
+        let uint8 = content instanceof ArrayBuffer
+          ? new Uint8Array(content)
+          : content;
+
+        // Check for gzip compression and decompress if needed
+        if (isGzipCompressed(uint8)) {
+          uint8 = await decompressGzip(uint8);
+        }
+
+        this._parseBinary(uint8);
       } else if (typeof content === 'string') {
         if (content.trimStart().startsWith('GTOa')) {
           this._parse(content);
@@ -743,12 +858,13 @@ export class Reader {
       totalComponents += obj.numComponents;
     }
 
-    // Read component headers
+    // Read component headers (20 bytes each for v4+, 16 bytes for older)
     interface BinaryComponentHeader {
       nameId: number;
       interpretationId: number;
       numProperties: number;
       flags: number;
+      childLevel: number;
     }
     const componentHeaders: BinaryComponentHeader[] = [];
     for (let i = 0; i < totalComponents; i++) {
@@ -757,7 +873,13 @@ export class Reader {
       const numProperties = view.getUint32(offset, littleEndian); offset += 4;
       const compFlags = view.getUint32(offset, littleEndian); offset += 4;
 
-      componentHeaders.push({ nameId, interpretationId, numProperties, flags: compFlags });
+      // Read childLevel for v4+ (nested components support)
+      let childLevel = 0;
+      if (version >= 4) {
+        childLevel = view.getUint32(offset, littleEndian); offset += 4;
+      }
+
+      componentHeaders.push({ nameId, interpretationId, numProperties, flags: compFlags, childLevel });
     }
 
     // Count total properties
@@ -766,7 +888,7 @@ export class Reader {
       totalProperties += comp.numProperties;
     }
 
-    // Read property headers
+    // Read property headers (28 bytes for v3, 40 bytes for v4+)
     interface BinaryPropertyHeader {
       nameId: number;
       interpretationId: number;
@@ -784,10 +906,13 @@ export class Reader {
       const size = view.getUint32(offset, littleEndian); offset += 4;
       const width = view.getUint32(offset, littleEndian); offset += 4;
 
-      // Read dims if version >= 4 (we'll read at least dims[0])
+      // Read dims - v4+ supports all 4 dimensions
       const dims: [number, number, number, number] = [1, 1, 1, 1];
       if (version >= 4) {
         dims[0] = view.getUint32(offset, littleEndian); offset += 4;
+        dims[1] = view.getUint32(offset, littleEndian); offset += 4;
+        dims[2] = view.getUint32(offset, littleEndian); offset += 4;
+        dims[3] = view.getUint32(offset, littleEndian); offset += 4;
       }
 
       propertyHeaders.push({ nameId, interpretationId, type, size, width, dims });
@@ -825,6 +950,7 @@ export class Reader {
           : '';
         componentInfo.numProperties = compHeader.numProperties;
         componentInfo.flags = compHeader.flags;
+        componentInfo.childLevel = compHeader.childLevel;
         componentInfo._nameId = compHeader.nameId;
         componentInfo._interpretationId = compHeader.interpretationId;
         componentInfo._object = objectInfo;

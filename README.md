@@ -1,22 +1,19 @@
 # gto-js
 
-JavaScript implementation of the GTO (Graph Topology Object) file format for reading and writing `.rv` text files.
+TypeScript implementation of the GTO (Graph Topology Object) file format for reading and writing `.rv` text files and binary `.gto` files.
 
 GTO is a flexible file format used primarily in visual effects and animation pipelines, notably by OpenRV for session files.
 
 ## Web Visualizer
 
-A browser-based visualizer for VFX artists is included. Start a local server and open `index.html`:
+A browser-based visualizer for VFX artists is included. Start the Vite dev server:
 
 ```bash
-# Using Python
-python3 -m http.server 8080
-
-# Using Node
-npx serve .
+pnpm install
+pnpm dev
 ```
 
-Then open http://localhost:8080
+Then open http://localhost:5173
 
 **Features:**
 - **Protocol browser** - Objects grouped by protocol type with meaningful summaries:
@@ -61,25 +58,54 @@ Then open http://localhost:8080
 ## Installation
 
 ```bash
-npm install gto
+npm install gto-js
+# or
+pnpm add gto-js
+```
+
+## Development Setup
+
+```bash
+# Install dependencies
+pnpm install
+
+# Run dev server
+pnpm dev
+
+# Run tests
+pnpm test
+
+# Type check
+pnpm typecheck
+
+# Build library
+pnpm build:lib
+
+# Build demo web app
+pnpm build:app
+
+# Build both
+pnpm build
 ```
 
 ## Features
 
 - **Reader** - Parse text (`.rv`) and binary GTO files with callback-based or simple API
 - **Writer** - Generate text or binary GTO files programmatically
-- **Binary format support** - Compact binary encoding for efficient storage
+- **Binary format support** - Compact binary encoding for efficient storage (GTO v4)
+- **Gzip compression** - Automatic decompression of gzip-compressed `.gto` files
 - **Builder** - Fluent API for constructing GTO data structures
 - **DTO** - Query and filter parsed data with null-safe chaining
 - **Round-trip support** - Read and write files without data loss
 - **Full type support** - int, float, double, string, byte, short, half, int64, and more
+- **TypeScript** - Full type definitions included
 
 ## Quick Start
 
 ### Reading a .rv file
 
-```javascript
-import { SimpleReader } from 'gto';
+```typescript
+import { SimpleReader } from 'gto-js';
 import { readFileSync } from 'fs';
 
 const content = readFileSync('session.rv', 'utf-8');
@@ -91,8 +117,8 @@ console.log(reader.result.objects);
 
 ### Writing a .rv file
 
-```javascript
-import { GTOBuilder, SimpleWriter } from 'gto';
+```typescript
+import { GTOBuilder, SimpleWriter } from 'gto-js';
 import { writeFileSync } from 'fs';
 
 const data = new GTOBuilder()
@@ -111,8 +137,8 @@ writeFileSync('output.rv', rv);
 
 ### Binary Format
 
-```javascript
-import { SimpleReader, SimpleWriter, GTOBuilder } from 'gto';
+```typescript
+import { SimpleReader, SimpleWriter, GTOBuilder } from 'gto-js';
 import { readFileSync, writeFileSync } from 'fs';
 
 // Write binary GTO file
@@ -140,10 +166,27 @@ textReader.open(textContent);
 const binaryOutput = SimpleWriter.write(textReader.result, { binary: true });
 ```
 
+### Gzip Compressed Files
+
+```typescript
+import { SimpleReader } from 'gto-js';
+import { readFileSync } from 'fs';
+
+// For gzip-compressed .gto files, use openAsync()
+const compressed = readFileSync('scene.gto.gz');
+const reader = new SimpleReader();
+await reader.openAsync(compressed.buffer);  // Async decompression
+console.log(reader.result.objects);
+
+// Non-gzipped files can still use sync open()
+reader.open(uncompressedData);
+```
+
 Binary format advantages:
 - **Compact**: ~50% smaller than text for numeric-heavy data
 - **Efficient**: Direct memory layout, no parsing overhead
 - **Auto-detected**: Reader automatically detects text vs binary format
+- **Gzip support**: Automatic decompression of compressed files via `openAsync()`
 
 ## API Reference
 
@@ -151,11 +194,16 @@ Binary format advantages:
 
 The easiest way to read GTO files. Parses the entire file into a structured object.
 
-```javascript
-import { SimpleReader } from 'gto';
+```typescript
+import { SimpleReader } from 'gto-js';
 
 const reader = new SimpleReader();
+
+// Synchronous - for text and uncompressed binary
 reader.open(fileContent);
+
+// Asynchronous - for gzip-compressed binary files
+await reader.openAsync(compressedBuffer);
 
 // Access parsed data
 console.log(reader.result.version);  // GTO version (usually 4)
@@ -163,7 +211,7 @@ console.log(reader.result.objects);  // Array of objects
 ```
 
 **Result structure:**
-```javascript
+```typescript
 {
   version: 4,
   objects: [{
@@ -192,8 +240,8 @@ console.log(reader.result.objects);  // Array of objects
 
 For custom parsing with callbacks, extend the `Reader` class:
 
-```javascript
-import { Reader, Request } from 'gto';
+```typescript
+import { Reader, Request } from 'gto-js';
 
 class MyReader extends Reader {
   object(name, protocol, protocolVersion, info) {
@@ -222,7 +270,7 @@ reader.open(fileContent);
 
 Convert structured data to `.rv` text or binary format:
 
-```javascript
+```typescript
 // Text output (default)
 const text = SimpleWriter.write(data);
 
@@ -233,8 +281,8 @@ const binary = SimpleWriter.write(data, { binary: true });
 
 **Text format example:**
 
-```javascript
-import { SimpleWriter } from 'gto';
+```typescript
+import { SimpleWriter } from 'gto-js';
 
 const data = {
   version: 4,
@@ -266,8 +314,8 @@ const rv = SimpleWriter.write(data);
 
 For more control over output:
 
-```javascript
-import { Writer, DataType, FileType } from 'gto';
+```typescript
+import { Writer, DataType, FileType } from 'gto-js';
 
 const writer = new Writer();
 writer.open(FileType.TextGTO);
@@ -290,8 +338,8 @@ const output = writer.close();
 
 Fluent API for building GTO structures:
 
-```javascript
-import { GTOBuilder } from 'gto';
+```typescript
+import { GTOBuilder } from 'gto-js';
 
 const data = new GTOBuilder()
   .object('mesh', 'polygon', 2)
@@ -329,8 +377,8 @@ const data = new GTOBuilder()
 ### Convenience Builders
 
 **Polygon mesh:**
-```javascript
-import { polygon } from 'gto';
+```typescript
+import { polygon } from 'gto-js';
 
 const mesh = polygon('cube', 2)
   .positions([[0,0,0], [1,0,0], [1,1,0], [0,1,0]])
@@ -343,8 +391,8 @@ const mesh = polygon('cube', 2)
 ```
 
 **Transform:**
-```javascript
-import { transform } from 'gto';
+```typescript
+import { transform } from 'gto-js';
 
 const identity = [1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1];
 
@@ -358,8 +406,8 @@ const xform = transform('myTransform', 1)
 
 Query and filter parsed GTO data with null-safe chaining:
 
-```javascript
-import { SimpleReader, GTODTO } from 'gto';
+```typescript
+import { SimpleReader, GTODTO } from 'gto-js';
 
 const reader = new SimpleReader();
 reader.open(fileContent);
@@ -448,7 +496,7 @@ const missing = dto.object('nonexistent').component('nope').prop('value');
 
 **RV Session helpers:**
 
-```javascript
+```typescript
 // Quick access to common RV session data
 const dto = new GTODTO(reader.result);
 
@@ -539,38 +587,51 @@ gto-js/
 ├── index.html            # Web visualizer for VFX artists
 ├── README.md
 ├── package.json
+├── tsconfig.json         # TypeScript configuration
+├── vite.config.ts        # Vite build configuration
 ├── src/
-│   ├── index.js          # Main entry point
-│   ├── constants.js      # Types, enums, info classes
-│   ├── reader.js         # Reader & SimpleReader
-│   ├── writer.js         # Writer & SimpleWriter
-│   ├── builder.js        # GTOBuilder, polygon(), transform()
-│   ├── dto.js            # GTODTO, ObjectDTO, ComponentDTO, PropertyDTO
-│   ├── string-table.js   # String table management
-│   └── utils.js          # Utilities
+│   ├── index.ts          # Main entry point
+│   ├── constants.ts      # Types, enums, info classes
+│   ├── reader.ts         # Reader & SimpleReader
+│   ├── writer.ts         # Writer & SimpleWriter
+│   ├── builder.ts        # GTOBuilder, polygon(), transform()
+│   ├── dto.ts            # GTODTO, ObjectDTO, ComponentDTO, PropertyDTO
+│   ├── string-table.ts   # String table management
+│   └── utils.ts          # Utilities
+├── tests/
+│   └── gto.test.ts       # Test suite (Vitest)
 ├── scripts/
 │   ├── rv-to-json.js     # CLI: .rv → .json
 │   └── json-to-rv.js     # CLI: .json → .rv
-├── tests/
-│   └── gto.test.js       # Test suite
-└── sample/
-    └── test_session.rv   # Sample RV file
+├── sample/
+│   └── test_session.rv   # Sample RV file
+├── dist/                 # Library build output (generated)
+│   ├── gto.js            # ES module bundle
+│   ├── gto.umd.cjs       # UMD bundle
+│   └── index.d.ts        # TypeScript declarations
+└── dist-app/             # Web app build output (generated)
 ```
 
 ## Constants
 
-```javascript
-import { DataType, FileType, Request, ReaderMode } from 'gto';
+```typescript
+import { DataType, FileType, Request, ReaderMode } from 'gto-js';
 
 // Data types
 DataType.Int      // 0
 DataType.Float    // 1
 DataType.Double   // 2
+DataType.Half     // 3
 DataType.String   // 4
-// ...
+DataType.Boolean  // 5
+DataType.Short    // 6
+DataType.Byte     // 7
+DataType.Int64    // 8
 
 // File types
-FileType.TextGTO  // 2
+FileType.BinaryGTO     // 0 - Standard binary
+FileType.CompressedGTO // 1 - Gzip compressed binary
+FileType.TextGTO       // 2 - Text format (.rv)
 
 // Reader callbacks
 Request.Skip      // 0 - Skip this item
@@ -580,6 +641,8 @@ Request.Read      // 1 - Read this item
 ReaderMode.None        // 0
 ReaderMode.HeaderOnly  // 1
 ReaderMode.RandomAccess // 2
+ReaderMode.BinaryOnly   // 4
+ReaderMode.TextOnly     // 8
 ```
 
 ## Common Protocols
