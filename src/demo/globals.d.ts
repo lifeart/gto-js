@@ -61,4 +61,12 @@ interface Window {
   openPropertyEditor: (objectName: string, compName: string, propName: string) => void;
   closePropertyEditor: () => void;
   savePropertyValue: () => void;
+
+  // Property copy functions
+  copyPropertyValue: (btn: HTMLElement, value: string) => void;
+  copyPropertyPath: (btn: HTMLElement, path: string) => void;
+
+  // SVG export functions
+  exportFrameSvg: () => void;
+  exportGraphSvg: () => void;
 }

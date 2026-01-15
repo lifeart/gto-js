@@ -2,7 +2,7 @@
  * File handling: loading and parsing GTO files
  */
 import { SimpleReader } from 'gto-js';
-import { state, setGtoData } from './state';
+import { state, setGtoData, setFileInfo } from './state';
 
 export type ParseCallback = (filename: string) => void;
 
@@ -36,10 +36,11 @@ export function handleFileSelect(event: Event): void {
 export function loadFile(file: File): void {
   const reader = new FileReader();
   const isBinary = file.name.toLowerCase().endsWith('.gto');
+  const fileSize = file.size;
 
   reader.onload = (e) => {
     const content = e.target?.result;
-    if (content) parseGTO(content, file.name);
+    if (content) parseGTO(content, file.name, fileSize);
   };
 
   if (isBinary) {
@@ -49,7 +50,7 @@ export function loadFile(file: File): void {
   }
 }
 
-export function parseGTO(content: string | ArrayBuffer, filename: string): boolean {
+export function parseGTO(content: string | ArrayBuffer, filename: string, fileSize?: number): boolean {
   const reader = new SimpleReader();
   const success = reader.open(content, filename);
 
@@ -59,6 +60,10 @@ export function parseGTO(content: string | ArrayBuffer, filename: string): boole
   }
 
   setGtoData(reader.result);
+
+  // Set file info for status bar
+  const size = fileSize ?? (typeof content === 'string' ? content.length : content.byteLength);
+  setFileInfo(filename, size);
 
   if (onParseSuccess) {
     onParseSuccess(filename);

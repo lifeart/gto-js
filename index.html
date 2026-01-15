@@ -10,6 +10,10 @@
     <div class="logo">
       <div class="logo-icon">◎</div>
       <span>GTO Session Viewer</span>
+      <div class="modified-indicator" id="modified-indicator" style="display: none;" title="Unsaved changes">
+        <span class="modified-dot">●</span>
+        <span class="modified-text">Modified</span>
+      </div>
     </div>
     <div class="header-actions">
       <button class="btn" onclick="document.getElementById('file-input').click()">
@@ -99,6 +103,9 @@
     </div>
   </main>
 
+  <!-- Status Bar -->
+  <footer class="status-bar" id="status-bar"></footer>
+
   <!-- Keyboard Shortcuts Modal -->
   <div class="modal-overlay" id="shortcuts-modal">
     <div class="modal">
@@ -170,6 +177,25 @@
           <div class="shortcut-row">
             <span>JSON</span>
             <div class="shortcut-keys"><span class="key">8</span></div>
+          </div>
+        </div>
+        <div class="shortcut-group">
+          <div class="shortcut-group-title">Timeline</div>
+          <div class="shortcut-row">
+            <span>Previous frame</span>
+            <div class="shortcut-keys"><span class="key">←</span></div>
+          </div>
+          <div class="shortcut-row">
+            <span>Next frame</span>
+            <div class="shortcut-keys"><span class="key">→</span></div>
+          </div>
+          <div class="shortcut-row">
+            <span>First frame</span>
+            <div class="shortcut-keys"><span class="key">Home</span></div>
+          </div>
+          <div class="shortcut-row">
+            <span>Last frame</span>
+            <div class="shortcut-keys"><span class="key">End</span></div>
           </div>
         </div>
         <div class="shortcut-group">

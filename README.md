@@ -32,32 +32,37 @@ Then open http://localhost:5173
   - Toggle switch for boolean values
   - JSON editor for arrays
   - Changes reflected immediately in JSON export
+- **Property tools** - Copy value/path buttons, interpretation hints, data size display
+- **Modified indicator** - Visual indicator when file has unsaved changes
+- **Status bar** - File info, object count, protocol count, GTO version
 - **Media source viewer** (paths, frame ranges, resolution)
-- **Interactive timeline** - Click to change frame, drag to adjust range
-- **Annotation previews** (paint strokes, text with frame viewer)
+- **Interactive timeline** - Draggable scrubber, click to jump, keyboard navigation
+- **Annotation previews** (paint strokes, text with frame viewer, SVG export)
 - **Protocol visualizers**:
   - CIE chromaticity diagram for color spaces
   - Lens warp grid visualization (barrel/pincushion distortion)
-- **Node connection graph** with zoom/pan controls
+- **Node connection graph** - Zoom/pan, connection badges, SVG export, native tooltips
 - **Object comparison** - Compare two objects side by side with diff highlighting
 - **Deep linking** - URL hash navigation (`#object=name&tab=details`)
 - **Dark/light theme** - Toggle with `T` key, persisted in localStorage
 - **Recently viewed** - Quick access to recently inspected objects
-- **Copy to clipboard** - Copy property values and paths
+- **Copy to clipboard** - Copy property values and paths with visual feedback
 - **Search highlighting** - Matched terms highlighted in results
 - **Breadcrumb navigation** - Shows current location hierarchy
-- **JSON export** with syntax highlighting
+- **Export options** - JSON, text (.rv), binary (.gto), and SVG for visualizations
 
 **Keyboard Shortcuts:**
 | Key | Action |
 |-----|--------|
-| `1-8` | Switch tabs (Protocols, Objects, Details, etc.) |
+| `1-8` | Switch tabs (Protocols, Details, Sources, Timeline, etc.) |
 | `?` | Show keyboard shortcuts help |
 | `T` | Toggle dark/light theme |
 | `E` | Expand all sidebar items |
 | `C` | Collapse all sidebar items |
-| `Ctrl/Cmd+F` | Focus search box |
+| `/` | Focus search box |
 | `↑/↓` | Navigate sidebar |
+| `←/→` | Previous/next frame (Timeline/Annotations panel) |
+| `Home/End` | Jump to first/last frame (Timeline/Annotations panel) |
 | `Enter` | Select focused item |
 | `Esc` | Clear search/close modals |
 | `Ctrl/Cmd+Enter` | Save changes (in property editor) |

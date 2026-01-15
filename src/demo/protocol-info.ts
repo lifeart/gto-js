@@ -110,6 +110,17 @@ export const PROTOCOL_INFO: Record<string, ProtocolMetadata> = {
       };
     }
   },
+  'RVViewGroup': {
+    icon: '👁',
+    category: 'session',
+    description: 'View container: manages what is displayed in the viewer',
+    getDetails: (obj) => {
+      const ui = obj.components.ui?.properties;
+      return {
+        'Name': ui?.name?.data?.[0] || obj.name
+      };
+    }
+  },
   'RVPaint': {
     icon: '🖌',
     category: 'paint',

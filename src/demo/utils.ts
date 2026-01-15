@@ -18,6 +18,20 @@ export function escapeAttr(str: unknown): string {
     .replace(/'/g, '&#39;');
 }
 
+/**
+ * Escape a string for use in a JavaScript single-quoted string literal inside an HTML attribute.
+ * Handles: backslashes, single quotes, newlines, carriage returns, and then HTML entities.
+ */
+export function escapeJsStringInHtmlAttr(str: string): string {
+  return str
+    .replace(/\\/g, '\\\\')      // Escape backslashes first
+    .replace(/'/g, "\\'")         // Escape single quotes
+    .replace(/\n/g, '\\n')        // Escape newlines
+    .replace(/\r/g, '\\r')        // Escape carriage returns
+    .replace(/&/g, '&amp;')       // HTML entity escapes
+    .replace(/"/g, '&quot;');
+}
+
 export function formatDataPreview(prop: PropertyData): string {
   const data = prop.data;
   if (!data || data.length === 0) return '<empty>';

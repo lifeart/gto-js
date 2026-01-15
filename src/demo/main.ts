@@ -32,7 +32,11 @@ import {
   toggleGhostFrames,
   openPropertyEditor,
   closePropertyEditor,
-  savePropertyValue
+  savePropertyValue,
+  copyPropertyValue,
+  copyPropertyPath,
+  exportFrameSvg,
+  exportGraphSvg
 } from './panels';
 
 // Export functions
@@ -151,6 +155,14 @@ function setupWindowGlobals(): void {
   window.openPropertyEditor = openPropertyEditor;
   window.closePropertyEditor = closePropertyEditor;
   window.savePropertyValue = savePropertyValue;
+
+  // Property copy functions
+  window.copyPropertyValue = copyPropertyValue;
+  window.copyPropertyPath = copyPropertyPath;
+
+  // SVG export functions
+  window.exportFrameSvg = exportFrameSvg;
+  window.exportGraphSvg = exportGraphSvg;
 }
 
 // ============= Initialize Application =============

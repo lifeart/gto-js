@@ -2,10 +2,132 @@
  * Panel rendering: all panel components for the demo app
  */
 import type { ObjectData, ComponentData, PropertyData } from 'gto-js';
-import { getGtoData, getSelectedObject, setSelectedObject } from './state';
-import { escapeHtml, escapeAttr, formatDataPreview, formatCompareValue } from './utils';
+import { getGtoData, getSelectedObject, setSelectedObject, markModified } from './state';
+import { escapeHtml, escapeAttr, escapeJsStringInHtmlAttr, formatDataPreview, formatCompareValue } from './utils';
 import { getProtocolIcon, getProtocolInfo, PROTOCOL_INFO } from './protocol-info';
 import { filterTree } from './tree';
+
+// ============= Utility Functions =============
+
+/**
+ * Estimate the byte size of property data
+ */
+function getDataByteSize(prop: PropertyData): number {
+  const typeSizes: Record<string, number> = {
+    'byte': 1, 'short': 2, 'int': 4, 'float': 4, 'double': 8, 'half': 2,
+    'string': 0 // Variable, estimate below
+  };
+  const typeSize = typeSizes[prop.type] || 4;
+
+  if (prop.type === 'string') {
+    // Estimate string size
+    let totalChars = 0;
+    for (const item of prop.data) {
+      if (typeof item === 'string') totalChars += item.length;
+    }
+    return totalChars * 2; // UTF-16
+  }
+
+  return prop.size * prop.width * typeSize;
+}
+
+/**
+ * Format byte size to human-readable string
+ */
+function formatByteSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes}B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
+}
+
+/**
+ * Get interpretation hint for a property based on its name and protocol
+ */
+function getPropertyHint(propName: string, prop: PropertyData, protocol: string): string | null {
+  // Common property hints based on naming conventions
+  const hints: Record<string, string> = {
+    // Transform properties
+    'flip': 'Horizontal mirror',
+    'flop': 'Vertical mirror',
+    'rotate': 'Rotation in degrees',
+    'scale': 'Scale factor',
+    'translate': 'Position offset in NDC',
+
+    // Color properties
+    'exposure': 'Exposure adjustment in stops',
+    'gamma': 'Gamma correction curve',
+    'saturation': 'Color saturation multiplier',
+    'contrast': 'Contrast adjustment',
+    'hue': 'Hue rotation in degrees',
+    'CDLslope': 'ASC-CDL slope (gain)',
+    'CDLoffset': 'ASC-CDL offset',
+    'CDLpower': 'ASC-CDL power (gamma)',
+    'CDLsaturation': 'ASC-CDL saturation',
+
+    // Paint properties
+    'color': prop.width === 4 ? 'RGBA color (0-1 range)' : 'RGB color (0-1 range)',
+    'width': 'Stroke width per point',
+    'points': 'Stroke points in NDC coordinates',
+    'brush': 'Brush type identifier',
+    'join': 'Line join style (0=miter, 1=round, 2=bevel)',
+    'cap': 'Line cap style (0=butt, 1=round, 2=square)',
+
+    // Session properties
+    'fps': 'Frames per second',
+    'range': 'Frame range [start, end) exclusive',
+    'frame': 'Current frame number',
+    'inc': 'Frame increment',
+
+    // Source properties
+    'media': 'Media file path',
+    'cutIn': 'Source in point',
+    'cutOut': 'Source out point',
+    'offset': 'Time offset in frames',
+
+    // Output properties
+    'viewNode': 'Current view node reference',
+    'device': 'Output device identifier',
+
+    // LUT properties
+    'file': 'LUT file path',
+    'active': 'Whether this node is enabled',
+
+    // Audio properties
+    'volume': 'Audio volume multiplier',
+    'balance': 'Stereo balance (-1 to 1)',
+    'audioOffset': 'Audio sync offset in seconds'
+  };
+
+  return hints[propName] || null;
+}
+
+/**
+ * Copy property value to clipboard with visual feedback
+ */
+export function copyPropertyValue(btn: HTMLElement, value: string): void {
+  navigator.clipboard.writeText(value).then(() => {
+    btn.classList.add('copied');
+    btn.textContent = '✓';
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.textContent = 'Value';
+    }, 1500);
+  });
+}
+
+/**
+ * Copy property path to clipboard with visual feedback
+ */
+export function copyPropertyPath(btn: HTMLElement, path: string): void {
+  navigator.clipboard.writeText(path).then(() => {
+    btn.classList.add('copied');
+    btn.textContent = '✓';
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.textContent = 'Path';
+    }, 1500);
+  });
+}
 
 // ============= Stats Panel =============
 
@@ -1254,17 +1376,32 @@ export function renderDetailsPanel(obj: ObjectData, highlightComponent: string |
               </tr>
             </thead>
             <tbody>
-              ${(Object.entries(comp.properties) as [string, PropertyData][]).map(([propName, prop]) => `
+              ${(Object.entries(comp.properties) as [string, PropertyData][]).map(([propName, prop]) => {
+                const dataSize = getDataByteSize(prop);
+                const hint = getPropertyHint(propName, prop, obj.protocol);
+                const propPath = `${obj.name}.${compName}.${propName}`;
+                const valueStr = JSON.stringify(prop.data);
+                return `
                 <tr>
-                  <td><strong>${propName}</strong></td>
+                  <td>
+                    <strong>${propName}</strong>
+                    ${hint ? `<div class="prop-hint"><span class="prop-hint-icon">💡</span>${hint}</div>` : ''}
+                  </td>
                   <td><span class="type-badge ${prop.type}">${prop.type}${prop.width > 1 ? `[${prop.width}]` : ''}</span></td>
-                  <td>${prop.size}</td>
+                  <td>
+                    ${prop.size}
+                    ${dataSize > 1024 ? `<span class="data-size ${dataSize > 10240 ? 'large' : ''}" title="Approximate data size">${formatByteSize(dataSize)}</span>` : ''}
+                  </td>
                   <td>
                     <span class="data-preview">${formatDataPreview(prop)}</span>
-                    <button class="edit-btn" onclick="openPropertyEditor('${escapeAttr(obj.name)}', '${escapeAttr(compName)}', '${escapeAttr(propName)}')" title="Edit ${propName}" aria-label="Edit ${propName}">Edit</button>
+                    <div class="prop-actions">
+                      <button class="prop-copy-btn" onclick="copyPropertyValue(this, '${escapeJsStringInHtmlAttr(valueStr)}')" title="Copy value">Value</button>
+                      <button class="prop-copy-btn" onclick="copyPropertyPath(this, '${escapeAttr(propPath)}')" title="Copy path">Path</button>
+                      <button class="edit-btn" onclick="openPropertyEditor('${escapeAttr(obj.name)}', '${escapeAttr(compName)}', '${escapeAttr(propName)}')" title="Edit ${propName}" aria-label="Edit ${propName}">Edit</button>
+                    </div>
                   </td>
                 </tr>
-              `).join('')}
+              `}).join('')}
             </tbody>
           </table>
         </div>
@@ -1644,6 +1781,21 @@ export function renderTimelinePanel(): void {
         <span class="timeline-center">${Math.floor((range[0] + range[1] - 1) / 2)}</span>
         <span>${range[1] - 1}</span>
       </div>
+
+      <div class="timeline-scrubber" id="timeline-scrubber" data-start="${range[0]}" data-end="${range[1]}">
+        <div class="timeline-frame-display" id="scrubber-display">Frame ${currentFrame}</div>
+        <div class="timeline-scrubber-fill" style="width: ${markerPos}%;"></div>
+        <div class="timeline-scrubber-handle" id="scrubber-handle" style="left: ${markerPos}%;"></div>
+      </div>
+      <div class="frame-nav-hint">
+        <span class="frame-nav-key">←</span>
+        <span class="frame-nav-key">→</span>
+        <span>Navigate frames</span>
+        <span class="frame-nav-key">Home</span>
+        <span>First frame</span>
+        <span class="frame-nav-key">End</span>
+        <span>Last frame</span>
+      </div>
     </div>
 
     <div class="timeline-details-grid">
@@ -1720,6 +1872,98 @@ export function renderTimelinePanel(): void {
       </div>
     </div>
   `;
+
+  // Set up scrubber interactivity after DOM is updated
+  setTimeout(() => setupTimelineScrubber(), 0);
+}
+
+/**
+ * Set up interactive timeline scrubber drag functionality
+ */
+let scrubberAbortController: AbortController | null = null;
+
+function setupTimelineScrubber(): void {
+  // Clean up previous listeners
+  if (scrubberAbortController) {
+    scrubberAbortController.abort();
+  }
+  scrubberAbortController = new AbortController();
+  const signal = scrubberAbortController.signal;
+
+  const scrubber = document.getElementById('timeline-scrubber');
+  const handle = document.getElementById('scrubber-handle');
+  const display = document.getElementById('scrubber-display');
+  const fill = scrubber?.querySelector('.timeline-scrubber-fill') as HTMLElement | null;
+
+  if (!scrubber || !handle) return;
+
+  const startFrame = parseInt(scrubber.dataset.start || '1');
+  const endFrame = parseInt(scrubber.dataset.end || '100');
+
+  let isDragging = false;
+
+  function updatePosition(clientX: number): void {
+    const rect = scrubber!.getBoundingClientRect();
+    const percentage = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
+    const frame = Math.round(startFrame + (percentage / 100) * (endFrame - startFrame - 1));
+
+    handle!.style.left = `${percentage}%`;
+    if (fill) fill.style.width = `${percentage}%`;
+    if (display) display.textContent = `Frame ${frame}`;
+  }
+
+  function commitFrame(clientX: number): void {
+    const rect = scrubber!.getBoundingClientRect();
+    const percentage = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
+    const frame = Math.round(startFrame + (percentage / 100) * (endFrame - startFrame - 1));
+
+    setTimelineFrame(frame);
+  }
+
+  handle.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    e.preventDefault();
+  }, { signal });
+
+  scrubber.addEventListener('click', (e) => {
+    if (!isDragging) {
+      commitFrame(e.clientX);
+    }
+  }, { signal });
+
+  document.addEventListener('mousemove', (e) => {
+    if (isDragging) {
+      updatePosition(e.clientX);
+    }
+  }, { signal });
+
+  document.addEventListener('mouseup', (e) => {
+    if (isDragging) {
+      isDragging = false;
+      commitFrame(e.clientX);
+    }
+  }, { signal });
+}
+
+/**
+ * Set the current frame in the timeline
+ */
+export function setTimelineFrame(frame: number): void {
+  const gtoData = getGtoData();
+  if (!gtoData) return;
+
+  const session = gtoData.objects.find(obj => obj.protocol === 'RVSession');
+  if (!session) return;
+
+  const sessionComp = session.components.session?.properties;
+  if (!sessionComp?.currentFrame) return;
+
+  const currentFrame = (sessionComp.currentFrame.data?.[0] as number) || 1;
+  if (frame !== currentFrame) {
+    sessionComp.currentFrame.data = [frame];
+    markModified();
+    renderTimelinePanel();
+  }
 }
 
 // ============= Annotations Panel =============
@@ -2129,6 +2373,9 @@ export function renderAnnotationsPanel(): void {
             <input type="checkbox" ${showGhostFrames ? 'checked' : ''} onchange="toggleGhostFrames(this.checked)">
             <span>Ghost</span>
           </label>
+          <button class="export-svg-btn" onclick="exportFrameSvg()" title="Export as SVG">
+            <span>📥</span> SVG
+          </button>
         </div>
       </div>
       <div class="detail-body frame-canvas-container">
@@ -2280,6 +2527,144 @@ export function toggleGhostFrames(enabled: boolean): void {
   renderAnnotationsPanel();
 }
 
+/**
+ * Export the current frame annotation canvas as SVG
+ */
+export function exportFrameSvg(): void {
+  const wrapper = document.getElementById('frame-canvas-wrapper');
+  if (!wrapper) return;
+
+  const svg = wrapper.querySelector('svg');
+  if (!svg) {
+    alert('No SVG content to export');
+    return;
+  }
+
+  // Clone the SVG and add styling
+  const clonedSvg = svg.cloneNode(true) as SVGElement;
+
+  // Add a white background rect
+  const bgRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  bgRect.setAttribute('width', '100%');
+  bgRect.setAttribute('height', '100%');
+  bgRect.setAttribute('fill', '#161b22');
+  clonedSvg.insertBefore(bgRect, clonedSvg.firstChild);
+
+  // Serialize SVG
+  const serializer = new XMLSerializer();
+  const svgString = serializer.serializeToString(clonedSvg);
+  const blob = new Blob([svgString], { type: 'image/svg+xml' });
+  const url = URL.createObjectURL(blob);
+
+  // Download
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `annotation-frame-${selectedAnnotationFrame || 'unknown'}.svg`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Export the graph panel as SVG
+ */
+export function exportGraphSvg(): void {
+  const canvas = document.getElementById('graph-canvas');
+  if (!canvas) return;
+
+  const svg = canvas.querySelector('svg');
+  const nodes = canvas.querySelectorAll('.graph-node');
+
+  if (!svg) {
+    alert('No graph content to export');
+    return;
+  }
+
+  // Create a new SVG with all content
+  const exportSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  const canvasRect = canvas.getBoundingClientRect();
+  exportSvg.setAttribute('width', String(canvasRect.width));
+  exportSvg.setAttribute('height', String(canvasRect.height));
+  exportSvg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+
+  // Add background
+  const bgRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  bgRect.setAttribute('width', '100%');
+  bgRect.setAttribute('height', '100%');
+  bgRect.setAttribute('fill', '#161b22');
+  exportSvg.appendChild(bgRect);
+
+  // Copy edge paths from original SVG
+  const paths = svg.querySelectorAll('path');
+  paths.forEach(path => {
+    const clonedPath = path.cloneNode(true) as SVGPathElement;
+    clonedPath.setAttribute('stroke', '#6e7681');
+    exportSvg.appendChild(clonedPath);
+  });
+
+  // Add nodes as groups
+  nodes.forEach(node => {
+    const rect = node.getBoundingClientRect();
+    const x = rect.left - canvasRect.left;
+    const y = rect.top - canvasRect.top;
+
+    const nodeGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    nodeGroup.setAttribute('transform', `translate(${x}, ${y})`);
+
+    // Node background
+    const nodeRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    nodeRect.setAttribute('width', String(rect.width));
+    nodeRect.setAttribute('height', String(rect.height));
+    nodeRect.setAttribute('rx', '8');
+    nodeRect.setAttribute('fill', '#21262d');
+    nodeRect.setAttribute('stroke', '#30363d');
+    nodeGroup.appendChild(nodeRect);
+
+    // Node name text
+    const nameEl = node.querySelector('.node-name');
+    if (nameEl) {
+      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      text.setAttribute('x', '40');
+      text.setAttribute('y', '20');
+      text.setAttribute('fill', '#e6edf3');
+      text.setAttribute('font-size', '12');
+      text.setAttribute('font-family', 'system-ui, sans-serif');
+      text.textContent = nameEl.textContent || '';
+      nodeGroup.appendChild(text);
+    }
+
+    // Protocol text
+    const protocolEl = node.querySelector('.node-protocol');
+    if (protocolEl) {
+      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      text.setAttribute('x', '40');
+      text.setAttribute('y', '36');
+      text.setAttribute('fill', '#8b949e');
+      text.setAttribute('font-size', '10');
+      text.setAttribute('font-family', 'system-ui, sans-serif');
+      text.textContent = protocolEl.textContent || '';
+      nodeGroup.appendChild(text);
+    }
+
+    exportSvg.appendChild(nodeGroup);
+  });
+
+  // Serialize and download
+  const serializer = new XMLSerializer();
+  const svgString = serializer.serializeToString(exportSvg);
+  const blob = new Blob([svgString], { type: 'image/svg+xml' });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'node-graph.svg';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 // ============= Graph Panel =============
 
 function getNodeType(nodeName: string): string {
@@ -2291,9 +2676,14 @@ function getNodeType(nodeName: string): string {
 
 function getProtocolCategory(nodeName: string, gtoData: ReturnType<typeof getGtoData>): string {
   const obj = gtoData?.objects.find(o => o.name === nodeName);
-  if (!obj) return 'unknown';
+  if (!obj) return 'default';
 
   const protocol = obj.protocol;
+  // Check PROTOCOL_INFO first for explicit category
+  const protoInfo = PROTOCOL_INFO[protocol];
+  if (protoInfo?.category) return protoInfo.category;
+
+  // Fallback to pattern matching
   if (protocol.includes('Color') || protocol.includes('Linearize')) return 'color';
   if (protocol.includes('Transform') || protocol.includes('Retime')) return 'transform';
   if (protocol.includes('Source') || protocol.includes('FileSource')) return 'source';
@@ -2301,6 +2691,7 @@ function getProtocolCategory(nodeName: string, gtoData: ReturnType<typeof getGto
   if (protocol.includes('Session') || protocol.includes('View')) return 'session';
   if (protocol.includes('Stack') || protocol.includes('Layout') || protocol.includes('Sequence')) return 'composite';
   if (protocol.includes('Group')) return 'group';
+  if (protocol === 'connection') return 'default'; // Special connection object
   return 'default';
 }
 
@@ -2482,6 +2873,9 @@ export function renderGraphPanel(): void {
         <div class="graph-stats">
           <span class="tree-badge">${nodes.size} nodes</span>
           <span class="tree-badge">${edges.length} connections</span>
+          <button class="export-svg-btn" onclick="exportGraphSvg()" title="Export as SVG">
+            <span>📥</span> SVG
+          </button>
         </div>
       </div>
       <div class="detail-body">
@@ -2518,21 +2912,33 @@ export function renderGraphPanel(): void {
             const nodeType = getNodeType(node);
             const category = getProtocolCategory(node, gtoData);
             const obj = gtoData.objects.find(o => o.name === node);
-            const protocol = obj?.protocol || 'Unknown';
+            const protocol = obj?.protocol || '';
             const compCount = obj ? Object.keys(obj.components).length : 0;
+            // Count connections
+            const incomingCount = edges.filter(e => e.to === node).length;
+            const outgoingCount = edges.filter(e => e.from === node).length;
+            const totalConnections = incomingCount + outgoingCount;
+            // Get protocol info for description
+            const protoInfo = protocol ? PROTOCOL_INFO[protocol] : null;
+            const protoDesc = protoInfo?.description || (obj ? 'Custom protocol' : 'Referenced node (not in file)');
+            const displayProtocol = protocol || 'Reference';
+            // Build native tooltip text
+            const tooltipLines = [
+              node,
+              displayProtocol,
+              protoDesc,
+              `${incomingCount} in · ${outgoingCount} out${obj ? ` · ${compCount} components` : ''}`
+            ];
+            const tooltipText = tooltipLines.join('\n');
             return `<div class="graph-node enhanced ${nodeType} cat-${category}"
                         data-node="${escapeAttr(node)}"
+                        title="${escapeAttr(tooltipText)}"
                         style="left: ${pos.x}px; top: ${pos.y}px;">
+              ${totalConnections > 0 ? `<div class="node-connection-badge">${totalConnections}</div>` : ''}
               <div class="node-icon">${categoryLabels[category]?.icon || '○'}</div>
               <div class="node-content">
                 <div class="node-name">${escapeHtml(node)}</div>
-                <div class="node-protocol">${escapeHtml(protocol)}</div>
-              </div>
-              <div class="node-tooltip">
-                <div class="tooltip-title">${escapeHtml(node)}</div>
-                <div class="tooltip-row">Protocol: ${escapeHtml(protocol)}</div>
-                <div class="tooltip-row">Components: ${compCount}</div>
-                <div class="tooltip-row">Depth: ${pos.depth}</div>
+                <div class="node-protocol">${escapeHtml(displayProtocol)}</div>
               </div>
             </div>`;
           }).join('')}
@@ -3040,6 +3446,9 @@ export function savePropertyValue(): void {
     const newValue = parsePropertyValue(prop);
     prop.data = newValue;
     prop.size = Array.isArray(newValue) ? newValue.length : 1;
+
+    // Mark file as modified
+    markModified();
 
     // Close modal
     closePropertyEditor();
