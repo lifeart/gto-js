@@ -53,27 +53,30 @@ export function setupKeyboardShortcuts(): void {
         if (!e.ctrlKey && !e.metaKey) collapseAll();
         break;
       case '1':
-        switchToTab('protocols');
+        switchToTab('overview');
         break;
       case '2':
-        switchToTab('details');
+        switchToTab('protocols');
         break;
       case '3':
-        switchToTab('sources');
+        switchToTab('details');
         break;
       case '4':
-        switchToTab('timeline');
+        switchToTab('sources');
         break;
       case '5':
-        switchToTab('annotations');
+        switchToTab('timeline');
         break;
       case '6':
-        switchToTab('graph');
+        switchToTab('annotations');
         break;
       case '7':
-        switchToTab('compare');
+        switchToTab('graph');
         break;
       case '8':
+        switchToTab('compare');
+        break;
+      case '9':
         switchToTab('json');
         break;
 

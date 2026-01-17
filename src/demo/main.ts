@@ -13,7 +13,7 @@ import { getGtoData, setSelectedObject } from './state';
 import { handleFileSelect, setupDragAndDrop, setParseCallback, loadSampleFile } from './file-handler';
 
 // Tree component
-import { renderTree, filterTree, expandAll, collapseAll, selectObjectByName, selectObject, setSelectionCallback } from './tree';
+import { renderTree, filterTree, expandAll, collapseAll, selectObjectByName, selectObject, setSelectionCallback, toggleTypeFilter } from './tree';
 
 // Panel components
 import {
@@ -36,7 +36,9 @@ import {
   copyPropertyValue,
   copyPropertyPath,
   exportFrameSvg,
-  exportGraphSvg
+  exportGraphSvg,
+  zoomGraph,
+  resetGraphView
 } from './panels';
 
 // Export functions
@@ -78,12 +80,13 @@ function onFileParsed(filename: string): void {
   renderTree();
   renderAllPanels();
 
-  // Handle hash navigation if present, otherwise select first object
+  // Handle hash navigation if present, otherwise stay on overview
   const hash = window.location.hash;
   if (hash && hash.length > 1) {
     handleHashChange();
-  } else if (gtoData.objects.length > 0) {
-    selectObject(gtoData.objects[0]);
+  } else {
+    // Stay on overview tab, don't auto-select first object
+    switchToTab('overview');
   }
 }
 
@@ -136,6 +139,7 @@ function setupWindowGlobals(): void {
   window.hideShortcutsModal = hideShortcutsModal;
   window.copyToClipboard = copyToClipboard;
   window.toggleProtocolSection = toggleProtocolSection;
+  window.toggleTypeFilter = toggleTypeFilter;
 
   // Compare functions
   window.toggleCompareMode = () => switchToTab('compare');
@@ -163,6 +167,10 @@ function setupWindowGlobals(): void {
   // SVG export functions
   window.exportFrameSvg = exportFrameSvg;
   window.exportGraphSvg = exportGraphSvg;
+
+  // Graph functions
+  window.zoomGraph = zoomGraph;
+  window.resetGraphView = resetGraphView;
 }
 
 // ============= Initialize Application =============
@@ -185,6 +193,9 @@ function init(): void {
 
   // Set up tab switching
   setupTabSwitching();
+
+  // Ensure initial tab state
+  switchToTab('overview');
 
   // Set up export menu close on outside click
   setupExportMenuClose();

@@ -82,6 +82,49 @@ export interface Annotation {
   hold?: number;
 }
 
+/** Source info structure */
+export interface SourceInfo {
+  name: string;
+  movie: string;
+  active: boolean;
+  repName: string;
+  range: [number, number];
+  fps: number;
+  volume: number;
+  audioOffset: number;
+  rangeOffset: number;
+  cutIn: number;
+  cutOut: number;
+  proxy: {
+    range: [number, number];
+    inc: number;
+    fps: number;
+    size: [number, number];
+  };
+  stereoViews: string[];
+  readAllChannels: boolean;
+}
+
+/** Session info structure */
+export interface SessionInfo {
+  viewNode: string;
+  range: [number, number];
+  region: [number, number];
+  fps: number;
+  realtime: boolean;
+  inc: number;
+  currentFrame: number;
+  marks: number[];
+  version: number;
+  matte: {
+    show: boolean;
+    aspect: number;
+    opacity: number;
+    heightVisible: number;
+    centerPoint: [number, number];
+  };
+}
+
 /**
  * Property wrapper with value accessors
  */
@@ -705,6 +748,41 @@ export class GTODTO {
   }
 
   /**
+   * Extract comprehensive source information
+   */
+  sourcesInfo(): SourceInfo[] {
+    return this.fileSources().map(source => {
+      const media = source.component('media');
+      const group = source.component('group');
+      const cut = source.component('cut');
+      const proxy = source.component('proxy');
+      const request = source.component('request');
+
+      return {
+        name: source.name,
+        movie: (media.prop('movie') as string) || '',
+        active: Boolean(media.prop('active')),
+        repName: (media.prop('repName') as string) || '',
+        range: (group.prop('range') as [number, number]) || [1, 100],
+        fps: (group.prop('fps') as number) || 24,
+        volume: (group.prop('volume') as number) || 1,
+        audioOffset: (group.prop('audioOffset') as number) || 0,
+        rangeOffset: (group.prop('rangeOffset') as number) || 0,
+        cutIn: (cut.prop('in') as number) || -2147483647,
+        cutOut: (cut.prop('out') as number) || 2147483647,
+        proxy: {
+          range: (proxy.prop('range') as [number, number]) || [1, 100],
+          inc: (proxy.prop('inc') as number) || 1,
+          fps: (proxy.prop('fps') as number) || 24,
+          size: (proxy.prop('size') as [number, number]) || [1280, 720]
+        },
+        stereoViews: (request.prop('stereoViews') as string[]) || [],
+        readAllChannels: Boolean(request.prop('readAllChannels'))
+      };
+    });
+  }
+
+  /**
    * Get timeline info
    */
   timeline(): TimelineInfo {
@@ -715,6 +793,34 @@ export class GTODTO {
       fps: (session.prop('fps') as number) || 24,
       currentFrame: (session.prop('currentFrame') as number) || 1,
       marks: (session.prop('marks') as unknown[]) || []
+    };
+  }
+
+  /**
+   * Extract comprehensive session information
+   */
+  sessionInfo(): SessionInfo {
+    const session = this.session();
+    const sessionComp = session.component('session');
+    const matte = session.component('matte');
+
+    return {
+      viewNode: (sessionComp.prop('viewNode') as string) || 'defaultSequence',
+      range: (sessionComp.prop('range') as [number, number]) || [1, 100],
+      region: (sessionComp.prop('region') as [number, number]) || [1, 100],
+      fps: (sessionComp.prop('fps') as number) || 24,
+      realtime: Boolean(sessionComp.prop('realtime')),
+      inc: (sessionComp.prop('inc') as number) || 1,
+      currentFrame: (sessionComp.prop('currentFrame') as number) || 1,
+      marks: (sessionComp.prop('marks') as number[]) || [],
+      version: (sessionComp.prop('version') as number) || 2,
+      matte: {
+        show: Boolean(matte.prop('show')),
+        aspect: (matte.prop('aspect') as number) || 1.33,
+        opacity: (matte.prop('opacity') as number) || 0.33,
+        heightVisible: (matte.prop('heightVisible') as number) || -1,
+        centerPoint: (matte.prop('centerPoint') as [number, number]) || [0, 0]
+      }
     };
   }
 
@@ -768,6 +874,29 @@ export class GTODTO {
       }
     }
     return result;
+  }
+
+  /**
+   * Get a comprehensive preview/summary of the GTO session
+   */
+  preview(): {
+    session: SessionInfo;
+    sources: SourceInfo[];
+    timeline: TimelineInfo;
+    paintEffects: PaintEffectsInfo;
+    annotations: Annotation[];
+    connections: Array<[string, string]>;
+    mediaPaths: string[];
+  } {
+    return {
+      session: this.sessionInfo(),
+      sources: this.sourcesInfo(),
+      timeline: this.timeline(),
+      paintEffects: this.paintEffects(),
+      annotations: this.annotations(),
+      connections: this.connectionEdges(),
+      mediaPaths: this.mediaPaths()
+    };
   }
 
   /**

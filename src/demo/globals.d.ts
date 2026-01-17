@@ -41,7 +41,7 @@ interface Window {
 
   // Compare functions
   toggleCompareMode: () => void;
-  setCompareObject: (side: string, name: string) => void;
+  setCompareObject: (side: 'left' | 'right', name: string) => void;
 
   // Graph functions
   zoomGraph: (delta: number) => void;

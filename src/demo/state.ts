@@ -134,3 +134,25 @@ export function getSelectedObject(): ObjectData | null {
 export function setSelectedObject(obj: ObjectData | null): void {
   state.selectedObject = obj;
 }
+
+export function getGraphZoom(): number {
+  return state.graphZoom;
+}
+
+export function setGraphZoom(zoom: number): void {
+  state.graphZoom = Math.max(0.1, Math.min(5, zoom)); // Clamp between 0.1 and 5
+}
+
+export function getGraphPan(): { x: number; y: number } {
+  return { ...state.graphPan };
+}
+
+export function setGraphPan(x: number, y: number): void {
+  state.graphPan.x = x;
+  state.graphPan.y = y;
+}
+
+export function resetGraphView(): void {
+  state.graphZoom = 1;
+  state.graphPan = { x: 0, y: 0 };
+}

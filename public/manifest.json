@@ -1,0 +1,16 @@
+{
+  "name": "GTO Session Viewer",
+  "short_name": "GTO Viewer",
+  "description": "Interactive viewer for GTO session files",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d1117",
+  "theme_color": "#0d1117",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%230d1117' stroke='%2330363d' stroke-width='2'/><text x='50' y='55' text-anchor='middle' fill='%23e6edf3' font-family='monospace' font-size='40'>◎</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    }
+  ]
+}

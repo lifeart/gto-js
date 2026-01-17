@@ -3,7 +3,7 @@
  */
 import type { ObjectData, ComponentData, PropertyData } from 'gto-js';
 import { GTODTO } from 'gto-js';
-import { getGtoData, getSelectedObject, setSelectedObject, markModified } from './state';
+import { getGtoData, getSelectedObject, setSelectedObject, markModified, getGraphZoom, setGraphZoom, resetGraphView as resetGraphViewState, getGraphPan } from './state';
 import { escapeHtml, escapeAttr, escapeJsStringInHtmlAttr, formatDataPreview, formatCompareValue } from './utils';
 import { getProtocolIcon, getProtocolInfo, PROTOCOL_INFO } from './protocol-info';
 import { filterTree } from './tree';
@@ -268,41 +268,20 @@ export function copyPropertyPath(btn: HTMLElement, path: string): void {
 
 export function calculateStats() {
   const gtoData = getGtoData();
-  if (!gtoData) return { objects: 0, protocols: 0, components: 0, properties: 0, sources: 0, annotations: 0 };
+  if (!gtoData) return { objects: 0, protocols: 0, components: 0 };
 
   let components = 0;
-  let properties = 0;
-  let sources = 0;
-  let annotations = 0;
   const protocolSet = new Set();
 
   for (const obj of gtoData.objects) {
     protocolSet.add(obj.protocol);
     components += Object.keys(obj.components).length;
-
-    for (const comp of Object.values(obj.components) as ComponentData[]) {
-      properties += Object.keys(comp.properties).length;
-    }
-
-    if (obj.protocol === 'RVFileSource') {
-      sources++;
-    }
-
-    if (obj.protocol === 'RVPaint') {
-      const paintComp = obj.components.paint as ComponentData | undefined;
-      if (paintComp && paintComp.properties.nextId) {
-        annotations += (paintComp.properties.nextId.data[0] as number) || 0;
-      }
-    }
   }
 
   return {
     objects: gtoData.objects.length,
     protocols: protocolSet.size,
-    components,
-    properties,
-    sources,
-    annotations
+    components
   };
 }
 
@@ -324,14 +303,6 @@ export function renderStats(): void {
     <div class="stat-card">
       <div class="stat-value">${stats.components}</div>
       <div class="stat-label">Components</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value">${stats.sources}</div>
-      <div class="stat-label">Sources</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value">${stats.annotations}</div>
-      <div class="stat-label">Annotations</div>
     </div>
   `;
 }
@@ -1450,9 +1421,19 @@ function renderProtocolVisualizer(obj: ObjectData): string {
   }
 }
 
-export function renderDetailsPanel(obj: ObjectData, highlightComponent: string | null = null): void {
+export function renderDetailsPanel(obj?: ObjectData, highlightComponent: string | null = null): void {
   const container = document.getElementById('panel-details');
   if (!container) return;
+
+  if (!obj) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">📋</div>
+        <div>Select an object from the tree or protocols panel to view details</div>
+      </div>
+    `;
+    return;
+  }
 
   // Get protocol-specific visualizer
   const protocolVisualizer = renderProtocolVisualizer(obj);
@@ -1717,27 +1698,53 @@ export function renderSourcesPanel(): void {
   let html = '<div class="source-list">';
 
   for (const source of sources) {
+    // Use defensive access to handle different component structures
     const media = source.components.media?.properties;
-    const proxy = source.components.proxy?.properties;
     const group = source.components.group?.properties;
-    const audio = source.components.audio?.properties;
+    const cut = source.components.cut?.properties;
+    const image = source.components.image?.properties;
+    const request = source.components.request?.properties;
 
     const moviePath = (media?.movie?.data?.[0] as string) || 'Unknown';
     const fileName = moviePath.split(/[/\\]/).pop() || 'Unknown';
-    const range = (proxy?.range?.data?.[0] as number[]) || [0, 0];
-    const fps = (proxy?.fps?.data?.[0] || group?.fps?.data?.[0] || 24) as number;
-    const size = (proxy?.size?.data?.[0] as number[]) || [0, 0];
+    const active = (media?.active?.data?.[0] as number) ?? (group?.active?.data?.[0] as number) ?? 1;
+    const repName = (media?.repName?.data?.[0] as string) || (group?.repName?.data?.[0] as string) || '';
+    const fps = (group?.fps?.data?.[0] as number) || (image?.fps?.data?.[0] as number) || 24;
+    const volume = (group?.volume?.data?.[0] as number) ?? 1.0;
+    const audioOffset = (group?.audioOffset?.data?.[0] as number) ?? 0.0;
+    const rangeOffset = (group?.rangeOffset?.data?.[0] as number) ?? 0;
 
-    // Audio properties
-    const volume = (audio?.volume?.data?.[0] as number) ?? 1.0;
-    const balance = (audio?.balance?.data?.[0] as number) ?? 0.0;
-    const audioOffset = (audio?.offset?.data?.[0] as number) ?? 0.0;
-    const hasAudio = audio !== undefined;
+    // Get frame range information - prefer cut info, fallback to image start/end
+    const cutIn = cut?.in?.data?.[0] as number;
+    const cutOut = cut?.out?.data?.[0] as number;
+    const imageStart = image?.start?.data?.[0] as number;
+    const imageEnd = image?.end?.data?.[0] as number;
+
+    // Determine if we have valid cut information
+    const hasCutInfo = cutIn !== undefined && cutOut !== undefined &&
+                      cutIn !== -2147483647 && cutOut !== 2147483647;
+
+    // Use cut range if available, otherwise use image range
+    let startFrame: number | undefined;
+    let endFrame: number | undefined;
+
+    if (hasCutInfo) {
+      startFrame = cutIn;
+      endFrame = cutOut;
+    } else if (imageStart !== undefined && imageEnd !== undefined) {
+      startFrame = imageStart + rangeOffset;
+      endFrame = imageEnd + rangeOffset;
+    }
+
+    const hasRangeInfo = startFrame !== undefined && endFrame !== undefined;
+    const stereoViews = (request?.stereoViews?.data as string[]) || [];
+    const readAllChannels = (request?.readAllChannels?.data?.[0] as number) ?? 0;
 
     // Calculate derived values
-    const frameCount = range[1] - range[0] + 1;
-    const duration = formatDuration(frameCount, fps);
-    const aspectRatio = calculateAspectRatio(size[0], size[1]);
+    const frameCount = hasRangeInfo ? Math.max(0, endFrame! - startFrame! + 1) : 'Unknown';
+    const duration = hasRangeInfo ? formatDuration(frameCount as number, fps) : 'Unknown';
+    const rangeDisplay = hasRangeInfo ? `${startFrame} / ${endFrame}` : 'No range info';
+    const aspectRatio = 'Unknown'; // No size info in this structure
 
     // Determine file type icon based on extension
     const ext = fileName.split('.').pop()?.toLowerCase() || '';
@@ -1755,6 +1762,11 @@ export function renderSourcesPanel(): void {
             <div class="source-name">${escapeHtml(fileName)}</div>
             <div class="source-type">${escapeHtml(ext.toUpperCase())} • ${escapeHtml(source.name)}</div>
           </div>
+          <div class="source-status">
+            <span class="status-indicator ${active ? 'active' : 'inactive'}">
+              ${active ? '●' : '○'}
+            </span>
+          </div>
         </div>
 
         <div class="source-path-row">
@@ -1762,46 +1774,32 @@ export function renderSourcesPanel(): void {
           <button class="copy-btn" onclick="event.stopPropagation(); copyToClipboard('${escapeAttr(moviePath)}', this)" title="Copy path">📋</button>
         </div>
 
-        <div class="source-timeline">
-          <div class="source-timeline-bar">
-            <div class="source-timeline-range" style="left: 0; width: 100%;"></div>
-            <div class="source-timeline-marker start" style="left: 0;" title="In: ${range[0]}"></div>
-            <div class="source-timeline-marker end" style="left: 100%;" title="Out: ${range[1]}"></div>
-          </div>
-          <div class="source-timeline-labels">
-            <span>${range[0]}</span>
-            <span class="timeline-duration">${frameCount} frames • ${duration}</span>
-            <span>${range[1]}</span>
-          </div>
-        </div>
-
         <div class="source-meta-grid">
-          <div class="source-meta-card">
-            <div class="meta-label">Resolution</div>
-            <div class="meta-value">${size[0]} × ${size[1]}</div>
-            <div class="meta-sub">${aspectRatio}</div>
-          </div>
           <div class="source-meta-card">
             <div class="meta-label">Frame Rate</div>
             <div class="meta-value">${fps} fps</div>
             <div class="meta-sub">${(1000/fps).toFixed(2)}ms/frame</div>
           </div>
           <div class="source-meta-card">
-            <div class="meta-label">Duration</div>
-            <div class="meta-value">${duration}</div>
+            <div class="meta-label">Volume</div>
+            <div class="meta-value">${Math.round(volume * 100)}%</div>
+            <div class="meta-sub">Offset: ${audioOffset.toFixed(2)}s</div>
+          </div>
+          <div class="source-meta-card">
+            <div class="meta-label">Frame Range</div>
+            <div class="meta-value">${rangeDisplay}</div>
             <div class="meta-sub">${frameCount} frames</div>
           </div>
-          ${hasAudio ? `
-          <div class="source-meta-card audio">
-            <div class="meta-label">Audio</div>
-            <div class="meta-value">${Math.round(volume * 100)}%</div>
-            <div class="meta-sub">
-              ${balance !== 0 ? `Pan: ${balance > 0 ? 'R' : 'L'}${Math.abs(Math.round(balance * 100))}%` : 'Centered'}
-              ${audioOffset !== 0 ? ` • Offset: ${audioOffset.toFixed(2)}s` : ''}
-            </div>
-          </div>
-          ` : ''}
         </div>
+
+        ${repName ? `
+        <div class="source-details">
+          <div class="source-detail-row">
+            <span class="detail-label">Rep Name:</span>
+            <span class="detail-value">${escapeHtml(repName)}</span>
+          </div>
+        </div>
+        ` : ''}
       </div>
     `;
   }
@@ -1809,9 +1807,14 @@ export function renderSourcesPanel(): void {
   html += '</div>';
   container.innerHTML = html;
 
-  // Click to select source
+  // Click to select source (highlight without switching tabs)
   container.querySelectorAll('.source-card[data-object]').forEach(card => {
-    card.addEventListener('click', () => selectFromProtocolView((card as HTMLElement).dataset.object!));
+    card.addEventListener('click', () => {
+      // Remove previous selection
+      container.querySelectorAll('.source-card.selected').forEach(c => c.classList.remove('selected'));
+      // Add selection to clicked card
+      card.classList.add('selected');
+    });
   });
 }
 
@@ -3030,6 +3033,9 @@ export function renderGraphPanel(): void {
   const container = document.getElementById('panel-graph');
   if (!container) return;
 
+  const zoom = getGraphZoom();
+  const pan = getGraphPan();
+
   // Find connections
   const connObj = gtoData.objects.find(obj => obj.protocol === 'connection');
   if (!connObj) {
@@ -3124,7 +3130,7 @@ export function renderGraphPanel(): void {
             return `<span class="legend-item ${cat}">${info.icon} ${info.label} (${count})</span>`;
           }).join('')}
         </div>
-        <div class="graph-canvas enhanced" id="graph-canvas" style="height: ${canvasHeight}px;">
+        <div class="graph-canvas enhanced" id="graph-canvas" style="height: ${canvasHeight}px; transform: scale(${zoom}) translate(${pan.x}px, ${pan.y}px); transform-origin: top left;">
           <svg width="100%" height="${canvasHeight}" style="position: absolute; top: 0; left: 0; pointer-events: none;">
             <defs>
               <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
@@ -3414,13 +3420,16 @@ export function switchToTab(tabName: string, triggerCallback = false): void {
 
 export function setupTabSwitching(): void {
   document.querySelectorAll('.tab').forEach(tab => {
-    tab.addEventListener('click', () => {
+    const clickHandler = () => {
       const tabName = (tab as HTMLElement).dataset.panel;
       if (tabName) {
         // User clicked tab directly - trigger callback to update hash
         switchToTab(tabName, true);
       }
-    });
+    };
+
+    tab.addEventListener('click', clickHandler);
+    tab.addEventListener('touchend', clickHandler);
   });
 }
 
@@ -3496,8 +3505,136 @@ export function selectFromProtocolView(objectName: string, options: SelectFromPr
 
 // ============= Render All Panels =============
 
+export function renderOverviewPanel(): void {
+  const gtoData = getGtoData();
+  const panel = document.getElementById('panel-overview');
+  if (!panel) return;
+
+  if (!gtoData) {
+    panel.innerHTML = `
+      <div class="overview-container">
+        <div class="overview-section">
+          <h3 class="overview-title">📊 Session Overview</h3>
+          <p>No GTO data loaded. Please upload a .rv or .gto file to see session information.</p>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  const dto = new GTODTO(gtoData);
+  const preview = dto.preview();
+
+  const session = preview.session;
+  const sources = preview.sources;
+  const timeline = preview.timeline;
+  const annotations = preview.annotations;
+  const connections = preview.connections;
+  const mediaPaths = preview.mediaPaths;
+
+  panel.innerHTML = `
+    <div class="overview-container">
+      <div class="overview-section">
+        <h3 class="overview-title">📊 Session Summary</h3>
+        <div class="overview-grid">
+          <div class="overview-item">
+            <div class="overview-label">Frame Range</div>
+            <div class="overview-value">${session.range[0]} - ${session.range[1]}</div>
+          </div>
+          <div class="overview-item">
+            <div class="overview-label">FPS</div>
+            <div class="overview-value">${session.fps}</div>
+          </div>
+          <div class="overview-item">
+            <div class="overview-label">Current Frame</div>
+            <div class="overview-value">${session.currentFrame}</div>
+          </div>
+          <div class="overview-item">
+            <div class="overview-label">View Node</div>
+            <div class="overview-value">${escapeHtml(session.viewNode)}</div>
+          </div>
+          <div class="overview-item">
+            <div class="overview-label">Realtime</div>
+            <div class="overview-value">${session.realtime ? 'Yes' : 'No'}</div>
+          </div>
+          <div class="overview-item">
+            <div class="overview-label">Frame Increment</div>
+            <div class="overview-value">${session.inc}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="overview-section">
+        <h3 class="overview-title">🎬 Sources (${sources.length})</h3>
+        ${sources.length > 0 ? `
+          <div class="overview-sources">
+            ${sources.slice(0, 5).map(source => `
+              <div class="overview-source">
+                <div class="source-name">${escapeHtml(source.name)}</div>
+                <div class="source-path">${escapeHtml(source.movie)}</div>
+                <div class="source-meta">
+                  <span class="source-range">${source.range[0]}-${source.range[1]}</span>
+                  <span class="source-fps">${source.fps}fps</span>
+                  ${source.active ? '<span class="source-active">Active</span>' : '<span class="source-inactive">Inactive</span>'}
+                </div>
+              </div>
+            `).join('')}
+            ${sources.length > 5 ? `<div class="overview-more">... and ${sources.length - 5} more sources</div>` : ''}
+          </div>
+        ` : '<div class="overview-empty">No sources found</div>'}
+      </div>
+
+      <div class="overview-section">
+        <h3 class="overview-title">🎭 Annotations (${annotations.length})</h3>
+        ${annotations.length > 0 ? `
+          <div class="overview-annotations">
+            ${annotations.slice(0, 3).map(ann => `
+              <div class="overview-annotation">
+                <div class="annotation-type">${escapeHtml(ann.type)}</div>
+                <div class="annotation-frame">Frame ${ann.frame}</div>
+                <div class="annotation-user">${escapeHtml(ann.user)}</div>
+              </div>
+            `).join('')}
+            ${annotations.length > 3 ? `<div class="overview-more">... and ${annotations.length - 3} more annotations</div>` : ''}
+          </div>
+        ` : '<div class="overview-empty">No annotations found</div>'}
+      </div>
+
+      <div class="overview-section">
+        <h3 class="overview-title">🔗 Connections (${connections.length})</h3>
+        ${connections.length > 0 ? `
+          <div class="overview-connections">
+            ${connections.slice(0, 5).map(([from, to]) => `
+              <div class="overview-connection">
+                <span class="connection-from">${escapeHtml(from)}</span>
+                <span class="connection-arrow">→</span>
+                <span class="connection-to">${escapeHtml(to)}</span>
+              </div>
+            `).join('')}
+            ${connections.length > 5 ? `<div class="overview-more">... and ${connections.length - 5} more connections</div>` : ''}
+          </div>
+        ` : '<div class="overview-empty">No connections found</div>'}
+      </div>
+
+      <div class="overview-section">
+        <h3 class="overview-title">📁 Media Files (${mediaPaths.length})</h3>
+        ${mediaPaths.length > 0 ? `
+          <div class="overview-media">
+            ${mediaPaths.slice(0, 5).map(path => `
+              <div class="overview-media-path">${escapeHtml(path)}</div>
+            `).join('')}
+            ${mediaPaths.length > 5 ? `<div class="overview-more">... and ${mediaPaths.length - 5} more files</div>` : ''}
+          </div>
+        ` : '<div class="overview-empty">No media files found</div>'}
+      </div>
+    </div>
+  `;
+}
+
 export function renderAllPanels(): void {
+  renderOverviewPanel();
   renderProtocolsPanel();
+  renderDetailsPanel();
   renderSourcesPanel();
   renderTimelinePanel();
   renderAnnotationsPanel();
@@ -3758,4 +3895,17 @@ function parsePropertyValue(prop: PropertyData): unknown[] {
   // Fallback: parse as JSON
   const parsed = JSON.parse(input.value || '[]');
   return Array.isArray(parsed) ? parsed : [parsed];
+}
+
+// ============= Graph Functions =============
+
+export function zoomGraph(delta: number): void {
+  const currentZoom = getGraphZoom();
+  setGraphZoom(currentZoom * (1 + delta / 100));
+  renderGraphPanel();
+}
+
+export function resetGraphView(): void {
+  resetGraphViewState();
+  renderGraphPanel();
 }

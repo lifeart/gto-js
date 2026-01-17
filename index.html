@@ -3,6 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0d1117">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="GTO Viewer">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="manifest" href="/manifest.json">
   <title>GTO Session Viewer</title>
 </head>
 <body>
@@ -81,7 +87,8 @@
         <div class="breadcrumb" id="breadcrumb" style="display: none;"></div>
 
         <div class="tabs">
-          <button class="tab active" data-panel="protocols">Protocols</button>
+          <button class="tab active" data-panel="overview">Overview</button>
+          <button class="tab" data-panel="protocols">Protocols</button>
           <button class="tab" data-panel="details">Details</button>
           <button class="tab" data-panel="sources">Sources</button>
           <button class="tab" data-panel="timeline">Timeline</button>
@@ -91,7 +98,8 @@
           <button class="tab" data-panel="json">JSON</button>
         </div>
 
-        <div class="panel visible" id="panel-protocols"></div>
+        <div class="panel visible" id="panel-overview"></div>
+        <div class="panel" id="panel-protocols"></div>
         <div class="panel" id="panel-details"></div>
         <div class="panel" id="panel-sources"></div>
         <div class="panel" id="panel-timeline"></div>
@@ -147,36 +155,40 @@
         <div class="shortcut-group">
           <div class="shortcut-group-title">Tabs</div>
           <div class="shortcut-row">
-            <span>Protocols</span>
+            <span>Overview</span>
             <div class="shortcut-keys"><span class="key">1</span></div>
           </div>
           <div class="shortcut-row">
-            <span>Details</span>
+            <span>Protocols</span>
             <div class="shortcut-keys"><span class="key">2</span></div>
           </div>
           <div class="shortcut-row">
-            <span>Sources</span>
+            <span>Details</span>
             <div class="shortcut-keys"><span class="key">3</span></div>
           </div>
           <div class="shortcut-row">
-            <span>Timeline</span>
+            <span>Sources</span>
             <div class="shortcut-keys"><span class="key">4</span></div>
           </div>
           <div class="shortcut-row">
-            <span>Annotations</span>
+            <span>Timeline</span>
             <div class="shortcut-keys"><span class="key">5</span></div>
           </div>
           <div class="shortcut-row">
-            <span>Graph</span>
+            <span>Annotations</span>
             <div class="shortcut-keys"><span class="key">6</span></div>
           </div>
           <div class="shortcut-row">
-            <span>Compare</span>
+            <span>Graph</span>
             <div class="shortcut-keys"><span class="key">7</span></div>
           </div>
           <div class="shortcut-row">
-            <span>JSON</span>
+            <span>Compare</span>
             <div class="shortcut-keys"><span class="key">8</span></div>
+          </div>
+          <div class="shortcut-row">
+            <span>JSON</span>
+            <div class="shortcut-keys"><span class="key">9</span></div>
           </div>
         </div>
         <div class="shortcut-group">

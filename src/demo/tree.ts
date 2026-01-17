@@ -381,3 +381,11 @@ function setupTreeEvents(): void {
     protocolFilter.addEventListener('change', () => filterTree());
   }
 }
+
+export function toggleTypeFilter(type: string): void {
+  const protocolFilter = document.getElementById('protocol-filter') as HTMLSelectElement | null;
+  if (protocolFilter) {
+    protocolFilter.value = type;
+    filterTree();
+  }
+}

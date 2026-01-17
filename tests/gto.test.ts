@@ -1175,6 +1175,250 @@ describe('GTODTO RV Helpers', () => {
     expect(ann.ghostAfter).toBe(3);
     expect(ann.hold).toBe(0);
   });
+
+  test('sourcesInfo() should extract comprehensive source information', () => {
+    const testData = {
+      version: 4,
+      objects: [
+        {
+          name: 'rv',
+          protocol: 'RVSession',
+          protocolVersion: 1,
+          components: {
+            session: {
+              interpretation: '',
+              properties: {
+                fps: { type: 'float', size: 1, width: 1, interpretation: '', data: [24] }
+              }
+            }
+          }
+        },
+        {
+          name: 'source1',
+          protocol: 'RVFileSource',
+          protocolVersion: 1,
+          components: {
+            media: {
+              interpretation: '',
+              properties: {
+                movie: { type: 'string', size: 1, width: 1, interpretation: '', data: ['/path/to/movie.exr'] },
+                active: { type: 'int', size: 1, width: 1, interpretation: '', data: [1] },
+                repName: { type: 'string', size: 1, width: 1, interpretation: '', data: ['shot_001'] }
+              }
+            },
+            group: {
+              interpretation: '',
+              properties: {
+                fps: { type: 'float', size: 1, width: 1, interpretation: '', data: [24] },
+                volume: { type: 'float', size: 1, width: 1, interpretation: '', data: [0.8] },
+                audioOffset: { type: 'float', size: 1, width: 1, interpretation: '', data: [0.5] },
+                rangeOffset: { type: 'int', size: 1, width: 1, interpretation: '', data: [10] }
+              }
+            },
+            cut: {
+              interpretation: '',
+              properties: {
+                in: { type: 'int', size: 1, width: 1, interpretation: '', data: [100] },
+                out: { type: 'int', size: 1, width: 1, interpretation: '', data: [200] }
+              }
+            },
+            request: {
+              interpretation: '',
+              properties: {
+                stereoViews: { type: 'string', size: 2, width: 1, interpretation: '', data: ['left', 'right'] },
+                readAllChannels: { type: 'int', size: 1, width: 1, interpretation: '', data: [1] }
+              }
+            }
+          }
+        }
+      ]
+    };
+
+    const dto = new GTODTO(testData);
+    const sources = dto.sourcesInfo();
+
+    expect(sources.length).toBe(1);
+    const source = sources[0];
+    expect(source.name).toBe('source1');
+    expect(source.movie).toBe('/path/to/movie.exr');
+    expect(source.active).toBe(true);
+    expect(source.repName).toBe('shot_001');
+    expect(source.fps).toBe(24);
+    expect(source.volume).toBe(0.8);
+    expect(source.audioOffset).toBe(0.5);
+    expect(source.rangeOffset).toBe(10);
+    expect(source.cutIn).toBe(100);
+    expect(source.cutOut).toBe(200);
+    expect(source.stereoViews).toEqual(['left', 'right']);
+    expect(source.readAllChannels).toBe(true);
+  });
+
+  test('sessionInfo() should extract comprehensive session information', () => {
+    const testData = {
+      version: 4,
+      objects: [
+        {
+          name: 'rv',
+          protocol: 'RVSession',
+          protocolVersion: 1,
+          components: {
+            session: {
+              interpretation: '',
+              properties: {
+                viewNode: { type: 'string', size: 1, width: 1, interpretation: '', data: ['defaultSequence'] },
+                range: { type: 'int', size: 2, width: 1, interpretation: '', data: [1, 100] },
+                region: { type: 'int', size: 2, width: 1, interpretation: '', data: [10, 90] },
+                fps: { type: 'float', size: 1, width: 1, interpretation: '', data: [30] },
+                realtime: { type: 'int', size: 1, width: 1, interpretation: '', data: [1] },
+                inc: { type: 'int', size: 1, width: 1, interpretation: '', data: [1] },
+                currentFrame: { type: 'int', size: 1, width: 1, interpretation: '', data: [50] },
+                marks: { type: 'int', size: 3, width: 1, interpretation: '', data: [25, 50, 75] },
+                version: { type: 'int', size: 1, width: 1, interpretation: '', data: [2] }
+              }
+            },
+            matte: {
+              interpretation: '',
+              properties: {
+                show: { type: 'int', size: 1, width: 1, interpretation: '', data: [1] },
+                aspect: { type: 'float', size: 1, width: 1, interpretation: '', data: [1.777] },
+                opacity: { type: 'float', size: 1, width: 1, interpretation: '', data: [0.5] },
+                heightVisible: { type: 'float', size: 1, width: 1, interpretation: '', data: [0.9] },
+                centerPoint: { type: 'float', size: 2, width: 1, interpretation: '', data: [0.5, 0.5] }
+              }
+            }
+          }
+        }
+      ]
+    };
+
+    const dto = new GTODTO(testData);
+    const session = dto.sessionInfo();
+
+    expect(session.viewNode).toBe('defaultSequence');
+    expect(session.range).toEqual([1, 100]);
+    expect(session.region).toEqual([10, 90]);
+    expect(session.fps).toBe(30);
+    expect(session.realtime).toBe(true);
+    expect(session.inc).toBe(1);
+    expect(session.currentFrame).toBe(50);
+    expect(session.marks).toEqual([25, 50, 75]);
+    expect(session.version).toBe(2);
+    expect(session.matte.show).toBe(true);
+    expect(session.matte.aspect).toBe(1.777);
+    expect(session.matte.opacity).toBe(0.5);
+    expect(session.matte.heightVisible).toBe(0.9);
+    expect(session.matte.centerPoint).toEqual([0.5, 0.5]);
+  });
+
+  test('preview() should return comprehensive session summary', () => {
+    const testData = {
+      version: 4,
+      objects: [
+        {
+          name: 'rv',
+          protocol: 'RVSession',
+          protocolVersion: 1,
+          components: {
+            session: {
+              interpretation: '',
+              properties: {
+                viewNode: { type: 'string', size: 1, width: 1, interpretation: '', data: ['sequence1'] },
+                range: { type: 'int', size: 2, width: 1, interpretation: '', data: [1, 200] },
+                fps: { type: 'float', size: 1, width: 1, interpretation: '', data: [24] },
+                currentFrame: { type: 'int', size: 1, width: 1, interpretation: '', data: [75] },
+                realtime: { type: 'int', size: 1, width: 1, interpretation: '', data: [0] },
+                inc: { type: 'int', size: 1, width: 1, interpretation: '', data: [1] }
+              }
+            }
+          }
+        },
+        {
+          name: 'source1',
+          protocol: 'RVFileSource',
+          protocolVersion: 1,
+          components: {
+            media: {
+              interpretation: '',
+              properties: {
+                movie: { type: 'string', size: 1, width: 1, interpretation: '', data: ['/media/shot001.exr'] },
+                active: { type: 'int', size: 1, width: 1, interpretation: '', data: [1] }
+              }
+            },
+            group: {
+              interpretation: '',
+              properties: {
+                fps: { type: 'float', size: 1, width: 1, interpretation: '', data: [24] },
+                range: { type: 'int', size: 2, width: 1, interpretation: '', data: [1, 100] }
+              }
+            }
+          }
+        },
+        {
+          name: 'connections',
+          protocol: 'connection',
+          protocolVersion: 1,
+          components: {
+            evaluation: {
+              interpretation: '',
+              properties: {
+                connections: { type: 'string', size: 2, width: 2, interpretation: '', data: [['source1', 'sequence1'], ['sequence1', 'rv']] }
+              }
+            }
+          }
+        },
+        {
+          name: 'paint1',
+          protocol: 'RVPaint',
+          protocolVersion: 3,
+          components: {
+            'pen:1:50:Artist': {
+              interpretation: '',
+              properties: {
+                color: { type: 'float', size: 4, width: 1, interpretation: '', data: [1, 0, 0, 1] },
+                points: { type: 'float', size: 2, width: 2, interpretation: '', data: [[0.1, 0.2], [0.3, 0.4]] },
+                startFrame: { type: 'int', size: 1, width: 1, interpretation: '', data: [45] },
+                duration: { type: 'int', size: 1, width: 1, interpretation: '', data: [10] }
+              }
+            }
+          }
+        }
+      ]
+    };
+
+    const dto = new GTODTO(testData);
+    const preview = dto.preview();
+
+    // Test session info
+    expect(preview.session.viewNode).toBe('sequence1');
+    expect(preview.session.range).toEqual([1, 200]);
+    expect(preview.session.fps).toBe(24);
+    expect(preview.session.currentFrame).toBe(75);
+    expect(preview.session.realtime).toBe(false);
+    expect(preview.session.inc).toBe(1);
+
+    // Test sources info
+    expect(preview.sources.length).toBe(1);
+    expect(preview.sources[0].name).toBe('source1');
+    expect(preview.sources[0].movie).toBe('/media/shot001.exr');
+    expect(preview.sources[0].active).toBe(true);
+
+    // Test timeline info
+    expect(preview.timeline.fps).toBe(24);
+    expect(preview.timeline.currentFrame).toBe(75);
+    expect(preview.timeline.range).toEqual([1, 200]);
+
+    // Test annotations
+    expect(preview.annotations.length).toBe(1);
+    expect(preview.annotations[0].type).toBe('pen');
+    expect(preview.annotations[0].frame).toBe(50);
+    expect(preview.annotations[0].user).toBe('Artist');
+
+    // Test connections
+    expect(preview.connections).toEqual([['source1', 'sequence1'], ['sequence1', 'rv']]);
+
+    // Test media paths
+    expect(preview.mediaPaths).toEqual(['/media/shot001.exr']);
+  });
 });
 
 describe('GTODTO with Builder Integration', () => {
