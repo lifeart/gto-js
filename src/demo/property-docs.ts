@@ -293,7 +293,11 @@ export const PROPERTY_DOCS: Record<string, ProtocolDoc> = {
           'splat': { description: 'Use Gaussian splats for rendering (soft brush effect)', type: 'int', default: 0 },
           'mode': { description: 'Composition mode: 0=draw over (normal), 1=erase', type: 'int', default: 0 },
           'startFrame': { description: 'First frame to display stroke. -1=display from current frame', type: 'int' },
-          'duration': { description: 'Number of frames to display stroke. -1=visible on all subsequent frames', type: 'int', default: -1 }
+          'duration': { description: 'Number of frames to display stroke. -1=visible on all subsequent frames', type: 'int', default: -1 },
+          'ghost': { description: 'Per-stroke ghosting override: enables (1) or disables (0) ghosting for this specific stroke', type: 'int' },
+          'ghostBefore': { description: 'Per-stroke override for frames to display ghosted annotations before start frame', type: 'int' },
+          'ghostAfter': { description: 'Per-stroke override for frames to display ghosted annotations after duration ends', type: 'int' },
+          'hold': { description: 'Per-stroke override for holding annotations indefinitely (1=enable, 0=disable)', type: 'int' }
         }
       },
       // Dynamic text components: text:[id]:[frame]:[user]

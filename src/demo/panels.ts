@@ -2,6 +2,7 @@
  * Panel rendering: all panel components for the demo app
  */
 import type { ObjectData, ComponentData, PropertyData } from 'gto-js';
+import { GTODTO } from 'gto-js';
 import { getGtoData, getSelectedObject, setSelectedObject, markModified } from './state';
 import { escapeHtml, escapeAttr, escapeJsStringInHtmlAttr, formatDataPreview, formatCompareValue } from './utils';
 import { getProtocolIcon, getProtocolInfo, PROTOCOL_INFO } from './protocol-info';
@@ -2133,6 +2134,12 @@ interface StrokeData {
   cap: number;
   objectName: string;
   componentName: string;
+  startFrame?: number;
+  duration?: number;
+  ghost?: number;
+  ghostBefore?: number;
+  ghostAfter?: number;
+  hold?: number;
 }
 
 interface TextAnnotation {
@@ -2300,7 +2307,13 @@ function collectFrameAnnotations(paintNodes: ObjectData[]): Map<number, FrameAnn
           join: (props.join?.data?.[0] as number) ?? 1,
           cap: (props.cap?.data?.[0] as number) ?? 1,
           objectName: paint.name,
-          componentName: compName
+          componentName: compName,
+          startFrame: props.startFrame?.data?.[0] as number,
+          duration: props.duration?.data?.[0] as number,
+          ghost: props.ghost?.data?.[0] as number,
+          ghostBefore: props.ghostBefore?.data?.[0] as number,
+          ghostAfter: props.ghostAfter?.data?.[0] as number,
+          hold: props.hold?.data?.[0] as number
         });
       } else if (compName.startsWith('text:')) {
         // text:{id}:{frame}:{user}
@@ -2463,6 +2476,69 @@ function renderFrameCanvas(
   `;
 }
 
+function renderPaintEffectsSettings(): string {
+  const gtoData = getGtoData();
+  if (!gtoData) return '<div class="empty-state">No session data available</div>';
+
+  const dto = new GTODTO(gtoData);
+  const effects = dto.paintEffects();
+
+  return `
+    <div class="paint-effect-item">
+      <label class="paint-effect-label">
+        <input type="checkbox" ${effects.ghost ? 'checked' : ''} onchange="updatePaintEffect('ghost', this.checked ? 1 : 0)">
+        <span>Ghosting Enabled</span>
+      </label>
+      <span class="paint-effect-desc">Show annotations from adjacent frames</span>
+    </div>
+    <div class="paint-effect-item">
+      <label class="paint-effect-label">Frames Before:</label>
+      <input type="number" class="paint-effect-input" value="${effects.ghostBefore}" min="0" max="100" onchange="updatePaintEffect('ghostBefore', parseInt(this.value))">
+      <span class="paint-effect-desc">Frames to show before current</span>
+    </div>
+    <div class="paint-effect-item">
+      <label class="paint-effect-label">Frames After:</label>
+      <input type="number" class="paint-effect-input" value="${effects.ghostAfter}" min="0" max="100" onchange="updatePaintEffect('ghostAfter', parseInt(this.value))">
+      <span class="paint-effect-desc">Frames to show after current</span>
+    </div>
+    <div class="paint-effect-item">
+      <label class="paint-effect-label">
+        <input type="checkbox" ${effects.hold ? 'checked' : ''} onchange="updatePaintEffect('hold', this.checked ? 1 : 0)">
+        <span>Hold Indefinitely</span>
+      </label>
+      <span class="paint-effect-desc">Keep annotations visible beyond their duration</span>
+    </div>
+  `;
+}
+
+export function updatePaintEffect(property: string, value: number): void {
+  const gtoData = getGtoData();
+  if (!gtoData) return;
+
+  const session = gtoData.objects.find(obj => obj.protocol === 'RVSession');
+  if (!session) return;
+
+  let paintEffectsComp = session.components.paintEffects;
+  if (!paintEffectsComp) {
+    session.components.paintEffects = {
+      interpretation: '',
+      properties: {}
+    };
+    paintEffectsComp = session.components.paintEffects;
+  }
+
+  paintEffectsComp.properties[property] = {
+    type: 'int',
+    size: 1,
+    width: 1,
+    interpretation: '',
+    data: [value]
+  };
+
+  markModified();
+  renderAnnotationsPanel();
+}
+
 export function renderAnnotationsPanel(): void {
   const gtoData = getGtoData();
   if (!gtoData) return;
@@ -2559,6 +2635,18 @@ export function renderAnnotationsPanel(): void {
       </div>
     </div>
 
+    <!-- Global Paint Effects Settings -->
+    <div class="detail-card">
+      <div class="detail-header">
+        <div class="detail-title">🎨 Global Paint Effects</div>
+      </div>
+      <div class="detail-body">
+        <div class="paint-effects-grid">
+          ${renderPaintEffectsSettings()}
+        </div>
+      </div>
+    </div>
+
     <!-- Annotation List -->
     <div class="detail-card">
       <div class="detail-header">
@@ -2598,6 +2686,13 @@ export function renderAnnotationsPanel(): void {
               <span>Brush: ${escapeHtml(stroke.brush)}</span>
               <span>Join: ${joinStyle}</span>
               <span>Cap: ${capStyle}</span>
+              ${stroke.startFrame !== undefined ? `<span>Start: ${stroke.startFrame}</span>` : ''}
+              ${stroke.duration !== undefined ? `<span>Duration: ${stroke.duration}</span>` : ''}
+              ${stroke.ghost !== undefined ? `<span>Ghost: ${stroke.ghost ? 'On' : 'Off'}</span>` : ''}
+              ${stroke.ghostBefore !== undefined ? `<span>Ghost Before: ${stroke.ghostBefore}</span>` : ''}
+              ${stroke.ghostAfter !== undefined ? `<span>Ghost After: ${stroke.ghostAfter}</span>` : ''}
+              ${stroke.hold !== undefined ? `<span>Hold: ${stroke.hold ? 'On' : 'Off'}</span>` : ''}
+            </div>
             </div>
           </div>
         </div>

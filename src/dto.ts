@@ -55,6 +55,14 @@ export interface TimelineInfo {
   marks: unknown[];
 }
 
+/** Paint effects settings structure */
+export interface PaintEffectsInfo {
+  ghost: number;
+  ghostBefore: number;
+  ghostAfter: number;
+  hold: number;
+}
+
 /** Annotation structure */
 export interface Annotation {
   type: string;
@@ -66,6 +74,12 @@ export interface Annotation {
   points: unknown;
   text: unknown;
   brush: unknown;
+  startFrame?: number;
+  duration?: number;
+  ghost?: number;
+  ghostBefore?: number;
+  ghostAfter?: number;
+  hold?: number;
 }
 
 /**
@@ -705,6 +719,19 @@ export class GTODTO {
   }
 
   /**
+   * Get global paint effects settings
+   */
+  paintEffects(): PaintEffectsInfo {
+    const session = this.session().component('paintEffects');
+    return {
+      ghost: (session.prop('ghost') as number) || 0,
+      ghostBefore: (session.prop('ghostBefore') as number) || 3,
+      ghostAfter: (session.prop('ghostAfter') as number) || 3,
+      hold: (session.prop('hold') as number) || 0
+    };
+  }
+
+  /**
    * Get node connections as array of [from, to] pairs
    */
   connectionEdges(): Array<[string, string]> {
@@ -729,7 +756,13 @@ export class GTODTO {
             color: comp.prop('color'),
             points: comp.prop('points'),
             text: comp.prop('text'),
-            brush: comp.prop('brush')
+            brush: comp.prop('brush'),
+            startFrame: comp.prop('startFrame') as number,
+            duration: comp.prop('duration') as number,
+            ghost: comp.prop('ghost') as number,
+            ghostBefore: comp.prop('ghostBefore') as number,
+            ghostAfter: comp.prop('ghostAfter') as number,
+            hold: comp.prop('hold') as number
           });
         }
       }

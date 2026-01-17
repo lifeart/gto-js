@@ -2127,6 +2127,56 @@
       margin-top: 4px;
     }
 
+    /* Paint Effects */
+    .paint-effects-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .paint-effect-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 12px;
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-sm);
+    }
+
+    .paint-effect-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+      cursor: pointer;
+    }
+
+    .paint-effect-label input[type="checkbox"] {
+      margin: 0;
+    }
+
+    .paint-effect-input {
+      width: 60px;
+      padding: 4px 8px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      color: var(--text-primary);
+      font-size: 13px;
+    }
+
+    .paint-effect-input:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+    }
+
+    .paint-effect-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
     /* Color Visualizer */
     .color-slider-container {
       display: flex;

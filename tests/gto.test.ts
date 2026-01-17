@@ -1019,6 +1019,15 @@ describe('GTODTO RV Helpers', () => {
               region: { type: 'int', size: 2, width: 1, interpretation: '', data: [25, 175] },
               marks: { type: 'int', size: 3, width: 1, interpretation: '', data: [50, 100, 150] }
             }
+          },
+          paintEffects: {
+            interpretation: '',
+            properties: {
+              ghost: { type: 'int', size: 1, width: 1, interpretation: '', data: [1] },
+              ghostBefore: { type: 'int', size: 1, width: 1, interpretation: '', data: [5] },
+              ghostAfter: { type: 'int', size: 1, width: 1, interpretation: '', data: [5] },
+              hold: { type: 'int', size: 1, width: 1, interpretation: '', data: [0] }
+            }
           }
         }
       },
@@ -1076,6 +1085,16 @@ describe('GTODTO RV Helpers', () => {
     expect(timeline.marks).toEqual([50, 100, 150]);
   });
 
+  test('paintEffects() should return paint effects settings', () => {
+    const dto = new GTODTO(rvSessionData);
+    const effects = dto.paintEffects();
+
+    expect(effects.ghost).toBe(1);
+    expect(effects.ghostBefore).toBe(5);
+    expect(effects.ghostAfter).toBe(5);
+    expect(effects.hold).toBe(0);
+  });
+
   test('fileSources() should return file sources', () => {
     const dto = new GTODTO(rvSessionData);
     const sources = dto.fileSources();
@@ -1111,6 +1130,50 @@ describe('GTODTO RV Helpers', () => {
     const edges = dto.connectionEdges();
 
     expect(edges).toEqual([['node1', 'node2'], ['node2', 'node3']]);
+  });
+
+  test('annotations() should extract annotations with ghost properties', () => {
+    const testData = {
+      version: 4,
+      objects: [
+        {
+          name: 'paint1',
+          protocol: 'RVPaint',
+          protocolVersion: 3,
+          components: {
+            'pen:1:15:User': {
+              interpretation: '',
+              properties: {
+                color: { type: 'float', size: 4, width: 1, interpretation: '', data: [1, 0, 0, 1] },
+                points: { type: 'float', size: 2, width: 2, interpretation: '', data: [[0.1, 0.2], [0.3, 0.4]] },
+                startFrame: { type: 'int', size: 1, width: 1, interpretation: '', data: [10] },
+                duration: { type: 'int', size: 1, width: 1, interpretation: '', data: [5] },
+                ghost: { type: 'int', size: 1, width: 1, interpretation: '', data: [1] },
+                ghostBefore: { type: 'int', size: 1, width: 1, interpretation: '', data: [2] },
+                ghostAfter: { type: 'int', size: 1, width: 1, interpretation: '', data: [3] },
+                hold: { type: 'int', size: 1, width: 1, interpretation: '', data: [0] }
+              }
+            }
+          }
+        }
+      ]
+    };
+
+    const dto = new GTODTO(testData);
+    const annotations = dto.annotations();
+
+    expect(annotations.length).toBe(1);
+    const ann = annotations[0];
+    expect(ann.type).toBe('pen');
+    expect(ann.id).toBe('1');
+    expect(ann.frame).toBe(15);
+    expect(ann.user).toBe('User');
+    expect(ann.startFrame).toBe(10);
+    expect(ann.duration).toBe(5);
+    expect(ann.ghost).toBe(1);
+    expect(ann.ghostBefore).toBe(2);
+    expect(ann.ghostAfter).toBe(3);
+    expect(ann.hold).toBe(0);
   });
 });
 
