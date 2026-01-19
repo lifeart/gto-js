@@ -3790,42 +3790,147 @@
     @media (max-width: 700px) {
       .main {
         flex-direction: column;
+        height: auto;
+        min-height: calc(100vh - 50px);
+        max-height: none;
       }
+
+      .header {
+        padding: 8px 12px;
+      }
+
+      .logo {
+        font-size: 16px;
+        gap: 8px;
+      }
+
+      .logo-icon {
+        width: 28px;
+        height: 28px;
+        font-size: 14px;
+      }
+
+      .header-actions {
+        gap: 6px;
+      }
+
+      .btn {
+        padding: 6px 10px;
+        font-size: 12px;
+      }
+
       .sidebar {
         width: 100%;
         height: auto;
-        max-height: 300px;
+        max-height: 180px;
+        min-height: 100px;
         border-right: none;
         border-bottom: 1px solid var(--border-color);
+        flex-shrink: 0;
       }
 
-      /* Mobile Tabs */
-      .tabs {
-        flex-wrap: wrap;
-        padding: 8px 16px;
+      .sidebar-header {
+        padding: 6px 8px;
         gap: 4px;
-        justify-content: center;
+      }
+
+      .sidebar-controls {
+        gap: 4px;
+      }
+
+      .search-box {
+        padding: 5px 8px;
+        font-size: 12px;
+      }
+
+      .protocol-filter {
+        padding: 5px 6px;
+        font-size: 12px;
+        min-width: 70px;
+      }
+
+      .sidebar-actions {
+        gap: 4px;
+      }
+
+      .sidebar-btn {
+        padding: 4px 8px;
+        font-size: 10px;
+      }
+
+      .object-tree {
+        padding: 4px;
+      }
+
+      .tree-item-header {
+        padding: 4px 6px;
+        font-size: 12px;
+      }
+
+      .tree-icon {
+        width: 18px;
+        height: 18px;
+        margin-right: 6px;
+        font-size: 10px;
+      }
+
+      .tree-name {
+        font-size: 12px;
+      }
+
+      .tree-badge {
+        font-size: 9px;
+        padding: 1px 5px;
+      }
+
+      .content {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      /* Mobile Tabs - Horizontal Scroll */
+      .tabs {
+        flex-wrap: nowrap;
+        padding: 4px 8px;
+        gap: 4px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        flex-shrink: 0;
+      }
+
+      .tabs::-webkit-scrollbar {
+        display: none;
       }
 
       .tab {
-        padding: 6px 10px;
+        padding: 5px 10px;
         font-size: 12px;
-        flex: 1;
-        min-width: 80px;
-        text-align: center;
+        flex-shrink: 0;
+        min-width: auto;
+        white-space: nowrap;
       }
 
       /* Mobile Data View */
       .data-view {
         flex: 1;
-        min-height: 0; /* Allow flex item to shrink */
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
       }
 
       /* Mobile Panels */
       .panel {
         flex: 1;
-        padding: 16px;
-        min-height: 0; /* Allow scrolling */
+        padding: 10px;
+        min-height: 0;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
       }
 
       /* Mobile Stats Bar */
@@ -3834,7 +3939,7 @@
         overflow-y: hidden;
         scrollbar-width: none;
         -ms-overflow-style: none;
-        padding: 4px 5px;
+        padding: 3px 4px;
         gap: 3px;
         -webkit-overflow-scrolling: touch;
       }
@@ -3845,262 +3950,528 @@
 
       .stat-card {
         flex-shrink: 0;
-        min-width: 100px;
-        padding: 3px 4px;
+        min-width: 70px;
+        padding: 2px 4px;
+      }
+
+      .stat-value {
+        font-size: 13px;
+      }
+
+      .stat-label {
+        font-size: 9px;
       }
 
       /* Mobile Overview Panel */
+      .overview-container {
+        max-width: 100%;
+      }
+
+      .overview-section {
+        padding: 10px;
+        margin-bottom: 10px;
+        border-radius: 8px;
+      }
+
+      .overview-title {
+        font-size: 14px;
+        margin-bottom: 8px;
+      }
+
       .overview-grid {
         grid-template-columns: 1fr;
-        gap: 12px;
+        gap: 8px;
       }
 
       .overview-item {
-        padding: 10px;
+        padding: 8px;
+      }
+
+      .overview-label {
+        font-size: 10px;
+      }
+
+      .overview-value {
+        font-size: 13px;
       }
 
       .overview-sources, .overview-annotations, .overview-connections, .overview-media {
-        gap: 8px;
+        gap: 6px;
       }
 
       .overview-source, .overview-annotation, .overview-connection, .overview-media-path {
-        padding: 10px;
+        padding: 8px;
+        font-size: 12px;
       }
 
       /* Mobile Source Cards */
+      .source-card {
+        padding: 10px;
+        margin-bottom: 10px;
+      }
+
+      .source-title {
+        font-size: 14px;
+      }
+
+      .source-type {
+        font-size: 11px;
+        padding: 2px 6px;
+      }
+
       .source-meta-grid {
-        grid-template-columns: 1fr;
-        gap: 8px;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
       }
 
       .source-meta-card {
-        padding: 10px;
+        padding: 6px;
         text-align: left;
       }
 
       .source-meta-card .meta-label {
-        margin-bottom: 6px;
+        font-size: 9px;
+        margin-bottom: 2px;
+      }
+
+      .source-meta-card .meta-value {
+        font-size: 12px;
+      }
+
+      /* Mobile Property Tables */
+      .property-row {
+        padding: 6px 8px;
+      }
+
+      .property-name {
+        font-size: 12px;
+      }
+
+      .property-value {
+        font-size: 11px;
       }
 
       /* Mobile Property Editor */
       .property-editor {
         width: 95vw;
         max-width: none;
-        margin: 10px;
+        margin: 8px;
       }
 
       /* Mobile Keyboard Shortcuts */
       .shortcuts-modal {
         width: 95vw;
         max-width: none;
-        margin: 10px;
+        margin: 8px;
       }
 
       .shortcut-group {
-        margin-bottom: 20px;
-      }
-
-      .shortcut-row {
-        padding: 6px 0;
-      }
-    }
-
-    @media (max-width: 480px) {
-      /* Extra small screens */
-      .header {
-        padding: 12px 16px;
-        flex-wrap: wrap;
-        gap: 8px;
-      }
-
-      .header-title {
-        font-size: 16px;
-      }
-
-      .header-actions {
-        flex-wrap: wrap;
-        gap: 8px;
-      }
-
-      .btn {
-        padding: 6px 12px;
-        font-size: 13px;
-      }
-
-      .panel {
-        padding: 12px;
-      }
-
-      .overview-section {
-        padding: 16px;
-        margin-bottom: 16px;
-      }
-
-      .overview-title {
-        font-size: 16px;
         margin-bottom: 12px;
       }
 
-      .source-card {
-        padding: 16px;
-      }
-
-      .source-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
-      }
-
-      .source-title {
-        width: 100%;
-      }
-
-      .source-type {
+      .shortcut-row {
+        padding: 4px 0;
         font-size: 12px;
       }
 
-      /* Mobile upload area */
-      .upload-area {
-        padding: 40px 20px;
+      /* Mobile Timeline */
+      .timeline-card {
+        padding: 10px;
       }
 
-      .upload-title {
-        font-size: 18px;
+      .timeline-info {
+        gap: 8px;
+      }
+
+      /* Mobile JSON Panel */
+      .json-container {
+        font-size: 11px;
+      }
+
+      .json-controls {
+        padding: 6px 8px;
+        gap: 6px;
+      }
+
+      /* Mobile Graph */
+      .graph-controls {
+        padding: 6px 8px;
+        gap: 6px;
+      }
+
+      .graph-btn {
+        padding: 4px 8px;
+        font-size: 11px;
       }
 
       /* Mobile Breadcrumb */
       .breadcrumb {
-        padding: 8px 16px;
-        font-size: 12px;
+        padding: 4px 8px;
+        font-size: 11px;
         gap: 4px;
       }
 
-      /* Mobile Search */
-      .search-input {
-        font-size: 14px;
-        padding: 8px 12px;
+      .breadcrumb-item {
+        padding: 2px 6px;
       }
+    }
 
-      /* Mobile Protocol Filter */
-      .protocol-filter {
-        font-size: 13px;
-        padding: 6px 10px;
-      }
-
-      /* Mobile Sidebar Actions */
-      .sidebar-actions {
-        flex-wrap: wrap;
+    @media (max-width: 480px) {
+      /* Extra small screens - compact layout */
+      .header {
+        padding: 6px 8px;
         gap: 6px;
       }
 
-      .sidebar-btn {
-        padding: 6px 10px;
+      .logo {
+        font-size: 14px;
+        gap: 6px;
+      }
+
+      .logo-icon {
+        width: 24px;
+        height: 24px;
         font-size: 12px;
       }
 
-      /* Mobile Export Menu */
-      .export-menu {
-        min-width: 140px;
+      .logo span {
+        display: none;
       }
 
-      .export-menu button {
-        padding: 8px 12px;
-        font-size: 13px;
+      .header-actions {
+        flex-wrap: nowrap;
+        gap: 4px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
       }
 
-      /* Mobile Tree Items */
-      .tree-item-header {
-        padding: 6px 8px;
-        font-size: 13px;
+      .btn {
+        padding: 4px 8px;
+        font-size: 11px;
+        white-space: nowrap;
+      }
+
+      .btn span:first-child {
+        display: none;
+      }
+
+      .theme-toggle {
+        padding: 4px;
+        font-size: 12px;
+      }
+
+      .main {
+        min-height: calc(100vh - 40px);
+      }
+
+      .sidebar {
+        max-height: 140px;
+        min-height: 80px;
+      }
+
+      .sidebar-header {
+        padding: 4px 6px;
+        gap: 3px;
+      }
+
+      .search-box {
+        font-size: 11px;
+        padding: 4px 6px;
+      }
+
+      .protocol-filter {
+        font-size: 11px;
+        padding: 4px 5px;
+        min-width: 60px;
+      }
+
+      .sidebar-actions {
+        gap: 3px;
+      }
+
+      .sidebar-btn {
+        padding: 3px 6px;
+        font-size: 9px;
+      }
+
+      .object-tree {
+        padding: 2px;
       }
 
       .tree-icon {
-        width: 20px;
-        height: 20px;
+        width: 16px;
+        height: 16px;
+        margin-right: 4px;
+        font-size: 9px;
+      }
+
+      .tree-name {
+        font-size: 11px;
+      }
+
+      .tree-badge {
+        font-size: 8px;
+        padding: 1px 4px;
+      }
+
+      .tabs {
+        padding: 3px 6px;
+        gap: 3px;
+      }
+
+      .tab {
+        padding: 4px 8px;
+        font-size: 11px;
+      }
+
+      .panel {
+        padding: 8px;
+      }
+
+      /* Mobile Stats Bar */
+      .stats-bar {
+        padding: 2px 4px;
+        gap: 3px;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+
+      .stats-bar::-webkit-scrollbar {
+        display: none;
+      }
+
+      .stat-card {
+        min-width: 60px;
+        padding: 2px 4px;
+      }
+
+      .stat-value {
+        font-size: 12px;
+      }
+
+      .stat-label {
+        font-size: 8px;
+      }
+
+      /* Mobile Overview */
+      .overview-section {
+        padding: 8px;
+        margin-bottom: 8px;
+      }
+
+      .overview-title {
+        font-size: 13px;
+        margin-bottom: 6px;
+      }
+
+      .overview-grid {
+        gap: 6px;
+      }
+
+      .overview-item {
+        padding: 6px;
+      }
+
+      .overview-label {
+        font-size: 9px;
+      }
+
+      .overview-value {
+        font-size: 12px;
+      }
+
+      .overview-source, .overview-annotation, .overview-connection, .overview-media-path {
+        padding: 6px;
+        font-size: 11px;
+      }
+
+      /* Mobile Source Cards */
+      .source-card {
+        padding: 8px;
+        margin-bottom: 8px;
+      }
+
+      .source-header {
+        flex-direction: row;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+
+      .source-title {
+        font-size: 13px;
+      }
+
+      .source-type {
+        font-size: 10px;
+        padding: 2px 5px;
+      }
+
+      .source-meta-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 4px;
+      }
+
+      .source-meta-card {
+        padding: 4px;
+      }
+
+      .source-meta-card .meta-label {
+        font-size: 8px;
+        margin-bottom: 1px;
+      }
+
+      .source-meta-card .meta-value {
+        font-size: 11px;
       }
 
       /* Mobile Property Rows */
       .property-row {
-        padding: 8px 12px;
+        padding: 4px 6px;
       }
 
       .property-name {
-        font-size: 13px;
+        font-size: 11px;
       }
 
       .property-value {
-        font-size: 12px;
+        font-size: 10px;
+      }
+
+      /* Mobile Breadcrumb */
+      .breadcrumb {
+        padding: 3px 6px;
+        font-size: 10px;
+        gap: 3px;
+      }
+
+      .breadcrumb-item {
+        padding: 1px 4px;
+      }
+
+      /* Mobile upload area */
+      .upload-area {
+        padding: 20px 12px;
+      }
+
+      .upload-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 24px;
+        margin-bottom: 12px;
+      }
+
+      .upload-title {
+        font-size: 16px;
+      }
+
+      .upload-subtitle {
+        font-size: 13px;
+        margin-bottom: 12px;
+      }
+
+      .format-tag {
+        padding: 4px 10px;
+        font-size: 11px;
+      }
+
+      .upload-container {
+        padding: 12px;
+        min-height: auto;
       }
 
       /* Mobile Timeline */
       .timeline-info {
         grid-template-columns: 1fr;
-        gap: 12px;
+        gap: 6px;
       }
 
       .timeline-card {
-        padding: 16px;
+        padding: 8px;
       }
 
       /* Mobile Graph */
       .graph-controls {
-        flex-wrap: wrap;
-        gap: 8px;
+        padding: 4px 6px;
+        gap: 4px;
       }
 
       .graph-btn {
-        padding: 6px 10px;
-        font-size: 12px;
+        padding: 3px 6px;
+        font-size: 10px;
       }
 
       /* Mobile Compare */
       .compare-controls {
         flex-direction: column;
-        gap: 12px;
+        gap: 6px;
       }
 
       .compare-select {
         width: 100%;
+        font-size: 11px;
+        padding: 4px 6px;
       }
 
       /* Mobile JSON */
+      .json-container {
+        font-size: 10px;
+      }
+
       .json-controls {
-        flex-wrap: wrap;
-        gap: 8px;
+        padding: 4px 6px;
+        gap: 4px;
       }
 
-      /* Touch-friendly improvements */
+      /* Mobile Export Menu */
+      .export-menu {
+        min-width: 120px;
+      }
+
+      .export-menu button {
+        padding: 6px 10px;
+        font-size: 11px;
+      }
+
+      /* Touch-friendly but compact - 32px is minimum usable touch target */
       .tab {
-        min-height: 44px;
+        min-height: 32px;
         display: flex;
         align-items: center;
         justify-content: center;
       }
 
-      .btn, .sidebar-btn, .graph-btn, .json-btn {
-        min-height: 44px;
+      .btn, .graph-btn, .json-btn {
+        min-height: 32px;
         display: flex;
         align-items: center;
         justify-content: center;
+      }
+
+      /* Sidebar buttons can be smaller since they're secondary actions */
+      .sidebar-btn {
+        min-height: 24px;
       }
 
       .tree-item-header {
-        min-height: 44px;
+        min-height: 32px;
+        padding: 3px 5px;
+        font-size: 11px;
         display: flex;
         align-items: center;
       }
 
       .copy-btn {
-        min-height: 36px;
-        min-width: 36px;
+        min-height: 28px;
+        min-width: 28px;
         display: flex;
         align-items: center;
         justify-content: center;
       }
 
       .modal-close {
-        min-height: 44px;
-        min-width: 44px;
+        min-height: 36px;
+        min-width: 36px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -4116,6 +4487,322 @@
         -webkit-touch-callout: none;
         -webkit-user-select: none;
         user-select: none;
+      }
+
+      /* Mobile modified indicator */
+      .modified-indicator {
+        padding: 2px 4px;
+        font-size: 9px;
+        margin-left: 4px;
+      }
+
+      .modified-text {
+        display: none;
+      }
+
+      /* Modal adjustments */
+      .modal {
+        margin: 8px;
+        max-height: calc(100vh - 16px);
+      }
+
+      .modal-header {
+        padding: 8px 10px;
+      }
+
+      .modal-title {
+        font-size: 14px;
+      }
+
+      .modal-body {
+        padding: 8px 10px;
+      }
+
+      .shortcut-group {
+        margin-bottom: 10px;
+      }
+
+      .shortcut-group-title {
+        font-size: 11px;
+        margin-bottom: 6px;
+      }
+
+      .shortcut-row {
+        padding: 3px 0;
+        font-size: 11px;
+      }
+
+      .key {
+        padding: 2px 5px;
+        font-size: 10px;
+      }
+    }
+
+    /* Very small screens (320px and below) - maximum density */
+    @media (max-width: 320px) {
+      .header {
+        padding: 4px 6px;
+        gap: 4px;
+      }
+
+      .logo-icon {
+        width: 20px;
+        height: 20px;
+        font-size: 10px;
+      }
+
+      .header-actions {
+        gap: 3px;
+      }
+
+      .btn {
+        padding: 3px 6px;
+        font-size: 10px;
+        min-height: 28px;
+      }
+
+      .theme-toggle {
+        padding: 3px;
+        font-size: 11px;
+        min-height: 28px;
+        min-width: 28px;
+      }
+
+      .main {
+        min-height: calc(100vh - 32px);
+      }
+
+      .sidebar {
+        max-height: 100px;
+        min-height: 60px;
+      }
+
+      .sidebar-header {
+        padding: 3px 4px;
+        gap: 2px;
+      }
+
+      .search-box {
+        font-size: 10px;
+        padding: 3px 5px;
+      }
+
+      .protocol-filter {
+        font-size: 10px;
+        padding: 3px 4px;
+        min-width: 50px;
+      }
+
+      .sidebar-btn {
+        padding: 2px 5px;
+        font-size: 8px;
+        min-height: 24px;
+      }
+
+      .object-tree {
+        padding: 1px;
+      }
+
+      .tree-item-header {
+        padding: 2px 4px;
+        font-size: 10px;
+        min-height: 28px;
+      }
+
+      .tree-icon {
+        width: 14px;
+        height: 14px;
+        margin-right: 3px;
+        font-size: 8px;
+      }
+
+      .tree-name {
+        font-size: 10px;
+      }
+
+      .tree-badge {
+        font-size: 7px;
+        padding: 1px 3px;
+      }
+
+      .tabs {
+        padding: 2px 4px;
+        gap: 2px;
+      }
+
+      .tab {
+        padding: 3px 6px;
+        font-size: 10px;
+        min-height: 28px;
+      }
+
+      .panel {
+        padding: 6px;
+      }
+
+      .stats-bar {
+        padding: 2px 3px;
+        gap: 2px;
+      }
+
+      .stat-card {
+        min-width: 50px;
+        padding: 2px 3px;
+      }
+
+      .stat-value {
+        font-size: 11px;
+      }
+
+      .stat-label {
+        font-size: 7px;
+      }
+
+      .overview-section {
+        padding: 6px;
+        margin-bottom: 6px;
+      }
+
+      .overview-title {
+        font-size: 12px;
+        margin-bottom: 4px;
+      }
+
+      .overview-grid {
+        gap: 4px;
+      }
+
+      .overview-item {
+        padding: 4px;
+      }
+
+      .overview-label {
+        font-size: 8px;
+      }
+
+      .overview-value {
+        font-size: 11px;
+      }
+
+      .source-card {
+        padding: 6px;
+        margin-bottom: 6px;
+      }
+
+      .source-title {
+        font-size: 12px;
+      }
+
+      .source-type {
+        font-size: 9px;
+        padding: 1px 4px;
+      }
+
+      .source-meta-grid {
+        gap: 3px;
+      }
+
+      .source-meta-card {
+        padding: 3px;
+      }
+
+      .source-meta-card .meta-label {
+        font-size: 7px;
+      }
+
+      .source-meta-card .meta-value {
+        font-size: 10px;
+      }
+
+      .property-row {
+        padding: 3px 4px;
+      }
+
+      .property-name {
+        font-size: 10px;
+      }
+
+      .property-value {
+        font-size: 9px;
+      }
+
+      .breadcrumb {
+        padding: 2px 4px;
+        font-size: 9px;
+        gap: 2px;
+      }
+
+      .upload-area {
+        padding: 16px 10px;
+      }
+
+      .upload-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 20px;
+        margin-bottom: 10px;
+      }
+
+      .upload-title {
+        font-size: 14px;
+      }
+
+      .upload-subtitle {
+        font-size: 11px;
+        margin-bottom: 10px;
+      }
+
+      .format-tag {
+        padding: 3px 8px;
+        font-size: 10px;
+      }
+
+      .upload-container {
+        padding: 8px;
+      }
+
+      .copy-btn {
+        min-height: 24px;
+        min-width: 24px;
+      }
+
+      .json-container {
+        font-size: 9px;
+      }
+
+      .timeline-card {
+        padding: 6px;
+      }
+
+      .graph-btn {
+        padding: 2px 5px;
+        font-size: 9px;
+        min-height: 28px;
+      }
+
+      .modal {
+        margin: 4px;
+      }
+
+      .modal-header {
+        padding: 6px 8px;
+      }
+
+      .modal-title {
+        font-size: 12px;
+      }
+
+      .modal-body {
+        padding: 6px 8px;
+      }
+
+      .shortcut-row {
+        font-size: 10px;
+      }
+
+      .key {
+        padding: 1px 4px;
+        font-size: 9px;
       }
     }
 
