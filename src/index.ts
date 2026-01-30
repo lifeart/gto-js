@@ -68,7 +68,20 @@ export type {
   ComponentData,
   PropertyData,
   TimelineInfo,
-  Annotation
+  Annotation,
+  SessionInfo,
+  SourceInfo,
+  PaintEffectsInfo,
+  EDLEntry,
+  ValidationResult,
+  BatchResult,
+  MediaValidation,
+  SourceOptions,
+  ColorCorrectionOptions,
+  CDLOptions,
+  Transform2DOptions,
+  LayoutOptions,
+  StereoOptions
 } from './dto.js';
 
 // Utilities

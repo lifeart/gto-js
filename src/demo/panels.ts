@@ -1007,10 +1007,10 @@ function renderSequenceVisualizer(obj: ObjectData): string {
 
   // Build clip segments
   const clips = frames.map((startFrame, i) => {
-    const inPt = inPoints[i] || 0;
-    const outPt = outPoints[i] || 100;
+    const inPt = inPoints[i] ?? 0;
+    const outPt = outPoints[i] ?? 0;
     const duration = outPt - inPt;
-    const sourceIdx = sources[i] || 0;
+    const sourceIdx = sources[i] ?? 0;
     return {
       start: startFrame,
       duration,
@@ -1820,6 +1820,198 @@ export function renderSourcesPanel(): void {
 
 // ============= Timeline Panel =============
 
+/**
+ * Get input nodes for a given node from the connection graph
+ */
+function getNodeInputs(nodeName: string): string[] {
+  const gtoData = getGtoData();
+  if (!gtoData) return [];
+
+  // Find the connections object
+  const connectionsObj = gtoData.objects.find(obj => obj.name === 'connections');
+  if (!connectionsObj) return [];
+
+  const evaluation = connectionsObj.components.evaluation?.properties;
+  if (!evaluation) return [];
+
+  const inputs: string[] = [];
+
+  // Handle connections array format: string[2][] where each pair is [source, target]
+  const connectionsArray = evaluation.connections?.data as string[][] | undefined;
+  if (connectionsArray && Array.isArray(connectionsArray)) {
+    for (const pair of connectionsArray) {
+      if (Array.isArray(pair) && pair.length >= 2 && pair[1] === nodeName && pair[0]) {
+        inputs.push(pair[0]);
+      }
+    }
+  }
+
+  // Also handle lhs/rhs format: lhs[i] -> rhs[i]
+  const lhs = (evaluation.lhs?.data as string[]) || [];
+  const rhs = (evaluation.rhs?.data as string[]) || [];
+  for (let i = 0; i < rhs.length; i++) {
+    if (rhs[i] === nodeName && lhs[i] && !inputs.includes(lhs[i])) {
+      inputs.push(lhs[i]);
+    }
+  }
+
+  return inputs;
+}
+
+/**
+ * Get a display name for a source node
+ */
+function getSourceDisplayName(nodeName: string): string {
+  const gtoData = getGtoData();
+  if (!gtoData) return nodeName;
+
+  const node = gtoData.objects.find(obj => obj.name === nodeName);
+  if (!node) return nodeName;
+
+  // Try to get media path first
+  const media = node.components.media?.properties?.movie?.data?.[0] as string;
+  if (media) {
+    // Extract filename from path
+    const parts = media.split('/');
+    return parts[parts.length - 1];
+  }
+
+  // Try UI name
+  const uiName = node.components.ui?.properties?.name?.data?.[0] as string;
+  if (uiName) return uiName;
+
+  return nodeName;
+}
+
+/**
+ * Render all EDL (Edit Decision List) sequences in the session
+ */
+function renderAllEDLs(fps: number): string {
+  const gtoData = getGtoData();
+  if (!gtoData) return '';
+
+  // Find all RVSequence nodes
+  const sequences = gtoData.objects.filter(obj => obj.protocol === 'RVSequence');
+  if (sequences.length === 0) return '';
+
+  // Colors for different sources
+  const colors = [
+    'var(--accent-blue)',
+    'var(--accent-green)',
+    'var(--accent-orange)',
+    'var(--accent-purple)',
+    'var(--accent-red)',
+    'var(--accent-cyan)'
+  ];
+
+  const edlSections = sequences.map(seq => {
+    const edl = seq.components.edl?.properties;
+    const output = seq.components.output?.properties;
+
+    const frames = (edl?.frame?.data as number[]) || [];
+    const sources = (edl?.source?.data as number[]) || [];
+    const inPoints = (edl?.in?.data as number[]) || [];
+    const outPoints = (edl?.out?.data as number[]) || [];
+    const seqFps = (output?.fps?.data?.[0] as number) || fps;
+
+    if (frames.length === 0) return '';
+
+    // Find the parent sequence group for this sequence node
+    // RVSequence nodes are typically named like "defaultSequence_sequence"
+    // and their parent RVSequenceGroup is "defaultSequence"
+    const seqGroupName = seq.name.replace(/_sequence$/, '');
+    const inputNodes = getNodeInputs(seqGroupName);
+
+    // Build clip segments
+    const clips = frames.map((globalIn, i) => {
+      const inPt = inPoints[i] ?? 0;
+      const outPt = outPoints[i] ?? 0;
+      const duration = outPt - inPt;
+      const sourceIdx = sources[i] ?? 0;
+      const nextGlobalIn = frames[i + 1];
+      const globalOut = nextGlobalIn !== undefined ? nextGlobalIn : globalIn + duration;
+
+      // Get the source name from the input nodes
+      const inputNodeName = inputNodes[sourceIdx];
+      const sourceName = inputNodeName
+        ? getSourceDisplayName(inputNodeName)
+        : `Source ${sourceIdx + 1}`;
+
+      return {
+        globalIn,
+        globalOut,
+        duration,
+        sourceIdx,
+        inPoint: inPt,
+        outPoint: outPt,
+        sourceName
+      };
+    });
+
+    const totalDuration = clips.reduce((sum, c) => sum + c.duration, 0) || 1;
+    // Clean up sequence name for display - remove _sequence suffix and replace underscores
+    const seqName = seq.name.replace(/_sequence$/, '').replace(/_/g, ' ');
+
+    return `
+      <div class="edl-sequence-section">
+        <div class="edl-sequence-header">
+          <span class="edl-sequence-name">🎞 ${escapeHtml(seqName)}</span>
+          <span class="edl-sequence-info">${clips.length} clips • ${totalDuration} frames • ${(totalDuration / seqFps).toFixed(2)}s</span>
+        </div>
+        <div class="edl-timeline-track">
+          ${clips.map((clip, i) => {
+            const widthPercent = (clip.duration / totalDuration) * 100;
+            const color = colors[clip.sourceIdx % colors.length];
+            return `
+              <div class="edl-clip-segment"
+                   style="width: ${widthPercent}%; background: ${color};"
+                   title="Clip ${i + 1}: ${escapeAttr(clip.sourceName)}&#10;Global: ${clip.globalIn}-${clip.globalOut}&#10;Source: ${clip.inPoint}-${clip.outPoint} (${clip.duration}f)">
+                <span class="edl-clip-num">${i + 1}</span>
+              </div>
+            `;
+          }).join('')}
+        </div>
+        <div class="edl-entries-table">
+          <div class="edl-table-header">
+            <span class="edl-col-num">#</span>
+            <span class="edl-col-global">Global In/Out</span>
+            <span class="edl-col-source">Source</span>
+            <span class="edl-col-range">Source In/Out</span>
+            <span class="edl-col-dur">Dur</span>
+          </div>
+          ${clips.slice(0, 10).map((clip, i) => `
+            <div class="edl-table-row">
+              <span class="edl-col-num">
+                <span class="edl-color-dot" style="background: ${colors[clip.sourceIdx % colors.length]}"></span>
+                ${i + 1}
+              </span>
+              <span class="edl-col-global">${clip.globalIn} - ${clip.globalOut}</span>
+              <span class="edl-col-source" title="${escapeAttr(clip.sourceName)}">${escapeHtml(clip.sourceName.length > 20 ? clip.sourceName.substring(0, 17) + '...' : clip.sourceName)}</span>
+              <span class="edl-col-range">${clip.inPoint} - ${clip.outPoint}</span>
+              <span class="edl-col-dur">${clip.duration}f</span>
+            </div>
+          `).join('')}
+          ${clips.length > 10 ? `<div class="edl-more-rows">+${clips.length - 10} more entries</div>` : ''}
+        </div>
+      </div>
+    `;
+  }).filter(Boolean);
+
+  if (edlSections.length === 0) return '';
+
+  return `
+    <div class="edl-panel-section">
+      <div class="edl-panel-header">
+        <h3>📋 Edit Decision Lists</h3>
+        <span class="edl-panel-count">${sequences.length} sequence${sequences.length !== 1 ? 's' : ''}</span>
+      </div>
+      <div class="edl-panel-content">
+        ${edlSections.join('')}
+      </div>
+    </div>
+  `;
+}
+
 function formatTimecode(frame: number, fps: number): string {
   const totalSeconds = frame / fps;
   const hours = Math.floor(totalSeconds / 3600);
@@ -2019,6 +2211,8 @@ export function renderTimelinePanel(): void {
         </div>
       </div>
     </div>
+
+    ${renderAllEDLs(fps)}
   `;
 
   // Set up scrubber interactivity after DOM is updated

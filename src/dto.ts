@@ -125,6 +125,144 @@ export interface SessionInfo {
   };
 }
 
+/** EDL (Edit Decision List) entry structure */
+export interface EDLEntry {
+  /** Global frame number where this cut starts */
+  globalIn: number;
+  /** Global frame number where this cut ends */
+  globalOut: number;
+  /** Index of the source input for this cut */
+  sourceIndex: number;
+  /** Source-relative in-frame */
+  sourceIn: number;
+  /** Source-relative out-frame */
+  sourceOut: number;
+  /** Optional path to the source media file */
+  sourcePath?: string;
+}
+
+/** Validation result structure for session validation */
+export interface ValidationResult {
+  /** Whether validation passed */
+  valid: boolean;
+  /** List of validation errors (critical issues) */
+  errors: string[];
+  /** List of validation warnings (non-critical issues) */
+  warnings: string[];
+}
+
+/** Batch processing result structure */
+export interface BatchResult {
+  /** File name or path that was processed */
+  file: string;
+  /** Whether processing succeeded */
+  success: boolean;
+  /** Number of sources found (if successful) */
+  sources?: number;
+  /** FPS of the session (if successful) */
+  fps?: number;
+  /** Error message (if failed) */
+  error?: string;
+}
+
+/** Media path validation result */
+export interface MediaValidation {
+  /** Path to the media file */
+  path: string;
+  /** Whether the file exists on disk */
+  exists: boolean;
+  /** Name of the source node that references this path */
+  source: string;
+}
+
+/** Source options for programmatic source creation */
+export interface SourceOptions {
+  /** Display name for the source */
+  name: string;
+  /** Path to the media file */
+  movie: string;
+  /** Frame rate (optional, defaults to 24.0) */
+  fps?: number;
+  /** Audio volume (optional, defaults to 1.0) */
+  volume?: number;
+  /** Cut in-point (optional) */
+  cutIn?: number;
+  /** Cut out-point (optional) */
+  cutOut?: number;
+}
+
+/** Color correction options */
+export interface ColorCorrectionOptions {
+  /** Enable/disable color correction */
+  active?: boolean;
+  /** Per-channel gamma values */
+  gamma?: [number, number, number];
+  /** Per-channel exposure values in stops */
+  exposure?: [number, number, number];
+  /** Saturation multiplier */
+  saturation?: number;
+  /** Hue rotation in radians */
+  hue?: number;
+  /** Per-channel contrast */
+  contrast?: [number, number, number];
+}
+
+/** CDL (Color Decision List) options */
+export interface CDLOptions {
+  /** Enable/disable CDL */
+  active?: boolean;
+  /** Working colorspace: rec709, aces, aceslog */
+  colorspace?: string;
+  /** CDL slope per channel */
+  slope?: [number, number, number];
+  /** CDL offset per channel */
+  offset?: [number, number, number];
+  /** CDL power per channel */
+  power?: [number, number, number];
+  /** CDL saturation */
+  saturation?: number;
+  /** Disable clamping for HDR workflows */
+  noClamp?: boolean;
+}
+
+/** Transform 2D options */
+export interface Transform2DOptions {
+  /** Enable/disable transform */
+  active?: boolean;
+  /** Translation [x, y] */
+  translate?: [number, number];
+  /** Scale [x, y] */
+  scale?: [number, number];
+  /** Rotation in degrees */
+  rotate?: number;
+  /** Vertical flip */
+  flip?: boolean;
+  /** Horizontal flip */
+  flop?: boolean;
+}
+
+/** Layout options for RVLayoutGroup */
+export interface LayoutOptions {
+  /** Layout mode: packed, packed2, row, column, grid */
+  mode?: string;
+  /** Spacing between items (0-1, 1=no gap) */
+  spacing?: number;
+  /** Grid columns (0=auto) */
+  gridColumns?: number;
+  /** Grid rows (0=auto) */
+  gridRows?: number;
+}
+
+/** Stereo display options */
+export interface StereoOptions {
+  /** Stereo mode: off, anaglyph, lumanaglyph, pair, mirror, hsqueezed, vsqueezed, scanline, checker */
+  type?: string;
+  /** Swap left/right eyes */
+  swap?: boolean;
+  /** Relative offset between eyes */
+  relativeOffset?: number;
+}
+
 /**
  * Property wrapper with value accessors
  */

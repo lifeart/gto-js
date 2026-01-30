@@ -1462,25 +1462,6 @@ export const PROPERTY_DOCS: Record<string, ProtocolDoc> = {
     }
   },
 
-  // ============= Connection/Graph =============
-  'connection': {
-    description: 'Node graph connections and evaluation order',
-    components: {
-      'evaluation': {
-        description: 'Graph evaluation settings',
-        properties: {
-          'connections': { description: 'Node connection pairs', type: 'string[]' }
-        }
-      },
-      'top': {
-        description: 'Top-level nodes',
-        properties: {
-          'nodes': { description: 'Root node names', type: 'string[]' }
-        }
-      }
-    }
-  },
-
   // ============= RVImageSource (verified from OpenRV ImageSourceIPNode.cpp) =============
   'RVImageSource': {
     description: 'Image source: handles multi-layer EXR sequences with multiple views and channels. Properties verified from ImageSourceIPNode.cpp.',
@@ -2978,6 +2959,201 @@ export const PROPERTY_DOCS: Record<string, ProtocolDoc> = {
           'artist': { description: 'Artist/author name', type: 'string' },
           'notes': { description: 'Review notes or comments', type: 'string' },
           'tags': { description: 'Searchable tags for filtering', type: 'string[]' }
+        }
+      }
+    }
+  },
+
+  // ============= RVColorCDL (Standalone CDL Node) =============
+  'RVColorCDL': {
+    description: 'Standalone Color Decision List (CDL) node for color grading interchange. Applies ASC-CDL formula: out = clamp((in × slope + offset)^power × saturation_matrix). Can load .cdl, .cc, or .ccc files.',
+    components: {
+      'node': {
+        description: 'CDL node settings',
+        properties: {
+          'active': { description: 'Enable CDL processing', type: 'int', default: 1 },
+          'file': { description: 'Path to CDL file (.cdl, .cc, or .ccc format)', type: 'string' },
+          'colorspace': { description: 'Working colorspace: rec709, aces, aceslog', type: 'string', default: 'rec709' },
+          'slope': { description: 'CDL slope (gain) per RGB channel', type: 'float[3]', default: [1, 1, 1], range: '0.0 to 4.0' },
+          'offset': { description: 'CDL offset per RGB channel', type: 'float[3]', default: [0, 0, 0], range: '-1.0 to 1.0' },
+          'power': { description: 'CDL power (gamma) per RGB channel', type: 'float[3]', default: [1, 1, 1], range: '0.1 to 4.0' },
+          'saturation': { description: 'CDL saturation multiplier', type: 'float', default: 1.0, range: '0.0 to 4.0' },
+          'noClamp': { description: 'Disable clamping for HDR/wide-gamut workflows', type: 'int', default: 1 }
+        }
+      }
+    }
+  },
+
+  // ============= RVColorACESLogCDL =============
+  'RVColorACESLogCDL': {
+    description: 'CDL node configured for ACES Log colorspace. Identical to RVColorCDL but with aceslog as the default working colorspace.',
+    components: {
+      'node': {
+        description: 'ACES Log CDL node settings',
+        properties: {
+          'active': { description: 'Enable CDL processing', type: 'int', default: 1 },
+          'file': { description: 'Path to CDL file', type: 'string' },
+          'colorspace': { description: 'Working colorspace (fixed to aceslog)', type: 'string', default: 'aceslog' },
+          'slope': { description: 'CDL slope per RGB channel', type: 'float[3]', default: [1, 1, 1] },
+          'offset': { description: 'CDL offset per RGB channel', type: 'float[3]', default: [0, 0, 0] },
+          'power': { description: 'CDL power per RGB channel', type: 'float[3]', default: [1, 1, 1] },
+          'saturation': { description: 'CDL saturation', type: 'float', default: 1.0 },
+          'noClamp': { description: 'Disable clamping', type: 'int', default: 1 }
+        }
+      }
+    }
+  },
+
+  // ============= RVColorLinearToSRGB =============
+  'RVColorLinearToSRGB': {
+    description: 'Standalone linear to sRGB conversion node. Applies the sRGB transfer function to convert linear light values to sRGB encoding.',
+    components: {
+      'node': {
+        description: 'Node control',
+        properties: {
+          'active': { description: 'Enable linear to sRGB conversion', type: 'int', default: 1 }
+        }
+      }
+    }
+  },
+
+  // ============= RVColorSRGBToLinear =============
+  'RVColorSRGBToLinear': {
+    description: 'Standalone sRGB to linear conversion node. Applies the inverse sRGB transfer function to convert sRGB encoded values to linear light.',
+    components: {
+      'node': {
+        description: 'Node control',
+        properties: {
+          'active': { description: 'Enable sRGB to linear conversion', type: 'int', default: 1 }
+        }
+      }
+    }
+  },
+
+  // ============= RVHistogram =============
+  'RVHistogram': {
+    description: 'Histogram analysis node for color distribution visualization. Computes and displays histogram of pixel values.',
+    components: {
+      'node': {
+        description: 'Histogram parameters',
+        properties: {
+          'active': { description: 'Enable histogram computation', type: 'int', default: 1 },
+          'height': { description: 'Histogram display height in pixels', type: 'int', default: 100 }
+        }
+      }
+    }
+  },
+
+  // ============= RVTextureOutputGroup =============
+  'RVTextureOutputGroup': {
+    description: 'Texture output group for rendering to GPU textures. Used for external rendering integration and real-time preview.',
+    components: {
+      'output': {
+        description: 'Texture output settings',
+        properties: {
+          'active': { description: 'Enable texture output', type: 'int', default: 0 },
+          'ndcCoordinates': { description: 'Use normalized device coordinates', type: 'int', default: 1 },
+          'width': { description: 'Output texture width (0 = auto)', type: 'int', default: 0 },
+          'height': { description: 'Output texture height (0 = auto)', type: 'int', default: 0 },
+          'dataType': { description: 'Output data type: uint8, uint16, float', type: 'string', default: 'uint8' },
+          'pixelAspect': { description: 'Pixel aspect ratio', type: 'float', default: 1.0 },
+          'tag': { description: 'Output identifier tag', type: 'string' },
+          'frame': { description: 'Output frame number', type: 'int', default: 1 },
+          'flip': { description: 'Flip texture vertically', type: 'int', default: 0 },
+          'flop': { description: 'Flip texture horizontally', type: 'int', default: 0 }
+        }
+      }
+    }
+  },
+
+  // ============= RVPipelineGroup =============
+  'RVPipelineGroup': {
+    description: 'Managed single-input pipeline container. Defines an ordered chain of processing nodes.',
+    components: {
+      'pipeline': {
+        description: 'Pipeline configuration',
+        properties: {
+          'nodes': { description: 'Ordered list of node types in the pipeline', type: 'string[]' }
+        }
+      }
+    }
+  },
+
+  // ============= RVAdaptor =============
+  'RVAdaptor': {
+    description: 'Connection adaptation node for routing inputs in complex graphs.',
+    components: {
+      'input': {
+        description: 'Input connection settings',
+        properties: {
+          'index': { description: 'Input connection index', type: 'int' }
+        }
+      }
+    }
+  },
+
+  // ============= RVDisplayGroup (Extended) =============
+  'RVDisplayGroup': {
+    description: 'Display output group configuration. Required name: "displayGroup". Contains display color and stereo processing nodes.',
+    components: {
+      'device': {
+        description: 'Display device settings',
+        properties: {
+          'name': { description: 'Display device name', type: 'string' },
+          'moduleName': { description: 'Display module/driver name', type: 'string' },
+          'systemProfileURL': { description: 'Path to ICC color profile', type: 'string' },
+          'systemProfileType': { description: 'Profile type identifier', type: 'string' }
+        }
+      },
+      'render': {
+        description: 'Render settings',
+        properties: {
+          'hashCount': { description: 'Render hash count for cache validation', type: 'int', default: 0 }
+        }
+      },
+      'chromaticities': {
+        description: 'Display chromaticity settings for color-managed output',
+        properties: {
+          'active': { description: 'Enable chromaticity adjustment', type: 'int', default: 0 },
+          'adoptedNeutral': { description: 'Adopt neutral point from display', type: 'int', default: 1 },
+          'white': { description: 'Display white point xy chromaticity (D65 default)', type: 'float[2]', default: [0.3127, 0.329] },
+          'red': { description: 'Display red primary xy chromaticity', type: 'float[2]', default: [0.64, 0.33] },
+          'green': { description: 'Display green primary xy chromaticity', type: 'float[2]', default: [0.3, 0.6] },
+          'blue': { description: 'Display blue primary xy chromaticity', type: 'float[2]', default: [0.15, 0.06] },
+          'neutral': { description: 'Display neutral point xy chromaticity', type: 'float[2]', default: [0.3127, 0.329] }
+        }
+      }
+    }
+  },
+
+  // ============= connection (Extended) =============
+  'connection': {
+    description: 'Node graph connections and evaluation order. Required object name: "connections".',
+    components: {
+      'evaluation': {
+        description: 'Graph evaluation settings - defines directed edges in the node graph',
+        properties: {
+          'lhs': { description: 'Source nodes (connection origins). Forms edges: lhs[i] -> rhs[i]', type: 'string[]' },
+          'rhs': { description: 'Target nodes (connection destinations)', type: 'string[]' },
+          'connections': { description: 'Paired connections array (alternative to lhs/rhs)', type: 'string[2][]' },
+          'root': { description: 'Single root node for evaluation', type: 'string' },
+          'roots': { description: 'Multiple root input nodes', type: 'string[]' }
+        }
+      },
+      'top': {
+        description: 'Top-level viewable nodes',
+        properties: {
+          'nodes': { description: 'All top-level viewable node names', type: 'string[]' }
+        }
+      },
+      '__graph': {
+        description: 'Internal graph metadata (non-persistent)',
+        properties: {
+          'inputs': { description: 'Input node names', type: 'string[]' },
+          'outputs': { description: 'Output node names', type: 'string[]' },
+          'outputIndex': { description: 'Current output index', type: 'int' },
+          'externalOutputs': { description: 'External output mappings', type: 'string[2][]' },
+          'externalIndex': { description: 'External output index', type: 'int' }
         }
       }
     }

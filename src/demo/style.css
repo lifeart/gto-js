@@ -5074,3 +5074,213 @@
       font-family: 'SF Mono', Monaco, monospace;
       font-size: 10px;
     }
+
+    /* ============= EDL Panel Section ============= */
+    .edl-panel-section {
+      margin-top: 24px;
+      background: var(--bg-secondary);
+      border-radius: var(--radius);
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+    }
+
+    .edl-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      background: var(--bg-tertiary);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .edl-panel-header h3 {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .edl-panel-count {
+      font-size: 12px;
+      color: var(--text-muted);
+      background: var(--bg-secondary);
+      padding: 4px 10px;
+      border-radius: 12px;
+    }
+
+    .edl-panel-content {
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .edl-sequence-section {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+    }
+
+    .edl-sequence-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: var(--bg-tertiary);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .edl-sequence-name {
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--text-primary);
+    }
+
+    .edl-sequence-info {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .edl-timeline-track {
+      display: flex;
+      height: 36px;
+      background: var(--bg-primary);
+      margin: 16px;
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+
+    .edl-clip-segment {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 20px;
+      transition: all 0.15s;
+      cursor: pointer;
+      border-right: 1px solid rgba(0, 0, 0, 0.3);
+    }
+
+    .edl-clip-segment:last-child {
+      border-right: none;
+    }
+
+    .edl-clip-segment:hover {
+      filter: brightness(1.15);
+      transform: scaleY(1.08);
+      z-index: 1;
+    }
+
+    .edl-clip-num {
+      font-size: 10px;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.9);
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    }
+
+    .edl-entries-table {
+      margin: 0 16px 16px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      overflow: hidden;
+      font-size: 12px;
+    }
+
+    .edl-table-header {
+      display: grid;
+      grid-template-columns: 50px 100px 1fr 100px 60px;
+      gap: 8px;
+      padding: 8px 12px;
+      background: var(--bg-tertiary);
+      border-bottom: 1px solid var(--border-color);
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-size: 10px;
+      letter-spacing: 0.5px;
+    }
+
+    .edl-table-row {
+      display: grid;
+      grid-template-columns: 50px 100px 1fr 100px 60px;
+      gap: 8px;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-secondary);
+    }
+
+    .edl-table-row:last-child {
+      border-bottom: none;
+    }
+
+    .edl-table-row:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .edl-col-num {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .edl-color-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .edl-col-global {
+      font-family: 'SF Mono', Monaco, monospace;
+      color: var(--accent-blue);
+    }
+
+    .edl-col-source {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .edl-col-range {
+      font-family: 'SF Mono', Monaco, monospace;
+      color: var(--text-secondary);
+    }
+
+    .edl-col-dur {
+      text-align: right;
+      font-family: 'SF Mono', Monaco, monospace;
+      color: var(--text-muted);
+    }
+
+    .edl-more-rows {
+      padding: 8px 12px;
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-muted);
+      background: var(--bg-tertiary);
+      font-style: italic;
+    }
+
+    /* Responsive adjustments for EDL panel */
+    @media (max-width: 768px) {
+      .edl-table-header,
+      .edl-table-row {
+        grid-template-columns: 40px 80px 1fr 80px 50px;
+        font-size: 11px;
+        padding: 6px 8px;
+      }
+
+      .edl-sequence-header {
+        flex-direction: column;
+        gap: 8px;
+        align-items: flex-start;
+      }
+
+      .edl-timeline-track {
+        height: 28px;
+        margin: 12px;
+      }
+    }
